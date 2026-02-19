@@ -1,0 +1,55 @@
+<svg width="1290" height="2796" viewBox="0 0 1290 2796" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="70" x2="1160" y2="2710" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#EDF2F8"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1290" height="2796" fill="url(#bg)"/>
+  <rect x="84" y="78" width="1122" height="2640" rx="120" fill="#FFFFFF" stroke="#CFD9E9" stroke-width="12"/>
+
+  <text x="180" y="246" fill="#2D466D" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="700">Settings</text>
+  <text x="180" y="300" fill="#607799" font-family="Inter, Arial, sans-serif" font-size="28">Notifications, appearance, and privacy controls</text>
+
+  <rect x="150" y="360" width="990" height="2194" rx="58" fill="#F9FBFE" stroke="#D8E1EE" stroke-width="6"/>
+
+  <text x="210" y="458" fill="#325178" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Notifications</text>
+  <rect x="210" y="512" width="870" height="132" rx="28" fill="#EEF3FA"/>
+  <text x="246" y="588" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">Smart stress nudges</text>
+  <rect x="936" y="548" width="110" height="56" rx="28" fill="#1AA6C9"/>
+  <circle cx="1018" cy="576" r="20" fill="#FFFFFF"/>
+
+  <rect x="210" y="660" width="870" height="132" rx="28" fill="#EEF3FA"/>
+  <text x="246" y="736" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">Recovery window alerts</text>
+  <rect x="936" y="696" width="110" height="56" rx="28" fill="#D6E0EE"/>
+  <circle cx="964" cy="724" r="20" fill="#FFFFFF"/>
+
+  <text x="210" y="908" fill="#325178" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Appearance</text>
+  <rect x="210" y="962" width="870" height="132" rx="28" fill="#EEF3FA"/>
+  <text x="246" y="1038" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">Theme</text>
+  <rect x="840" y="998" width="206" height="58" rx="29" fill="#DFE8F5"/>
+  <text x="882" y="1036" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">System</text>
+
+  <rect x="210" y="1110" width="870" height="132" rx="28" fill="#EEF3FA"/>
+  <text x="246" y="1186" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">Reduce motion</text>
+  <rect x="936" y="1146" width="110" height="56" rx="28" fill="#1AA6C9"/>
+  <circle cx="1018" cy="1174" r="20" fill="#FFFFFF"/>
+
+  <text x="210" y="1358" fill="#325178" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Data Controls</text>
+  <rect x="210" y="1412" width="870" height="132" rx="28" fill="#EEF3FA"/>
+  <text x="246" y="1488" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">Export data</text>
+
+  <rect x="210" y="1560" width="870" height="132" rx="28" fill="#EEF3FA"/>
+  <text x="246" y="1636" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">Delete account data</text>
+
+  <text x="210" y="1808" fill="#325178" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Safety</text>
+  <rect x="210" y="1862" width="870" height="286" rx="34" fill="#EAF1FC"/>
+  <text x="244" y="1940" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">MindSense AI provides wellness support guidance.</text>
+  <text x="244" y="1992" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">It does not replace emergency services.</text>
+  <text x="244" y="2044" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">Use local emergency channels for urgent risk.</text>
+
+  <text x="210" y="2288" fill="#325178" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Version</text>
+  <rect x="210" y="2342" width="870" height="132" rx="28" fill="#EEF3FA"/>
+  <text x="246" y="2418" fill="#3E5C82" font-family="Inter, Arial, sans-serif" font-size="24">MindSense AI v1.0.0</text>
+</svg>

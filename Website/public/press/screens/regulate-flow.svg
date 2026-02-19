@@ -1,0 +1,52 @@
+<svg width="1290" height="2796" viewBox="0 0 1290 2796" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="130" y1="90" x2="1140" y2="2700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F0F9F8"/>
+      <stop offset="1" stop-color="#E3F2EE"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1290" height="2796" fill="url(#bg)"/>
+  <rect x="84" y="78" width="1122" height="2640" rx="120" fill="#FFFFFF" stroke="#BEDFD4" stroke-width="12"/>
+
+  <text x="180" y="246" fill="#124B52" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="700">Regulate</text>
+  <text x="180" y="300" fill="#3C7077" font-family="Inter, Arial, sans-serif" font-size="28">Guided flow • 6-minute Focus Prep</text>
+
+  <rect x="150" y="360" width="990" height="840" rx="62" fill="#F7FCFB" stroke="#CBE7DE" stroke-width="6"/>
+  <text x="210" y="456" fill="#1B6069" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Breathing Pace</text>
+  <circle cx="645" cy="760" r="280" fill="#D8F2EA"/>
+  <circle cx="645" cy="760" r="220" fill="#C1EBDD"/>
+  <circle cx="645" cy="760" r="154" fill="#0FB89A" opacity="0.85"/>
+  <text x="560" y="760" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="52" font-weight="700">Inhale</text>
+  <text x="596" y="820" fill="#ECFFFA" font-family="Inter, Arial, sans-serif" font-size="34">4 sec</text>
+
+  <rect x="210" y="1080" width="870" height="74" rx="30" fill="#E8F6F1"/>
+  <text x="250" y="1126" fill="#2D6970" font-family="Inter, Arial, sans-serif" font-size="24">Cycle 3 of 8 • Haptics enabled</text>
+
+  <rect x="150" y="1262" width="990" height="560" rx="62" fill="#F7FCFB" stroke="#CBE7DE" stroke-width="6"/>
+  <text x="210" y="1356" fill="#1B6069" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Protocol Steps</text>
+
+  <rect x="210" y="1410" width="870" height="110" rx="26" fill="#E8F6F1"/>
+  <text x="244" y="1476" fill="#2D6970" font-family="Inter, Arial, sans-serif" font-size="26">1. Center attention</text>
+
+  <rect x="210" y="1538" width="870" height="110" rx="26" fill="#DBF2EA"/>
+  <text x="244" y="1604" fill="#1D6168" font-family="Inter, Arial, sans-serif" font-size="26">2. Controlled breathing pattern</text>
+
+  <rect x="210" y="1666" width="870" height="110" rx="26" fill="#E8F6F1"/>
+  <text x="244" y="1732" fill="#2D6970" font-family="Inter, Arial, sans-serif" font-size="26">3. Close with focus cue</text>
+
+  <rect x="150" y="1884" width="990" height="670" rx="62" fill="#F7FCFB" stroke="#CBE7DE" stroke-width="6"/>
+  <text x="210" y="1980" fill="#1B6069" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Impact Check-In</text>
+  <text x="210" y="2034" fill="#3C7077" font-family="Inter, Arial, sans-serif" font-size="24">How much did this help right now?</text>
+
+  <rect x="210" y="2086" width="870" height="20" rx="10" fill="#D6EAE4"/>
+  <rect x="210" y="2086" width="630" height="20" rx="10" fill="#0FB89A"/>
+  <circle cx="840" cy="2096" r="24" fill="#FFFFFF" stroke="#0FB89A" stroke-width="8"/>
+
+  <rect x="210" y="2162" width="870" height="92" rx="46" fill="#0E6E77"/>
+  <text x="540" y="2220" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="700">Finish</text>
+
+  <rect x="210" y="2300" width="870" height="190" rx="34" fill="#EAF8F3"/>
+  <text x="244" y="2364" fill="#2D6970" font-family="Inter, Arial, sans-serif" font-size="24">Session saved. Recommendation quality updates with your feedback.</text>
+  <text x="244" y="2416" fill="#2D6970" font-family="Inter, Arial, sans-serif" font-size="24">Consistency score will refresh in the next state cycle.</text>
+</svg>

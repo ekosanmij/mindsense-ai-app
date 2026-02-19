@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -14,8 +15,14 @@ export function SiteHeader() {
     <header className="sticky top-0 z-50 border-b border-ink-200/70 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/65 dark:border-ink-800 dark:bg-ink-950/80 dark:supports-[backdrop-filter]:bg-ink-950/55">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 md:px-6">
         <Link href="/" className="inline-flex items-center gap-2 font-semibold text-ink-900 dark:text-ink-50">
-          <img src="/brand/logo-icon-dark.svg" alt="" className="h-7 w-7 rounded-sm dark:hidden" />
-          <img src="/brand/logo-icon-light.svg" alt="" className="hidden h-7 w-7 rounded-sm dark:block" />
+          <Image src="/brand/logo-icon-dark.svg" alt="" width={28} height={28} className="rounded-sm dark:hidden" />
+          <Image
+            src="/brand/logo-icon-light.svg"
+            alt=""
+            width={28}
+            height={28}
+            className="hidden rounded-sm dark:block"
+          />
           <span>{siteConfig.appName}</span>
         </Link>
 

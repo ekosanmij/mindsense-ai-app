@@ -1,0 +1,47 @@
+<svg width="1290" height="2796" viewBox="0 0 1290 2796" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="130" y1="80" x2="1140" y2="2710" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F8FF"/>
+      <stop offset="1" stop-color="#E3EBFB"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1290" height="2796" fill="url(#bg)"/>
+  <rect x="84" y="78" width="1122" height="2640" rx="120" fill="#FFFFFF" stroke="#C9D9F0" stroke-width="12"/>
+
+  <text x="180" y="246" fill="#1F407A" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="700">Data Trends</text>
+  <text x="180" y="300" fill="#58729B" font-family="Inter, Arial, sans-serif" font-size="28">Readiness versus Load over 14 days</text>
+
+  <rect x="150" y="360" width="990" height="1240" rx="58" fill="#F8FBFF" stroke="#D5E2F4" stroke-width="6"/>
+  <text x="210" y="456" fill="#264D89" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Readiness vs Load</text>
+
+  <line x1="220" y1="1400" x2="1080" y2="1400" stroke="#C8D9EE" stroke-width="4"/>
+  <line x1="220" y1="760" x2="220" y2="1400" stroke="#C8D9EE" stroke-width="4"/>
+
+  <path d="M230 1280 C320 1200, 420 1220, 500 1120 C590 1010, 690 1100, 780 1000 C860 920, 960 960, 1070 850" stroke="#287ADE" stroke-width="16" stroke-linecap="round"/>
+  <path d="M230 1190 C320 1110, 420 1160, 500 1180 C590 1210, 690 1130, 780 1210 C860 1280, 960 1170, 1070 1240" stroke="#18B49A" stroke-width="14" stroke-linecap="round"/>
+
+  <circle cx="500" cy="1120" r="16" fill="#287ADE"/>
+  <circle cx="780" cy="1000" r="16" fill="#287ADE"/>
+  <circle cx="780" cy="1210" r="16" fill="#18B49A"/>
+  <circle cx="960" cy="1170" r="16" fill="#18B49A"/>
+
+  <rect x="220" y="1460" width="860" height="96" rx="40" fill="#ECF3FF"/>
+  <text x="270" y="1520" fill="#345D8A" font-family="Inter, Arial, sans-serif" font-size="25">Blue: Readiness  •  Green: Load  •  Window: 14 days</text>
+
+  <rect x="150" y="1660" width="990" height="894" rx="58" fill="#F8FBFF" stroke="#D5E2F4" stroke-width="6"/>
+  <text x="210" y="1752" fill="#264D89" font-family="Inter, Arial, sans-serif" font-size="30" font-weight="600">Interpretation</text>
+
+  <rect x="210" y="1806" width="870" height="136" rx="30" fill="#ECF3FF"/>
+  <text x="244" y="1882" fill="#355E8D" font-family="Inter, Arial, sans-serif" font-size="24">Readiness trend has increased while load remained moderate.</text>
+
+  <rect x="210" y="1960" width="870" height="136" rx="30" fill="#ECF3FF"/>
+  <text x="244" y="2036" fill="#355E8D" font-family="Inter, Arial, sans-serif" font-size="24">Recommendation confidence is high due stable coverage.</text>
+
+  <rect x="210" y="2114" width="870" height="136" rx="30" fill="#ECF3FF"/>
+  <text x="244" y="2190" fill="#355E8D" font-family="Inter, Arial, sans-serif" font-size="24">Consider maintaining current protocol cadence.</text>
+
+  <rect x="210" y="2298" width="870" height="216" rx="36" fill="#EAF1FD"/>
+  <text x="244" y="2372" fill="#355E8D" font-family="Inter, Arial, sans-serif" font-size="24">Trend views are guidance tools, not clinical diagnostics.</text>
+  <text x="244" y="2424" fill="#355E8D" font-family="Inter, Arial, sans-serif" font-size="24">MindSense prioritizes practical action with clear boundaries.</text>
+</svg>

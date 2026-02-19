@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { footerNavLinks, siteConfig } from "@/lib/site-config";
 
 export function SiteFooter() {
@@ -7,8 +8,14 @@ export function SiteFooter() {
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 md:grid-cols-[1.6fr_1fr_1fr] md:px-6">
         <div className="space-y-4">
           <div className="inline-flex items-center gap-2">
-            <img src="/brand/logo-icon-dark.svg" alt="" className="h-7 w-7 rounded-sm dark:hidden" />
-            <img src="/brand/logo-icon-light.svg" alt="" className="hidden h-7 w-7 rounded-sm dark:block" />
+            <Image src="/brand/logo-icon-dark.svg" alt="" width={28} height={28} className="rounded-sm dark:hidden" />
+            <Image
+              src="/brand/logo-icon-light.svg"
+              alt=""
+              width={28}
+              height={28}
+              className="hidden rounded-sm dark:block"
+            />
             <span className="font-semibold text-ink-900 dark:text-ink-100">{siteConfig.appName}</span>
           </div>
           <p className="max-w-sm text-sm text-ink-600 dark:text-ink-300">{siteConfig.description}</p>
