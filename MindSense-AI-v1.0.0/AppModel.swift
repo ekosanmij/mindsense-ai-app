@@ -131,6 +131,13 @@ struct MagicLinkAuthConfiguration {
         "\(redirectScheme)://\(redirectHost)\(normalizedRedirectPath)"
     }
 
+    var verificationRouteDescription: String {
+        if let universalHost = universalLinkHost {
+            return "https://\(universalHost)\(normalizedRedirectPath)"
+        }
+        return redirectRouteDescription
+    }
+
     private var isSupabaseProvider: Bool {
         providerName.lowercased().contains("supabase")
     }
@@ -161,15 +168,20 @@ struct MagicLinkAuthConfiguration {
 
     func verificationURL(email: String, token: String, intent: MagicLinkIntent) -> URL {
         var components = URLComponents()
-        components.scheme = redirectScheme
-        components.host = redirectHost
+        if let universalHost = universalLinkHost {
+            components.scheme = "https"
+            components.host = universalHost
+        } else {
+            components.scheme = redirectScheme
+            components.host = redirectHost
+        }
         components.path = normalizedRedirectPath
         components.queryItems = [
             URLQueryItem(name: "token", value: token),
             URLQueryItem(name: "email", value: email),
             URLQueryItem(name: "intent", value: intent.rawValue)
         ]
-        return components.url ?? URL(string: redirectRouteDescription) ?? URL(fileURLWithPath: "/")
+        return components.url ?? URL(string: verificationRouteDescription) ?? URL(fileURLWithPath: "/")
     }
 
     static func live(environment: [String: String] = ProcessInfo.processInfo.environment) -> MagicLinkAuthConfiguration {
@@ -218,7 +230,9 @@ struct MagicLinkAuthConfiguration {
         let scheme = env("MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME", default: "mindsense")
         let host = env("MINDSENSE_MAGIC_LINK_REDIRECT_HOST", default: "auth")
         let path = env("MINDSENSE_MAGIC_LINK_REDIRECT_PATH", default: "/verify")
-        let universalHost = environment["MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST"]?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let universalHost = normalizedUniversalHost(
+            environment["MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST"]
+        )
         let ttlMinutes = envInt("MINDSENSE_MAGIC_LINK_TTL_MINUTES", default: 15, min: 5, max: 60)
         let resendCooldown = envInt("MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS", default: 20, min: 5, max: 120)
         #if DEBUG
@@ -237,12 +251,48 @@ struct MagicLinkAuthConfiguration {
             redirectScheme: scheme,
             redirectHost: host,
             redirectPath: path,
-            universalLinkHost: universalHost?.isEmpty == true ? nil : universalHost,
+            universalLinkHost: universalHost,
             tokenTTLMinutes: ttlMinutes,
             resendCooldownSeconds: resendCooldown,
             debugShowLinkPreview: debugPreview,
             debugAutoOpenReceivedLink: debugAutoOpen
         )
+    }
+
+    private static func normalizedUniversalHost(_ value: String?) -> String? {
+        guard let value else {
+            return nil
+        }
+
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            return nil
+        }
+
+        if let components = URLComponents(string: trimmed),
+           let host = components.host?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !host.isEmpty {
+            return host.lowercased()
+        }
+
+        let withoutScheme: String
+        if let separatorRange = trimmed.range(of: "://") {
+            withoutScheme = String(trimmed[separatorRange.upperBound...])
+        } else {
+            withoutScheme = trimmed
+        }
+
+        guard let candidateHost = withoutScheme
+            .split(separator: "/", maxSplits: 1, omittingEmptySubsequences: true)
+            .first else {
+            return nil
+        }
+
+        let normalized = String(candidateHost)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+
+        return normalized.isEmpty ? nil : normalized
     }
 }
 
@@ -1533,10 +1583,7 @@ final class MindSenseStore: ObservableObject {
     }
 
     var magicLinkRouteLine: String {
-        if let universalHost = magicLinkConfiguration.universalLinkHost {
-            return "Route: https://\(universalHost)\(magicLinkConfiguration.normalizedRedirectPath)"
-        }
-        return "Route: \(magicLinkConfiguration.redirectRouteDescription)"
+        "Route: \(magicLinkConfiguration.verificationRouteDescription)"
     }
 
     var magicLinkDeliveryLine: String {
@@ -2518,7 +2565,7 @@ final class MindSenseStore: ObservableObject {
             metadata: [
                 "provider": magicLinkConfiguration.providerName,
                 "ttl_minutes": "\(magicLinkConfiguration.tokenTTLMinutes)",
-                "route": magicLinkConfiguration.redirectRouteDescription,
+                "route": magicLinkConfiguration.verificationRouteDescription,
                 "delivery": magicLinkConfiguration.requestEndpointDescription
             ]
         )

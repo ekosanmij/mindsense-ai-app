@@ -75,4 +75,35 @@ final class MagicLinkAuthConfigurationTests: XCTestCase {
         XCTAssertEqual(queryItems.first(where: { $0.name == "email" })?.value, "user@example.com")
         XCTAssertEqual(queryItems.first(where: { $0.name == "intent" })?.value, MagicLinkIntent.createAccount.rawValue)
     }
+
+    func testVerificationURLPrefersUniversalLinkHostWhenConfigured() throws {
+        let configuration = MagicLinkAuthConfiguration.live(
+            environment: [
+                "MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME": "msapp",
+                "MINDSENSE_MAGIC_LINK_REDIRECT_HOST": "login",
+                "MINDSENSE_MAGIC_LINK_REDIRECT_PATH": "/verify",
+                "MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST": "auth.example.com"
+            ]
+        )
+        let url = configuration.verificationURL(
+            email: "user@example.com",
+            token: "abc123",
+            intent: .signIn
+        )
+        let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
+
+        XCTAssertEqual(components.scheme, "https")
+        XCTAssertEqual(components.host, "auth.example.com")
+        XCTAssertEqual(components.path, "/verify")
+    }
+
+    func testLiveConfigurationNormalizesUniversalHostWithSchemeAndPath() {
+        let configuration = MagicLinkAuthConfiguration.live(
+            environment: [
+                "MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST": " https://AUTH.Example.com/verify/path "
+            ]
+        )
+
+        XCTAssertEqual(configuration.universalLinkHost, "auth.example.com")
+    }
 }

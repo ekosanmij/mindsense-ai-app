@@ -105,6 +105,11 @@
             value = "/verify"
             isEnabled = "YES">
          </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST"
+            value = "mindsense-ai-app.vercel.app"
+            isEnabled = "YES">
+         </EnvironmentVariable>
       </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
