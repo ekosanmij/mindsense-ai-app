@@ -1485,14 +1485,9 @@ final class MindSenseStore: ObservableObject {
     private static let analyticsTimestampFormatter = ISO8601DateFormatter()
     private static let relativeDateFormatter = RelativeDateTimeFormatter()
 
-    private enum IncomingMagicLinkCredential {
-        case localToken(String)
-        case supabaseAccessToken(String)
-    }
-
     private struct IncomingMagicLinkPayload {
         let email: String
-        let credential: IncomingMagicLinkCredential
+        let token: String
     }
 
     private struct MagicLinkDispatchPayload: Encodable {
@@ -2549,15 +2544,7 @@ final class MindSenseStore: ObservableObject {
             return false
         }
 
-        let verificationError: String?
-        switch payload.credential {
-        case .localToken(let token):
-            verificationError = consumeMagicLink(email: payload.email, token: token, source: "deeplink")
-        case .supabaseAccessToken(let accessToken):
-            verificationError = consumeSupabaseMagicLink(email: payload.email, accessToken: accessToken, source: "deeplink")
-        }
-
-        if let error = verificationError {
+        if let error = consumeMagicLink(email: payload.email, token: payload.token, source: "deeplink") {
             showBanner(
                 title: "Link could not be verified",
                 detail: error,
@@ -3093,36 +3080,19 @@ final class MindSenseStore: ObservableObject {
         let token = queryItems.first(where: { ["token", "code", "magic_token"].contains($0.name.lowercased()) })?.value
         let email = queryItems.first(where: { $0.name.caseInsensitiveCompare("email") == .orderedSame })?.value
 
-        if let token, !token.isEmpty, let email {
-            let normalizedEmail = normalizedEmail(from: email)
-            guard isValidEmail(normalizedEmail) else {
-                return nil
-            }
-
-            return .init(
-                email: normalizedEmail,
-                credential: .localToken(token)
-            )
+        guard let token, !token.isEmpty else {
+            return nil
+        }
+        guard let email else {
+            return nil
         }
 
-        let fragmentItems = queryItemsFromFormEncodedString(URLComponents(url: url, resolvingAgainstBaseURL: false)?.fragment)
-        if let accessToken = fragmentItems.first(where: { $0.name.caseInsensitiveCompare("access_token") == .orderedSame })?.value,
-           !accessToken.isEmpty {
-            let emailFromFragment = fragmentItems.first(where: { $0.name.caseInsensitiveCompare("email") == .orderedSame })?.value
-            let tokenEmail = emailFromFragment ?? emailClaim(fromJWT: accessToken)
-            if let tokenEmail {
-                let normalizedEmail = normalizedEmail(from: tokenEmail)
-                guard isValidEmail(normalizedEmail) else {
-                    return nil
-                }
-                return .init(
-                    email: normalizedEmail,
-                    credential: .supabaseAccessToken(accessToken)
-                )
-            }
+        let normalizedEmail = normalizedEmail(from: email)
+        guard isValidEmail(normalizedEmail) else {
+            return nil
         }
 
-        return nil
+        return .init(email: normalizedEmail, token: token)
     }
 
     private func consumeMagicLink(email: String, token: String, source: String) -> String? {
@@ -3179,80 +3149,6 @@ final class MindSenseStore: ObservableObject {
             ]
         )
         return nil
-    }
-
-    private func consumeSupabaseMagicLink(email: String, accessToken: String, source: String) -> String? {
-        _ = accessToken
-
-        if let pendingMagicLinkRequest {
-            if pendingMagicLinkRequest.isExpired {
-                clearPendingMagicLinkRequest()
-                return "This magic link has expired. Request a new link."
-            }
-            if pendingMagicLinkRequest.email != email {
-                return "This link was issued for \(pendingMagicLinkRequest.email)."
-            }
-            let intent = pendingMagicLinkRequest.intent
-            persistSession(email: email)
-            track(
-                event: .actionCompleted,
-                surface: .auth,
-                action: "magic_link_verified_\(intent.analyticsSuffix)",
-                metadata: [
-                    "source": "\(source)_supabase_fragment",
-                    "provider": magicLinkConfiguration.providerName
-                ]
-            )
-            return nil
-        }
-
-        persistSession(email: email)
-        track(
-            event: .actionCompleted,
-            surface: .auth,
-            action: "magic_link_verified_sign_in",
-            metadata: [
-                "source": "\(source)_supabase_fragment_no_pending",
-                "provider": magicLinkConfiguration.providerName
-            ]
-        )
-        return nil
-    }
-
-    private func queryItemsFromFormEncodedString(_ value: String?) -> [URLQueryItem] {
-        guard let value,
-              !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              let components = URLComponents(string: "https://mindsense.local?\(value)") else {
-            return []
-        }
-        return components.queryItems ?? []
-    }
-
-    private func emailClaim(fromJWT token: String) -> String? {
-        let segments = token.split(separator: ".")
-        guard segments.count >= 2 else { return nil }
-        var payload = String(segments[1])
-            .replacingOccurrences(of: "-", with: "+")
-            .replacingOccurrences(of: "_", with: "/")
-
-        switch payload.count % 4 {
-        case 2:
-            payload += "=="
-        case 3:
-            payload += "="
-        case 0:
-            break
-        default:
-            return nil
-        }
-
-        guard let data = Data(base64Encoded: payload),
-              let object = try? JSONSerialization.jsonObject(with: data),
-              let dictionary = object as? [String: Any],
-              let email = dictionary["email"] as? String else {
-            return nil
-        }
-        return email
     }
 
     private func normalizedPath(_ value: String) -> String {

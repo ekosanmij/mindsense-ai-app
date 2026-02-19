@@ -50,7 +50,7 @@ enum MindSenseDeltaEngine {
         case .balancedDay:
             return .init(load: max(-1, days / 2), readiness: min(4, days), consistency: min(3, max(1, days / 2)))
         case .recoveryWeek:
-            return .init(load: -min(4, days), readiness: min(5, days + 1), consistency: min(4, days))
+            return .init(load: -min(4, days), readiness: min(5, days + 1), rconsistency: min(4, days))
         }
     }
 
