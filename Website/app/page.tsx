@@ -224,7 +224,11 @@ export default function HomePage() {
               .
             </p>
           </div>
-          <LeadForm mode="waitlist" submitLabel="Join waitlist" />
+          <LeadForm
+            mode="waitlist"
+            submitLabel="Join waitlist"
+            endpoint={siteConfig.formEndpoints.waitlist || undefined}
+          />
         </section>
       </Reveal>
     </div>

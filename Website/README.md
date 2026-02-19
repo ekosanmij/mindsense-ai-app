@@ -85,9 +85,10 @@ Current behavior:
 To connect forms:
 
 1. Open `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Website/components/lead-form.tsx`
-2. Pass a real `endpoint` prop where `LeadForm` is used in:
-   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Website/app/page.tsx`
-   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Website/app/contact/page.tsx`
+2. Set real endpoint URLs in:
+   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Website/content/site.json`
+   - `formEndpoints.waitlist`
+   - `formEndpoints.contact`
 3. Endpoint should accept `POST application/json`
 
 ## SEO / Metadata

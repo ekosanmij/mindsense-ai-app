@@ -50,7 +50,11 @@ export default function ContactPage() {
             </article>
           </div>
 
-          <LeadForm mode="contact" submitLabel="Send message" />
+          <LeadForm
+            mode="contact"
+            submitLabel="Send message"
+            endpoint={siteConfig.formEndpoints.contact || undefined}
+          />
         </section>
       </Reveal>
     </div>

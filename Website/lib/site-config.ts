@@ -41,6 +41,10 @@ export type SiteConfig = {
     testflight: string;
     privacy: string;
   };
+  formEndpoints: {
+    waitlist: string;
+    contact: string;
+  };
   socials: SocialLink[];
   outcomes: Array<{ title: string; description: string }>;
   productPreview: ProductPreviewItem[];

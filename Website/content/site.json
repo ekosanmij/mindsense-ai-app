@@ -17,6 +17,10 @@
     "testflight": "https://testflight.apple.com/join/your-code",
     "privacy": "https://example.com/privacy"
   },
+  "formEndpoints": {
+    "waitlist": "",
+    "contact": ""
+  },
   "socials": [
     {
       "label": "X",
