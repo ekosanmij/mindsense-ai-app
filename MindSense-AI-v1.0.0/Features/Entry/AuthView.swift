@@ -1,14 +1,7 @@
 import SwiftUI
 
-private enum AuthFormMode: String, CaseIterable {
-    case signIn = "Sign In"
-    case create = "Create Account"
-}
-
 private enum AuthFormField: Hashable {
     case email
-    case password
-    case confirmPassword
 }
 
 struct AuthView: View {
@@ -16,12 +9,11 @@ struct AuthView: View {
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @AppStorage("appReduceMotion") private var appReduceMotion = false
 
-    @State private var mode: AuthFormMode = .signIn
+    @State private var mode: MagicLinkIntent = .signIn
     @State private var email = ""
-    @State private var password = ""
-    @State private var confirmPassword = ""
     @State private var inlineMessage = ""
     @State private var inlineSeverity: BannerSeverity = .info
+    @State private var isSubmitting = false
     @State private var didAppear = false
     @FocusState private var focusedField: AuthFormField?
 
@@ -29,164 +21,221 @@ struct AuthView: View {
         appReduceMotion || accessibilityReduceMotion
     }
 
+    private var screenTitle: String {
+        "Account"
+    }
+
+    private var primaryActionTitle: String {
+        if isSubmitting {
+            return "Sending magic link..."
+        }
+        if let pending = store.pendingMagicLinkRequest,
+           pending.email == normalizedEmail,
+           !pending.isExpired {
+            return "Resend magic link"
+        }
+        switch mode {
+        case .signIn:
+            return "Send sign-in link"
+        case .createAccount:
+            return "Send sign-up link"
+        }
+    }
+
+    private var bottomContentPadding: CGFloat {
+        110
+    }
+
+    private var normalizedEmail: String {
+        email
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: MindSenseRhythm.section) {
-                authHeader
-                    .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: MindSenseRhythm.section) {
+                    authHeader
+                        .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
 
-                FocusSurface {
-                    VStack(alignment: .leading, spacing: MindSenseRhythm.regular) {
-                        MindSenseSectionHeader(
-                            model: .init(
-                                title: mode == .signIn ? "Sign in" : "Create account",
-                                subtitle: "Use email and password to continue setup."
+                    FocusSurface {
+                        VStack(alignment: .leading, spacing: MindSenseRhythm.regular) {
+                            MindSenseSectionHeader(
+                                model: .init(
+                                    title: "Email access link",
+                                    subtitle: mode == .signIn
+                                        ? "Use your email to receive a secure sign-in link."
+                                        : "Create your account with a one-time secure email link."
+                                )
                             )
-                        )
 
-                        modeSelector
+                            modeSelector
 
-                        MindSenseSectionDivider(emphasis: 0.24)
+                            MindSenseSectionDivider(emphasis: 0.24)
 
-                        authField(title: "Email", isFocused: focusedField == .email) {
-                            TextField("name@example.com", text: $email)
-                                .textContentType(.emailAddress)
-                                .keyboardType(.emailAddress)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .focused($focusedField, equals: .email)
-                                .submitLabel(.next)
-                                .onSubmit {
-                                    focusedField = .password
-                                }
-                        }
-
-                        authField(title: "Password", isFocused: focusedField == .password) {
-                            SecureField("Password", text: $password)
-                                .textContentType(.password)
-                                .focused($focusedField, equals: .password)
-                                .submitLabel(mode == .create ? .next : .go)
-                                .onSubmit {
-                                    if mode == .create {
-                                        focusedField = .confirmPassword
-                                    } else {
-                                        submitAuth()
-                                    }
-                                }
-                        }
-
-                        if mode == .create {
-                            authField(title: "Confirm password", isFocused: focusedField == .confirmPassword) {
-                                SecureField("Confirm password", text: $confirmPassword)
-                                    .textContentType(.password)
-                                    .focused($focusedField, equals: .confirmPassword)
+                            authField(title: "Email", isFocused: focusedField == .email) {
+                                TextField("name@example.com", text: $email)
+                                    .textContentType(.emailAddress)
+                                    .keyboardType(.emailAddress)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                                    .focused($focusedField, equals: .email)
                                     .submitLabel(.go)
                                     .onSubmit {
-                                        submitAuth()
+                                        submitMagicLinkRequest()
                                     }
                             }
-                            .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
-                        }
 
-                        if !inlineMessage.isEmpty {
-                            InlineStatusView(text: inlineMessage, severity: inlineSeverity)
-                                .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
-                        }
+                            magicLinkStatusCard
 
-                        MindSenseSectionDivider(emphasis: 0.3)
-
-                        Button(mode == .signIn ? "Sign In" : "Create Account") {
-                            submitAuth()
-                        }
-                        .accessibilityIdentifier("auth_primary_cta")
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
-
-                        if mode == .signIn {
-                            Button("Forgot password?") {
-                                inlineSeverity = .info
-                                inlineMessage = "Reset email sent. Check your inbox to continue."
+                            if !inlineMessage.isEmpty {
+                                InlineStatusView(text: inlineMessage, severity: inlineSeverity)
+                                    .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
                             }
-                            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
-                        }
 
-                        if AppFeatureFlags.demoControlsEnabled {
-                            VStack(alignment: .leading, spacing: 6) {
-                                MindSenseSectionDivider(emphasis: 0.2)
-                                Text("Optional")
-                                    .font(MindSenseTypography.micro)
-                                    .foregroundStyle(.secondary)
-                                    .tracking(0.8)
-                                Button("Continue in Demo Mode") {
-                                    store.startDemoMode()
+                            InsetSurface {
+                                MindSenseSectionHeader(
+                                    model: .init(
+                                        title: "Integration",
+                                        subtitle: "Configuration currently active for auth routing."
+                                    )
+                                )
+
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(store.magicLinkProviderLine)
+                                        .font(MindSenseTypography.caption)
+                                        .foregroundStyle(.secondary)
+                                    Text(store.magicLinkRouteLine)
+                                        .font(MindSenseTypography.caption)
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text(store.magicLinkDeliveryLine)
+                                        .font(MindSenseTypography.caption)
+                                        .foregroundStyle(.secondary)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text("Link expiry: \(store.magicLinkTTLMinutes) minutes")
+                                        .font(MindSenseTypography.caption)
+                                        .foregroundStyle(.secondary)
                                 }
-                                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
                             }
+
                         }
                     }
+                    .disabled(isSubmitting)
+                    .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                 }
-                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                .mindSensePageInsets(bottom: bottomContentPadding)
+                .animation(reduceMotion ? nil : MindSenseMotion.confirmation, value: inlineMessage)
+                .animation(reduceMotion ? nil : MindSenseMotion.confirmation, value: mode)
             }
-            .mindSensePageInsets()
-            .animation(reduceMotion ? nil : MindSenseMotion.confirmation, value: inlineMessage)
-            .animation(reduceMotion ? nil : MindSenseMotion.confirmation, value: mode)
-        }
-        .mindSensePageBackground()
-        .onAppear {
-            didAppear = true
-        }
-        .onChange(of: mode) { _, newMode in
-            focusedField = nil
-            if newMode == .signIn {
-                confirmPassword = ""
+            .scrollBounceBehavior(.always, axes: .vertical)
+            .mindSensePageBackground()
+            .navigationTitle(screenTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: screenTitle)
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                MindSenseBottomActionDock {
+                    Spacer()
+                        .frame(height: 12)
+
+                    Button(primaryActionTitle) {
+                        submitMagicLinkRequest()
+                    }
+                    .accessibilityIdentifier("auth_primary_cta")
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                    .disabled(isSubmitting)
+                }
+            }
+            .onAppear {
+                didAppear = true
+                if email.isEmpty, let pending = store.pendingMagicLinkRequest {
+                    email = pending.email
+                }
+                store.track(event: .screenView, surface: .auth)
+            }
+            .onChange(of: mode) { _, _ in
+                focusedField = nil
+                inlineMessage = ""
             }
         }
     }
 
     private var authHeader: some View {
-        InsetSurface {
-            HStack(spacing: 8) {
-                MindSenseIconBadge(
-                    systemName: "lock.shield.fill",
-                    tint: MindSensePalette.signalCoolStrong,
-                    style: .filled,
-                    size: 30
-                )
-                Text("Secure access")
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(MindSensePalette.signalCoolStrong)
-                    .tracking(1)
-                Spacer()
-                PillChip(label: "Secure auth", state: .selected)
-            }
-
-            MindSenseSectionHeader(
-                model: .init(
-                    title: mode == .signIn ? "Sign in to continue setup" : "Create your secure account",
-                    subtitle: "Your account keeps baseline, check-ins, and experiments synchronized."
-                )
-            )
-
-            HStack(spacing: 8) {
-                Image(systemName: "checkmark.shield")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(MindSensePalette.signalCool)
-                Text("Credentials are used only for account access and sync.")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
+        MindSenseCommandDeck(
+            label: screenTitle,
+            title: mode == .signIn ? "Sign in with magic link" : "Create account with magic link",
+            detail: "No password required. A secure one-time link is sent to your email.",
+            metric: "\(store.magicLinkTTLMinutes) min expiry"
+        )
     }
 
     private var modeSelector: some View {
         MindSenseSegmentedControl(
-            options: AuthFormMode.allCases,
+            options: MagicLinkIntent.allCases,
             selection: $mode,
-            title: { $0.rawValue },
+            title: { $0.title },
             onSelectionChanged: { _ in
                 store.triggerHaptic(intent: .selection)
             }
         )
+    }
+
+    @ViewBuilder
+    private var magicLinkStatusCard: some View {
+        if let pending = store.pendingMagicLinkRequest {
+            InsetSurface {
+                MindSenseSectionHeader(
+                    model: .init(
+                        title: pending.isExpired ? "Magic link expired" : "Magic link sent",
+                        subtitle: pending.isExpired
+                            ? "Request a new link to continue."
+                            : "Sent to \(pending.email). Expires at \(pending.expiresAt.formatted(date: .omitted, time: .shortened))."
+                    )
+                )
+
+                if let previewURL = store.magicLinkDebugPreviewURL {
+                    VStack(alignment: .leading, spacing: 6) {
+                        MindSenseSectionDivider(emphasis: 0.2)
+                        Text("Preview link")
+                            .font(MindSenseTypography.micro)
+                            .foregroundStyle(.secondary)
+                            .tracking(0.8)
+                        Text(previewURL.absoluteString)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .textSelection(.enabled)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Button("Complete using preview link") {
+                            completePendingMagicLinkFromPreview()
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 40))
+                    }
+                }
+
+                HStack(spacing: MindSenseSpacing.sm) {
+                    Button("Resend") {
+                        resendMagicLink()
+                    }
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                    .disabled(isSubmitting)
+
+                    Button("Cancel request") {
+                        store.cancelPendingMagicLinkRequest()
+                        inlineSeverity = .info
+                        inlineMessage = "Pending magic link cleared."
+                    }
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                    .disabled(isSubmitting)
+                }
+            }
+            .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
+        }
     }
 
     private func authField<Content: View>(title: String, isFocused: Bool, @ViewBuilder content: () -> Content) -> some View {
@@ -211,28 +260,55 @@ struct AuthView: View {
         }
     }
 
-    private func submitAuth() {
+    private func submitMagicLinkRequest() {
+        guard !isSubmitting else { return }
         focusedField = nil
+        isSubmitting = true
+        inlineSeverity = .info
+        inlineMessage = "Sending magic link..."
         store.triggerHaptic(intent: .primary)
 
-        let result: String?
-        if mode == .signIn {
-            result = store.signIn(email: email, password: password)
-        } else {
-            result = store.createAccount(
-                email: email,
-                password: password,
-                confirm: confirmPassword
-            )
+        Task { @MainActor in
+            if let message = await store.requestMagicLink(email: email, intent: mode) {
+                inlineSeverity = .error
+                inlineMessage = message
+                store.triggerHaptic(intent: .error)
+            } else {
+                inlineSeverity = .success
+                inlineMessage = "Magic link sent. Check your inbox for \(normalizedEmail)."
+            }
+            isSubmitting = false
         }
+    }
 
-        if let message = result {
+    private func resendMagicLink() {
+        guard !isSubmitting else { return }
+        isSubmitting = true
+        inlineSeverity = .info
+        inlineMessage = "Sending magic link..."
+
+        Task { @MainActor in
+            if let message = await store.resendMagicLink() {
+                inlineSeverity = .error
+                inlineMessage = message
+                store.triggerHaptic(intent: .error)
+            } else {
+                inlineSeverity = .success
+                inlineMessage = "A new magic link was sent."
+                store.triggerHaptic(intent: .success)
+            }
+            isSubmitting = false
+        }
+    }
+
+    private func completePendingMagicLinkFromPreview() {
+        if let message = store.completePendingMagicLinkForDebug() {
             inlineSeverity = .error
             inlineMessage = message
             store.triggerHaptic(intent: .error)
         } else {
             inlineSeverity = .success
-            inlineMessage = mode == .signIn ? "Sign in successful." : "Account created."
+            inlineMessage = "Magic link verified."
         }
     }
 }

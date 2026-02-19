@@ -64,20 +64,32 @@ final class MindSensePersistenceService {
         guard let email = defaults.string(forKey: "auth.fallback_session_email") else {
             return nil
         }
-        return AuthSession(
-            email: email,
-            isDemo: defaults.bool(forKey: "auth.fallback_session_is_demo")
-        )
+        return AuthSession(email: email)
     }
 
-    func persistSession(email: String, isDemo: Bool) {
+    func persistSession(email: String) {
         defaults.set(email.lowercased(), forKey: "auth.fallback_session_email")
-        defaults.set(isDemo, forKey: "auth.fallback_session_is_demo")
     }
 
     func clearSession() {
         defaults.removeObject(forKey: "auth.fallback_session_email")
-        defaults.removeObject(forKey: "auth.fallback_session_is_demo")
+        defaults.removeObject(forKey: "auth.magic_link.pending.v1")
+    }
+
+    func loadPendingMagicLinkRequest() -> PendingMagicLinkRequest? {
+        guard let data = defaults.data(forKey: "auth.magic_link.pending.v1") else {
+            return nil
+        }
+        return try? decoder.decode(PendingMagicLinkRequest.self, from: data)
+    }
+
+    func persistPendingMagicLinkRequest(_ request: PendingMagicLinkRequest?) {
+        if let request,
+           let data = try? encoder.encode(request) {
+            defaults.set(data, forKey: "auth.magic_link.pending.v1")
+            return
+        }
+        defaults.removeObject(forKey: "auth.magic_link.pending.v1")
     }
 
     // MARK: - Onboarding

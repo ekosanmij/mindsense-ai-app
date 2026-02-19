@@ -114,8 +114,8 @@ struct CommunityView: View {
                 MindSenseCommandDeck(
                     label: AppIA.community,
                     title: "Community insights (read-only)",
-                    detail: "Scenario-aware examples for \(store.demoScenario.title). All cards are simulated and safety moderated.",
-                    metric: "Demo only"
+                    detail: "Context-aware examples for \(store.demoScenario.title), safety moderated and read-only.",
+                    metric: "Read-only"
                 )
                 .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
 
@@ -288,7 +288,7 @@ struct CommunityView: View {
                 )
             )
 
-            Text("Community content is demo-only, read-only, and not monitored for real-time intervention.")
+            Text("Community content is read-only and not monitored for real-time intervention.")
                 .font(MindSenseTypography.body)
                 .foregroundStyle(.secondary)
 

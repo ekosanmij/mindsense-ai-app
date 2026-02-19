@@ -40,7 +40,7 @@ struct IntroView: View {
                 }
                 .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
 
-                Button("Continue to Secure Sign In") {
+                Button("Continue to email sign in") {
                     store.triggerHaptic(intent: .primary)
                     store.completeIntro()
                 }
@@ -89,7 +89,7 @@ struct IntroView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Clinical guidance for daily nervous-system regulation",
-                    subtitle: "Secure sign in unlocks your first regulate session and data baseline."
+                    subtitle: "Email magic-link sign in unlocks your first regulate session and data baseline."
                 )
             )
         }

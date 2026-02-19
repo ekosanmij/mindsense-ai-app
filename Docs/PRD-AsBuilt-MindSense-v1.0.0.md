@@ -32,8 +32,9 @@ Core promise (from design/brand docs and reflected in UI structure):
 - User should identify current state and one next action in under ~30 seconds.
 
 Current implementation posture:
-- Mostly demo/simulated intelligence and demo health signals.
-- No real backend auth.
+- Mostly simulated intelligence and simulated health signals.
+- Passwordless email magic-link auth UX is implemented with local persistence and routing.
+- No external auth-provider handshake in this build.
 - No real HealthKit ingestion pipeline.
 - No real billing/StoreKit purchase flow.
 
@@ -62,7 +63,7 @@ Current implementation posture:
 - Stress-exposed knowledge worker seeking short, actionable self-regulation steps.
 
 ### 4.2 Secondary users
-- Product/demo stakeholders validating deterministic UX narratives via scenario controls.
+- Product stakeholders validating deterministic UX narratives via scenario controls.
 - QA/research users evaluating interaction quality and modeled recommendation behavior.
 
 ### 4.3 Jobs to be done
@@ -100,7 +101,7 @@ Implemented but not currently wired into primary runtime navigation:
 - Seeds defaults (`MindSenseBootstrapService.seedDefaultsIfNeeded()`).
 - Applies launch overrides for UI testing (`-uitest-*` flags).
 - Loads local state from `UserDefaults` persistence service.
-- Repairs corrupted demo data where needed.
+- Repairs corrupted local seeded data where needed.
 - Resolves destination through `AppStateResolver`.
 
 App launch state machine:
@@ -118,7 +119,7 @@ Root route mapping:
 
 ```mermaid
 flowchart TD
-  A["App Launch"] --> B["Load persisted session + onboarding + demo state"]
+  A["App Launch"] --> B["Load persisted session + onboarding + simulation state"]
   B --> C{"Session exists?"}
   C -- "No" --> D{"Has seen intro?"}
   D -- "No" --> E["IntroView"]
@@ -137,7 +138,7 @@ Purpose:
 
 Behavior:
 - Shows three value highlights.
-- CTA `Continue to Secure Sign In` sets `hasSeenIntro = true`.
+- CTA `Continue to email sign in` sets `hasSeenIntro = true`.
 - Secondary “Restore purchase” currently shows informational banner only.
 
 ## 7.2 Auth
@@ -148,17 +149,26 @@ Modes:
 
 Validation rules:
 - Email must contain `@` and `.` and be length >= 5.
-- Password min length = 6.
-- Create-account confirm must match password.
+- Resend requests are cooldown-gated (`MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS`, default 20s).
 
 Auth data behavior:
-- Stores fallback local session in `UserDefaults`.
-- No server/API auth handshake.
-- On success, app restores onboarding/demo state and routes forward.
+- Uses passwordless email magic-link requests and deep-link verification.
+- Persists pending link request state locally (`email`, `token`, `intent`, `requestedAt`, `expiresAt`, `verificationURL`).
+- Supports resend and cancel of pending magic-link requests.
+- On successful link consumption, app persists session email and routes forward.
+- Debug preview completion is optional and build-config gated.
 
-Demo mode:
-- `Continue in Demo Mode` shown when `AppFeatureFlags.demoControlsEnabled` is true.
-- Starts session as `demo@mindsense.ai`, `isDemo = true`.
+Magic-link configuration (env-driven):
+- `MINDSENSE_MAGIC_LINK_PROVIDER`
+- `MINDSENSE_MAGIC_LINK_API_BASE_URL`
+- `MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME`
+- `MINDSENSE_MAGIC_LINK_REDIRECT_HOST`
+- `MINDSENSE_MAGIC_LINK_REDIRECT_PATH`
+- `MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST`
+- `MINDSENSE_MAGIC_LINK_TTL_MINUTES`
+- `MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS`
+- `MINDSENSE_MAGIC_LINK_DEBUG_SHOW_LINK_PREVIEW`
+- `MINDSENSE_MAGIC_LINK_DEBUG_AUTO_OPEN`
 
 ## 7.3 Onboarding
 
@@ -287,7 +297,7 @@ Trends submode:
 
 Experiments submode:
 - Focus chips (`Readiness`, `Load`, `Consistency`).
-- Scenario-specific 7-day experiment cards.
+- Context-focused 7-day experiment cards.
 - Experiment statuses:
   - `planned`
   - `active`
@@ -326,7 +336,7 @@ Sections:
 Key behaviors:
 - Autosave every setting change (AppStorage/UserDefaults-backed).
 - Tracks `setting_autosaved` analytics events.
-- Sign out clears session and resets major demo state.
+- Sign out clears session and resets major local seeded state.
 - Navigation into Apple Health permissions screen.
 - Crisis call shortcut (`tel://988`).
 
@@ -342,13 +352,13 @@ Appearance/motion:
 - Reduce motion.
 - Haptics.
 
-Apple Health permissions screen (demo diagnostics):
+Apple Health permissions screen (simulated diagnostics):
 - Shows connection status and quality score.
 - Displays permission checklist.
 - Displays quality diagnostics bars.
 - Actions:
   - Open Health app URL.
-  - Resync demo health data.
+- Resync health data.
   - Rebuild derived baseline.
   - Delete health-derived data (with destructive confirmation).
 
@@ -368,15 +378,15 @@ Constraints:
 
 Capabilities:
 - Scenario switcher.
-- Guided demo path controls.
-- Demo data mutation controls:
+- Guided validation path controls (currently hidden by feature flag).
+- Data mutation controls:
   - reset
   - fast-forward day
   - inject stress event
-- KPI scorecard navigation.
+- KPI scorecard navigation (currently hidden by feature flag).
 
 Constraints:
-- Intended debug/demo-only.
+- Intended debug-only.
 - Not reachable from primary app navigation in current wiring.
 
 ## 7.10 KPI Scorecard (implemented, secondary)
@@ -427,7 +437,7 @@ Important domain rules:
   - Load: 8..96
   - Readiness: 8..98
   - Consistency: 10..99
-- Demo day is clamped:
+- Simulated day index (`demoDay`) is clamped:
   - 1..35
 - Session/experiment histories are bounded:
   - session history: 50
@@ -508,7 +518,7 @@ Confidence output:
 - Anchor metrics.
 - Drift over selected window.
 - Sin/cos wave modulation.
-- Demo day adjustment.
+- Simulated day adjustment (`demoDay`).
 - Completed session/experiment impacts.
 
 Windows:
@@ -516,7 +526,7 @@ Windows:
 - `14D`: 28 points, 12-hour step.
 - `30D`: 30 points, 24-hour step.
 
-## 10.6 Health signal engine (demo)
+## 10.6 Health signal engine (simulated)
 
 Generates:
 - Permission states.
@@ -541,7 +551,7 @@ Storage strategy:
 Major keys:
 - Session/auth:
   - `auth.fallback_session_email`
-  - `auth.fallback_session_is_demo`
+  - `auth.magic_link.pending.v1`
 - Intro/onboarding:
   - `hasSeenIntro`
   - `onboarding.progress.<email>`
@@ -578,7 +588,7 @@ Major keys:
   - `notifications.quietEndMinutes`
 
 Corruption handling:
-- Decode failures return fallback values and set a demo data issue message.
+- Decode failures return fallback values and set a data issue message.
 - `retryCoreScreen` repairs by resetting to seeded `Balanced Day` defaults.
 
 ## 12. Analytics Taxonomy
@@ -615,9 +625,9 @@ Analytics storage:
 
 Runtime feature flags:
 - `demoControlsEnabled`
-  - Debug builds: always true.
-  - Release: true only with `-enable-demo-features` arg or `MINDSENSE_ENABLE_DEMO_FEATURES=1`.
-- `communityEnabled`, `kpiScorecardEnabled`, `guidedPathEnabled` currently alias demo-controls flag.
+  - Currently hard-disabled (`false`).
+- `communityEnabled`, `kpiScorecardEnabled`, `guidedPathEnabled`
+  - Currently hard-disabled (`false`).
 
 UI test launch controls:
 - `-uitest-reset`
@@ -626,7 +636,7 @@ UI test launch controls:
 - `-uitest-enable-haptics 0|1`
 - `-uitest-reduce-motion 0|1`
 
-`-uitest-ready` seeds deterministic post-onboarding demo state and scenario.
+`-uitest-ready` seeds deterministic post-onboarding local simulation state and scenario.
 
 ## 14. UX, Accessibility, And Quality Gates
 
@@ -669,8 +679,8 @@ UI tests (`MindSenseCoreScreensUITests`):
 ## 16. Security, Privacy, And Compliance Posture
 
 Current posture:
-- Data is local-only and mostly demo/simulated.
-- Auth is local fallback storage, not federated or server-backed.
+- Data is local-only and mostly simulated.
+- Auth uses local fallback session + local pending magic-link persistence; it is not federated/server-backed in this build.
 - No PHI transport pipeline and no network sync path in audited code.
 - Crisis/support messaging is informational; app explicitly frames itself as non-emergency support.
 
@@ -682,10 +692,10 @@ Known compliance constraints in current state:
 
 Product and wiring gaps:
 - `Community`, `QA Tools`, and `KPI Scorecard` are implemented but not reachable from primary runtime navigation.
-- Guided demo path references opening QA Tools from profile flow, but no route is currently wired for that action.
+- Guided path flow references opening QA Tools from profile flow, but no route is currently wired for that action.
 
 Integration gaps:
-- No real HealthKit integration (diagnostics are explicitly demo-mode).
+- No real HealthKit integration (diagnostics are currently simulated).
 - No push/local notification scheduling despite settings toggles.
 - No backend auth/session infrastructure.
 - No StoreKit billing flow behind post-activation paywall.
@@ -710,7 +720,7 @@ Core shipped surfaces:
 - `Settings`
 - `Post-activation paywall sheet`
 
-Demo/debug or latent surfaces:
+Debug/latent surfaces:
 - `Community`
 - `QATools`
 - `KPI Scorecard`

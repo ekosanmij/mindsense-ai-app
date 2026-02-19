@@ -14,7 +14,7 @@ private enum PreviewStoreFactory {
         let store = MindSenseStore()
         store.appState = .needsOnboarding
         store.hasSeenIntro = true
-        store.session = AuthSession(email: "preview@mindsense.ai", isDemo: false)
+        store.session = AuthSession(email: "preview@mindsense.ai")
         store.onboarding = OnboardingProgress()
         return store
     }
@@ -23,7 +23,7 @@ private enum PreviewStoreFactory {
         let store = MindSenseStore()
         store.appState = .ready
         store.hasSeenIntro = true
-        store.session = AuthSession(email: "preview@mindsense.ai", isDemo: false)
+        store.session = AuthSession(email: "preview@mindsense.ai")
         var onboarding = OnboardingProgress()
         OnboardingStep.allCases.forEach { onboarding.markComplete($0) }
         onboarding.baselineStart = Calendar.current.date(byAdding: .day, value: -6, to: Date())

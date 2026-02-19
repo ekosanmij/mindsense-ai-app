@@ -465,7 +465,7 @@ struct TodayView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Today timeline",
-                    subtitle: "Stress episodes and recovery windows inferred from demo signals.",
+                    subtitle: "Stress episodes and recovery windows inferred from recent signals.",
                     icon: "clock.arrow.circlepath"
                 )
             )
@@ -872,7 +872,7 @@ struct TodayView: View {
         if let delta = store.latestCheckInDeltaSummary {
             return "Change since \(delta.baselineTitle)"
         }
-        return "Change vs scenario baseline"
+        return "Change vs baseline"
     }
 
     private var heroInterpretation: String {
@@ -1067,7 +1067,7 @@ private struct TodaySignalSourceSheet: View {
                         MindSenseSectionHeader(
                             model: .init(
                                 title: "Signal source",
-                                subtitle: "Demo pipeline status that mirrors future HealthKit diagnostics."
+                                subtitle: "Current pipeline status and health diagnostics."
                             )
                         )
                         Text(sourceLine)

@@ -685,7 +685,7 @@ struct DataView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "7-day experiments",
-                    subtitle: "Run one scenario-specific experiment with daily adherence logging.",
+                    subtitle: "Run one focused experiment with daily adherence logging.",
                     icon: "flask"
                 )
             )
@@ -1241,7 +1241,7 @@ private struct ExperimentCompletionSheet: View {
                     MindSenseCommandDeck(
                         label: "Experiment",
                         title: "Complete your 7-day run",
-                        detail: "Scenario: \(scenarioTitle). Finalize this result to improve your next recommendation.",
+                        detail: "Context: \(scenarioTitle). Finalize this result to improve your next recommendation.",
                         metric: "Final step"
                     )
                     .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
@@ -1249,7 +1249,7 @@ private struct ExperimentCompletionSheet: View {
                     PrimarySurface {
                         ProtocolTokenStripView(
                             what: "Capture perceived shift + summary",
-                            why: "Close the experiment loop for this scenario",
+                            why: "Close the experiment loop for this context",
                             expectedEffect: "Sharper next recommendation",
                             time: "About 1 min"
                         )

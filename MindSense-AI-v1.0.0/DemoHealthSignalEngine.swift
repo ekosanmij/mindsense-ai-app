@@ -209,7 +209,7 @@ enum DemoHealthSignalEngine {
         return DemoHealthProfile(
             isConnected: true,
             sync: .init(
-                sourceLabel: "Apple Watch (Demo)",
+                sourceLabel: "Apple Watch",
                 lastSyncAt: now.addingTimeInterval(-480),
                 lastSleepImportAt: now.addingTimeInterval(-4_500),
                 lastHRVSampleAt: permissions.first(where: { $0.signal == .hrv })?.state == .granted

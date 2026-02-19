@@ -499,7 +499,7 @@ private struct AppleHealthPermissionsView: View {
                 MindSenseCommandDeck(
                     label: "Apple Health",
                     title: "Permissions and sync diagnostics",
-                    detail: "Demo mode active. Real HealthKit wiring can be connected to these controls.",
+                    detail: "Review connection, imports, and data quality from Apple Health.",
                     metric: store.healthSourceStatusLine
                 )
 
@@ -592,7 +592,7 @@ private struct AppleHealthPermissionsView: View {
                     MindSenseSectionHeader(
                         model: .init(
                             title: "Actions",
-                            subtitle: "Demo-safe controls wired for later HealthKit integration."
+                            subtitle: "Use these controls to refresh and recalculate health-derived insights."
                         )
                     )
 

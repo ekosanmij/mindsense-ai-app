@@ -26,8 +26,8 @@ struct QAToolsView: View {
             VStack(spacing: MindSenseRhythm.section) {
                 MindSenseCommandDeck(
                     label: AppIA.qaTools,
-                    title: "Demo and validation controls",
-                    detail: "Visible in debug builds and explicit demo sessions only.",
+                    title: "Validation controls",
+                    detail: "Visible only in internal debug builds.",
                     metric: "Debug only"
                 )
                 .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
@@ -69,7 +69,7 @@ struct QAToolsView: View {
         FocusSurface {
             MindSenseSectionHeader(
                 model: .init(
-                    title: "Scenario",
+                    title: "Context profile",
                     subtitle: "Switch context and watch Today, Regulate, and Data update immediately."
                 )
             )
@@ -86,7 +86,7 @@ struct QAToolsView: View {
         FocusSurface {
             MindSenseSectionHeader(
                 model: .init(
-                    title: "Guided demo path",
+                    title: "Guided validation path",
                     subtitle: "Structured QA walkthrough across core tabs."
                 )
             )
@@ -105,7 +105,7 @@ struct QAToolsView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Button(store.guidedPathPrimaryActionLabel ?? "Start guided demo path") {
+            Button(store.guidedPathPrimaryActionLabel ?? "Start guided path") {
                 if store.guidedDemoPathStep == nil {
                     store.startGuidedDemoPath()
                 } else if store.guidedDemoPathStep == .settings {
@@ -123,12 +123,12 @@ struct QAToolsView: View {
         FocusSurface {
             MindSenseSectionHeader(
                 model: .init(
-                    title: "Demo data controls",
-                    subtitle: "Reset and mutate scenario data for deterministic QA checks."
+                    title: "Data controls",
+                    subtitle: "Reset and mutate data for deterministic QA checks."
                 )
             )
 
-            debugActionButton("Reset demo data", hierarchy: .secondary, haptic: .warning) {
+            debugActionButton("Reset data", hierarchy: .secondary, haptic: .warning) {
                 store.resetDemoDataForCurrentScenario()
             }
 

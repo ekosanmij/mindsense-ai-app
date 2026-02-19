@@ -69,7 +69,6 @@ final class MindSenseBootstrapService {
 
         defaults.set(true, forKey: "hasSeenIntro")
         defaults.set("uitest@mindsense.ai", forKey: "auth.fallback_session_email")
-        defaults.set(true, forKey: "auth.fallback_session_is_demo")
 
         var onboarding = OnboardingProgress()
         OnboardingStep.allCases.forEach { onboarding.markComplete($0) }

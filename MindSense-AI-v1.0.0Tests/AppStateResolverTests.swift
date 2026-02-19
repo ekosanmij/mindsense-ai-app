@@ -16,7 +16,7 @@ final class AppStateResolverTests: XCTestCase {
         let state = AppStateResolver.reduce(
             state: .launching,
             event: .launchDataLoaded(
-                session: .init(email: "user@example.com", isDemo: false),
+                session: .init(email: "user@example.com"),
                 onboarding: onboarding
             )
         )
@@ -32,7 +32,7 @@ final class AppStateResolverTests: XCTestCase {
         let state = AppStateResolver.reduce(
             state: .launching,
             event: .launchDataLoaded(
-                session: .init(email: "user@example.com", isDemo: false),
+                session: .init(email: "user@example.com"),
                 onboarding: onboarding
             )
         )

@@ -12,6 +12,9 @@ struct MindSense_AI_v1_0_0App: App {
                 .preferredColorScheme(
                     AppearanceMode(rawValue: appearanceMode)?.colorScheme
                 )
+                .onOpenURL { url in
+                    _ = store.handleIncomingURL(url)
+                }
         }
     }
 }
