@@ -6,9 +6,16 @@ struct PersistenceLoadResult<Value> {
 }
 
 final class MindSensePersistenceService {
+    private static let analyticsEventsKey = "analytics.events.v1"
+    private static let analyticsMaxEventCount = 400
+    private static let analyticsMaxPayloadBytes = 350_000
+    private static let analyticsPersistDelay: TimeInterval = 1.0
+
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private let analyticsWriteQueue = DispatchQueue(label: "com.mindsense.persistence.analytics", qos: .utility)
+    private var pendingAnalyticsWrite: DispatchWorkItem?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -196,18 +203,44 @@ final class MindSensePersistenceService {
     // MARK: - Analytics
 
     func persistAnalyticsEvents(_ events: [AnalyticsEventRecord]) {
-        if let data = try? encoder.encode(events) {
-            defaults.set(data, forKey: "analytics.events.v1")
+        let trimmed = Array(events.suffix(Self.analyticsMaxEventCount))
+        pendingAnalyticsWrite?.cancel()
+
+        let defaults = self.defaults
+        let key = Self.analyticsEventsKey
+        let work = DispatchWorkItem {
+            let encoder = JSONEncoder()
+            if let data = try? encoder.encode(trimmed) {
+                defaults.set(data, forKey: key)
+            }
         }
+
+        pendingAnalyticsWrite = work
+        analyticsWriteQueue.asyncAfter(deadline: .now() + Self.analyticsPersistDelay, execute: work)
     }
 
     func loadAnalyticsEvents() -> [AnalyticsEventRecord] {
-        guard let data = defaults.data(forKey: "analytics.events.v1") else { return [] }
-        return (try? decoder.decode([AnalyticsEventRecord].self, from: data)) ?? []
+        let key = Self.analyticsEventsKey
+        guard let data = defaults.data(forKey: key) else { return [] }
+
+        if data.count > Self.analyticsMaxPayloadBytes {
+            defaults.removeObject(forKey: key)
+            return []
+        }
+
+        let decoded = (try? decoder.decode([AnalyticsEventRecord].self, from: data)) ?? []
+        guard decoded.count > Self.analyticsMaxEventCount else {
+            return decoded
+        }
+
+        let trimmed = Array(decoded.suffix(Self.analyticsMaxEventCount))
+        persistAnalyticsEvents(trimmed)
+        return trimmed
     }
 
     func clearAnalyticsEvents() {
-        defaults.removeObject(forKey: "analytics.events.v1")
+        pendingAnalyticsWrite?.cancel()
+        defaults.removeObject(forKey: Self.analyticsEventsKey)
     }
 
     // MARK: - Demo

@@ -111,6 +111,7 @@ struct MagicLinkAuthConfiguration {
     let providerName: String
     let apiBaseURL: URL?
     let requestEndpointURL: URL?
+    let supabaseAnonKey: String?
     let redirectScheme: String
     let redirectHost: String
     let redirectPath: String
@@ -130,8 +131,32 @@ struct MagicLinkAuthConfiguration {
         "\(redirectScheme)://\(redirectHost)\(normalizedRedirectPath)"
     }
 
+    private var isSupabaseProvider: Bool {
+        providerName.lowercased().contains("supabase")
+    }
+
+    var resolvedRequestEndpointURL: URL? {
+        if let requestEndpointURL {
+            return requestEndpointURL
+        }
+
+        if isSupabaseProvider,
+           let apiBaseURL {
+            let trimmed = apiBaseURL.path.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if trimmed.hasPrefix("/auth/v1") {
+                return apiBaseURL.appendingPathComponent("otp")
+            }
+            return apiBaseURL
+                .appendingPathComponent("auth")
+                .appendingPathComponent("v1")
+                .appendingPathComponent("otp")
+        }
+
+        return nil
+    }
+
     var requestEndpointDescription: String {
-        requestEndpointURL?.absoluteString ?? "Not configured"
+        resolvedRequestEndpointURL?.absoluteString ?? "Not configured"
     }
 
     func verificationURL(email: String, token: String, intent: MagicLinkIntent) -> URL {
@@ -177,10 +202,13 @@ struct MagicLinkAuthConfiguration {
         let provider = env("MINDSENSE_MAGIC_LINK_PROVIDER", default: "MindSense Auth")
         let apiBase = URL(string: env("MINDSENSE_MAGIC_LINK_API_BASE_URL", default: ""))
         let explicitRequestURL = URL(string: env("MINDSENSE_MAGIC_LINK_REQUEST_URL", default: ""))
+        let supabaseKeyRaw = env("MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY", default: "")
+        let supabaseKey = supabaseKeyRaw.isEmpty ? nil : supabaseKeyRaw
+        let isSupabaseProvider = provider.lowercased().contains("supabase")
         let requestEndpoint: URL?
         if let explicitRequestURL {
             requestEndpoint = explicitRequestURL
-        } else if let apiBase {
+        } else if !isSupabaseProvider, let apiBase {
             requestEndpoint = apiBase
                 .appendingPathComponent("magic-links")
                 .appendingPathComponent("request")
@@ -205,6 +233,7 @@ struct MagicLinkAuthConfiguration {
             providerName: provider,
             apiBaseURL: apiBase,
             requestEndpointURL: requestEndpoint,
+            supabaseAnonKey: supabaseKey,
             redirectScheme: scheme,
             redirectHost: host,
             redirectPath: path,
@@ -1443,19 +1472,27 @@ final class MindSenseStore: ObservableObject {
     @Published private(set) var coreScreenStates: [CoreScreenID: ScreenMode] = [:]
     @Published var shouldPresentPostActivationPaywall = false
     @Published var kpiLastReviewedAt: Date?
-    @Published private(set) var analyticsEvents: [AnalyticsEventRecord] = []
+    private(set) var analyticsEvents: [AnalyticsEventRecord] = []
 
     private let persistence = MindSensePersistenceService()
     private let bootstrap = MindSenseBootstrapService()
     private let magicLinkConfiguration = MagicLinkAuthConfiguration.live()
     private let defaults = UserDefaults.standard
     private var bannerTask: Task<Void, Never>?
+    private let primaryImpactFeedback = UIImpactFeedbackGenerator(style: .soft)
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+    private let notificationFeedback = UINotificationFeedbackGenerator()
     private static let analyticsTimestampFormatter = ISO8601DateFormatter()
     private static let relativeDateFormatter = RelativeDateTimeFormatter()
 
+    private enum IncomingMagicLinkCredential {
+        case localToken(String)
+        case supabaseAccessToken(String)
+    }
+
     private struct IncomingMagicLinkPayload {
         let email: String
-        let token: String
+        let credential: IncomingMagicLinkCredential
     }
 
     private struct MagicLinkDispatchPayload: Encodable {
@@ -1465,6 +1502,20 @@ final class MindSenseStore: ObservableObject {
         let redirectURL: String
         let requestedAt: String
         let expiresAt: String
+    }
+
+    private struct SupabaseMagicLinkDispatchPayload: Encodable {
+        let email: String
+        let createUser: Bool
+        let emailRedirectTo: String
+        let redirectTo: String
+
+        enum CodingKeys: String, CodingKey {
+            case email
+            case createUser = "create_user"
+            case emailRedirectTo = "email_redirect_to"
+            case redirectTo = "redirect_to"
+        }
     }
 
     init() {
@@ -2498,7 +2549,15 @@ final class MindSenseStore: ObservableObject {
             return false
         }
 
-        if let error = consumeMagicLink(email: payload.email, token: payload.token, source: "deeplink") {
+        let verificationError: String?
+        switch payload.credential {
+        case .localToken(let token):
+            verificationError = consumeMagicLink(email: payload.email, token: token, source: "deeplink")
+        case .supabaseAccessToken(let accessToken):
+            verificationError = consumeSupabaseMagicLink(email: payload.email, accessToken: accessToken, source: "deeplink")
+        }
+
+        if let error = verificationError {
             showBanner(
                 title: "Link could not be verified",
                 detail: error,
@@ -2682,7 +2741,10 @@ final class MindSenseStore: ObservableObject {
                 metadata: context
             )
         )
-        analyticsEvents = Array(analyticsEvents.suffix(2000))
+        let maxEvents = 400
+        if analyticsEvents.count > maxEvents {
+            analyticsEvents.removeFirst(analyticsEvents.count - maxEvents)
+        }
         persistAnalyticsEvents()
     }
 
@@ -2691,21 +2753,20 @@ final class MindSenseStore: ObservableObject {
 
         switch intent {
         case .primary:
-            let generator = UIImpactFeedbackGenerator(style: .soft)
-            generator.prepare()
-            generator.impactOccurred(intensity: 0.62)
+            primaryImpactFeedback.impactOccurred(intensity: 0.62)
+            primaryImpactFeedback.prepare()
         case .selection:
-            let generator = UISelectionFeedbackGenerator()
-            generator.prepare()
-            generator.selectionChanged()
+            selectionFeedback.selectionChanged()
+            selectionFeedback.prepare()
         case .success:
-            let generator = UIImpactFeedbackGenerator(style: .soft)
-            generator.prepare()
-            generator.impactOccurred(intensity: 0.55)
+            primaryImpactFeedback.impactOccurred(intensity: 0.55)
+            primaryImpactFeedback.prepare()
         case .warning:
-            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+            notificationFeedback.notificationOccurred(.warning)
+            notificationFeedback.prepare()
         case .error:
-            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            notificationFeedback.notificationOccurred(.error)
+            notificationFeedback.prepare()
         }
     }
 
@@ -2747,33 +2808,56 @@ final class MindSenseStore: ObservableObject {
         } else {
             onboarding = OnboardingProgress()
         }
-        activeRegulateSession = loadActiveRegulateSession()
-        regulateSessionHistory = loadRegulateSessionHistory()
-        demoScenario = loadDemoScenario()
-        demoMetrics = loadDemoMetrics(for: demoScenario)
-        demoEventHistory = loadDemoEvents()
-        demoSavedInsights = loadDemoSavedInsights()
-        demoDay = loadDemoDay(for: demoScenario)
-        demoHealthProfile = loadDemoHealthProfile(for: demoScenario, demoDay: demoDay)
-        guidedDemoPathStep = loadGuidedDemoPathStep()
-        demoLastUpdatedAt = persistence.demoLastUpdatedAt
-        experiments = loadExperiments()
-        analyticsEvents = loadAnalyticsEvents()
-        kpiLastReviewedAt = persistence.kpiReviewedAt
-        if experiments.isEmpty {
-            experiments = MindSenseDemoSeedCatalog.defaultExperiments(for: demoScenario)
-            persistExperiments()
+        if session != nil {
+            analyticsEvents = loadAnalyticsEvents()
+            kpiLastReviewedAt = persistence.kpiReviewedAt
+            activeRegulateSession = loadActiveRegulateSession()
+            regulateSessionHistory = loadRegulateSessionHistory()
+            demoScenario = loadDemoScenario()
+            demoMetrics = loadDemoMetrics(for: demoScenario)
+            demoEventHistory = loadDemoEvents()
+            demoSavedInsights = loadDemoSavedInsights()
+            demoDay = loadDemoDay(for: demoScenario)
+            demoHealthProfile = loadDemoHealthProfile(for: demoScenario, demoDay: demoDay)
+            guidedDemoPathStep = loadGuidedDemoPathStep()
+            demoLastUpdatedAt = persistence.demoLastUpdatedAt
+            experiments = loadExperiments()
+            if experiments.isEmpty {
+                experiments = MindSenseDemoSeedCatalog.defaultExperiments(for: demoScenario)
+                persistExperiments()
+            }
+            if let activeRegulateSession, activeRegulateSession.isCompleted {
+                self.activeRegulateSession = nil
+                persistActiveRegulateSession()
+            }
+            syncActiveRegulateSessionState()
+            refreshDemoHealthSignals(updateSyncTimestamp: false)
+            refreshCoreScreensLoadingThenReady()
+        } else {
+            analyticsEvents = []
+            kpiLastReviewedAt = nil
+            activeRegulateSession = nil
+            regulateSessionHistory = []
+            demoScenario = .balancedDay
+            demoMetrics = DemoScenario.balancedDay.baseMetrics
+            demoEventHistory = []
+            demoSavedInsights = []
+            demoDay = DemoScenario.balancedDay.defaultDay
+            demoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(
+                for: .balancedDay,
+                demoDay: DemoScenario.balancedDay.defaultDay
+            )
+            guidedDemoPathStep = nil
+            demoLastUpdatedAt = Date()
+            experiments = []
+            demoDataIssue = nil
+            coreScreenStates = [:]
         }
-        if let activeRegulateSession, activeRegulateSession.isCompleted {
-            self.activeRegulateSession = nil
-            persistActiveRegulateSession()
-        }
-        syncActiveRegulateSessionState()
-        refreshDemoHealthSignals(updateSyncTimestamp: false)
-        refreshCoreScreensLoadingThenReady()
         shouldPresentPostActivationPaywall = false
         if session != nil, !onboarding.isFullyComplete {
             startOnboardingTimerIfNeeded()
+        } else {
+            persistence.clearOnboardingTimer()
         }
 
         Task {
@@ -2821,6 +2905,8 @@ final class MindSenseStore: ObservableObject {
         guidedDemoPathStep = loadGuidedDemoPathStep()
         demoLastUpdatedAt = persistence.demoLastUpdatedAt
         experiments = loadExperiments()
+        analyticsEvents = loadAnalyticsEvents()
+        kpiLastReviewedAt = persistence.kpiReviewedAt
         if experiments.isEmpty {
             experiments = MindSenseDemoSeedCatalog.defaultExperiments(for: demoScenario)
             persistExperiments()
@@ -2871,7 +2957,12 @@ final class MindSenseStore: ObservableObject {
     }
 
     private func dispatchMagicLink(_ request: PendingMagicLinkRequest) async -> String? {
-        guard let endpointURL = magicLinkConfiguration.requestEndpointURL else {
+        let isSupabaseProvider = magicLinkConfiguration.providerName.lowercased().contains("supabase")
+
+        guard let endpointURL = magicLinkConfiguration.resolvedRequestEndpointURL else {
+            if isSupabaseProvider {
+                return "Supabase magic-link delivery is not configured. Set MINDSENSE_MAGIC_LINK_API_BASE_URL or MINDSENSE_MAGIC_LINK_REQUEST_URL."
+            }
             return "Magic-link delivery is not configured. Set MINDSENSE_MAGIC_LINK_REQUEST_URL or MINDSENSE_MAGIC_LINK_API_BASE_URL."
         }
 
@@ -2880,17 +2971,34 @@ final class MindSenseStore: ObservableObject {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
 
-        let payload = MagicLinkDispatchPayload(
-            email: request.email,
-            intent: request.intent.rawValue,
-            token: request.token,
-            redirectURL: request.verificationURL.absoluteString,
-            requestedAt: Self.analyticsTimestampFormatter.string(from: request.requestedAt),
-            expiresAt: Self.analyticsTimestampFormatter.string(from: request.expiresAt)
-        )
-
         do {
-            urlRequest.httpBody = try JSONEncoder().encode(payload)
+            if isSupabaseProvider {
+                guard let anonKey = magicLinkConfiguration.supabaseAnonKey,
+                      !anonKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    return "Supabase anon key is missing. Set MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY."
+                }
+
+                urlRequest.setValue(anonKey, forHTTPHeaderField: "apikey")
+                urlRequest.setValue("Bearer \(anonKey)", forHTTPHeaderField: "Authorization")
+
+                let payload = SupabaseMagicLinkDispatchPayload(
+                    email: request.email,
+                    createUser: request.intent == .createAccount,
+                    emailRedirectTo: request.verificationURL.absoluteString,
+                    redirectTo: request.verificationURL.absoluteString
+                )
+                urlRequest.httpBody = try JSONEncoder().encode(payload)
+            } else {
+                let payload = MagicLinkDispatchPayload(
+                    email: request.email,
+                    intent: request.intent.rawValue,
+                    token: request.token,
+                    redirectURL: request.verificationURL.absoluteString,
+                    requestedAt: Self.analyticsTimestampFormatter.string(from: request.requestedAt),
+                    expiresAt: Self.analyticsTimestampFormatter.string(from: request.expiresAt)
+                )
+                urlRequest.httpBody = try JSONEncoder().encode(payload)
+            }
         } catch {
             return "Magic-link request could not be prepared."
         }
@@ -2985,19 +3093,36 @@ final class MindSenseStore: ObservableObject {
         let token = queryItems.first(where: { ["token", "code", "magic_token"].contains($0.name.lowercased()) })?.value
         let email = queryItems.first(where: { $0.name.caseInsensitiveCompare("email") == .orderedSame })?.value
 
-        guard let token, !token.isEmpty else {
-            return nil
-        }
-        guard let email else {
-            return nil
+        if let token, !token.isEmpty, let email {
+            let normalizedEmail = normalizedEmail(from: email)
+            guard isValidEmail(normalizedEmail) else {
+                return nil
+            }
+
+            return .init(
+                email: normalizedEmail,
+                credential: .localToken(token)
+            )
         }
 
-        let normalizedEmail = normalizedEmail(from: email)
-        guard isValidEmail(normalizedEmail) else {
-            return nil
+        let fragmentItems = queryItemsFromFormEncodedString(URLComponents(url: url, resolvingAgainstBaseURL: false)?.fragment)
+        if let accessToken = fragmentItems.first(where: { $0.name.caseInsensitiveCompare("access_token") == .orderedSame })?.value,
+           !accessToken.isEmpty {
+            let emailFromFragment = fragmentItems.first(where: { $0.name.caseInsensitiveCompare("email") == .orderedSame })?.value
+            let tokenEmail = emailFromFragment ?? emailClaim(fromJWT: accessToken)
+            if let tokenEmail {
+                let normalizedEmail = normalizedEmail(from: tokenEmail)
+                guard isValidEmail(normalizedEmail) else {
+                    return nil
+                }
+                return .init(
+                    email: normalizedEmail,
+                    credential: .supabaseAccessToken(accessToken)
+                )
+            }
         }
 
-        return .init(email: normalizedEmail, token: token)
+        return nil
     }
 
     private func consumeMagicLink(email: String, token: String, source: String) -> String? {
@@ -3054,6 +3179,80 @@ final class MindSenseStore: ObservableObject {
             ]
         )
         return nil
+    }
+
+    private func consumeSupabaseMagicLink(email: String, accessToken: String, source: String) -> String? {
+        _ = accessToken
+
+        if let pendingMagicLinkRequest {
+            if pendingMagicLinkRequest.isExpired {
+                clearPendingMagicLinkRequest()
+                return "This magic link has expired. Request a new link."
+            }
+            if pendingMagicLinkRequest.email != email {
+                return "This link was issued for \(pendingMagicLinkRequest.email)."
+            }
+            let intent = pendingMagicLinkRequest.intent
+            persistSession(email: email)
+            track(
+                event: .actionCompleted,
+                surface: .auth,
+                action: "magic_link_verified_\(intent.analyticsSuffix)",
+                metadata: [
+                    "source": "\(source)_supabase_fragment",
+                    "provider": magicLinkConfiguration.providerName
+                ]
+            )
+            return nil
+        }
+
+        persistSession(email: email)
+        track(
+            event: .actionCompleted,
+            surface: .auth,
+            action: "magic_link_verified_sign_in",
+            metadata: [
+                "source": "\(source)_supabase_fragment_no_pending",
+                "provider": magicLinkConfiguration.providerName
+            ]
+        )
+        return nil
+    }
+
+    private func queryItemsFromFormEncodedString(_ value: String?) -> [URLQueryItem] {
+        guard let value,
+              !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let components = URLComponents(string: "https://mindsense.local?\(value)") else {
+            return []
+        }
+        return components.queryItems ?? []
+    }
+
+    private func emailClaim(fromJWT token: String) -> String? {
+        let segments = token.split(separator: ".")
+        guard segments.count >= 2 else { return nil }
+        var payload = String(segments[1])
+            .replacingOccurrences(of: "-", with: "+")
+            .replacingOccurrences(of: "_", with: "/")
+
+        switch payload.count % 4 {
+        case 2:
+            payload += "=="
+        case 3:
+            payload += "="
+        case 0:
+            break
+        default:
+            return nil
+        }
+
+        guard let data = Data(base64Encoded: payload),
+              let object = try? JSONSerialization.jsonObject(with: data),
+              let dictionary = object as? [String: Any],
+              let email = dictionary["email"] as? String else {
+            return nil
+        }
+        return email
     }
 
     private func normalizedPath(_ value: String) -> String {

@@ -15,8 +15,6 @@ enum MindSenseButtonKind {
 
 struct MindSenseButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
-    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
-    @AppStorage("appReduceMotion") private var appReduceMotion = false
 
     let hierarchy: MindSenseButtonHierarchy
     var tint: Color = MindSensePalette.accent
@@ -46,10 +44,6 @@ struct MindSenseButtonStyle: ButtonStyle {
         case .destructive:
             self.init(hierarchy: .text, tint: MindSensePalette.critical, fullWidth: false)
         }
-    }
-
-    private var reduceMotion: Bool {
-        appReduceMotion || accessibilityReduceMotion
     }
 
     func makeBody(configuration: Configuration) -> some View {
@@ -106,11 +100,8 @@ struct MindSenseButtonStyle: ButtonStyle {
             }
         }
         .opacity(isPressed && isEnabled ? 0.9 : 1)
-        .scaleEffect(reduceMotion ? 1 : (isPressed && isEnabled ? 0.976 : 1))
-        .brightness(reduceMotion ? 0 : (isPressed && isEnabled ? -0.01 : 0))
         .saturation(isEnabled ? 1 : 0.2)
         .contentShape(Rectangle())
-        .animation(reduceMotion ? nil : MindSenseMotion.selection, value: isPressed)
         .hoverEffect(hierarchy == .text ? .highlight : .lift)
     }
 

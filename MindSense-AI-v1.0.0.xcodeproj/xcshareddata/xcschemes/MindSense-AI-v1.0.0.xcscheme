@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "2620"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES"
+      buildArchitectures = "Automatic">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "13FFE82B2F44726200EF4B2E"
+               BuildableName = "MindSense-AI-v1.0.0.app"
+               BlueprintName = "MindSense-AI-v1.0.0"
+               ReferencedContainer = "container:MindSense-AI-v1.0.0.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      shouldAutocreateTestPlan = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "8A1A00062F44726200EF4B2E"
+               BuildableName = "MindSense-AI-v1.0.0UITests.xctest"
+               BlueprintName = "MindSense-AI-v1.0.0UITests"
+               ReferencedContainer = "container:MindSense-AI-v1.0.0.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "9B2B00062F50000100A1B2C3"
+               BuildableName = "MindSense-AI-v1.0.0Tests.xctest"
+               BlueprintName = "MindSense-AI-v1.0.0Tests"
+               ReferencedContainer = "container:MindSense-AI-v1.0.0.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "13FFE82B2F44726200EF4B2E"
+            BuildableName = "MindSense-AI-v1.0.0.app"
+            BlueprintName = "MindSense-AI-v1.0.0"
+            ReferencedContainer = "container:MindSense-AI-v1.0.0.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "MINDSENSE_MAGIC_LINK_PROVIDER"
+            value = "Supabase"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MINDSENSE_MAGIC_LINK_API_BASE_URL"
+            value = "https://ilwmfsnsqcsjkpelkurn.supabase.co"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY"
+            value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsd21mc25zcWNzamtwZWxrdXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1MzE2ODcsImV4cCI6MjA4NzEwNzY4N30.G_lwzDEf_u6GmJWq0bH0CubbqXAQa_C2hMqJ8vBurrI"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME"
+            value = "mindsense"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MINDSENSE_MAGIC_LINK_REDIRECT_HOST"
+            value = "auth"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "MINDSENSE_MAGIC_LINK_REDIRECT_PATH"
+            value = "/verify"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "13FFE82B2F44726200EF4B2E"
+            BuildableName = "MindSense-AI-v1.0.0.app"
+            BlueprintName = "MindSense-AI-v1.0.0"
+            ReferencedContainer = "container:MindSense-AI-v1.0.0.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>

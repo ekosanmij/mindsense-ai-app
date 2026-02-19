@@ -4,22 +4,47 @@ private enum AuthFormField: Hashable {
     case email
 }
 
+private enum AuthProgressStep: Int, CaseIterable, Identifiable {
+    case enterEmail
+    case checkInbox
+    case verify
+
+    var id: Int { rawValue }
+
+    var chipTitle: String {
+        switch self {
+        case .enterEmail:
+            return "1 Email"
+        case .checkInbox:
+            return "2 Inbox"
+        case .verify:
+            return "3 Verify"
+        }
+    }
+
+    var hint: String {
+        switch self {
+        case .enterEmail:
+            return "Enter your email to request a secure one-time link."
+        case .checkInbox:
+            return "Open your inbox and tap the most recent MindSense link."
+        case .verify:
+            return "Return to MindSense and continue from your verified session."
+        }
+    }
+}
+
 struct AuthView: View {
     @EnvironmentObject private var store: MindSenseStore
-    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
-    @AppStorage("appReduceMotion") private var appReduceMotion = false
 
     @State private var mode: MagicLinkIntent = .signIn
     @State private var email = ""
     @State private var inlineMessage = ""
     @State private var inlineSeverity: BannerSeverity = .info
     @State private var isSubmitting = false
-    @State private var didAppear = false
+    @State private var didTrackScreenView = false
+    @State private var showDebugPreview = false
     @FocusState private var focusedField: AuthFormField?
-
-    private var reduceMotion: Bool {
-        appReduceMotion || accessibilityReduceMotion
-    }
 
     private var screenTitle: String {
         "Account"
@@ -46,6 +71,52 @@ struct AuthView: View {
         110
     }
 
+    private var activePendingRequest: PendingMagicLinkRequest? {
+        store.pendingMagicLinkRequest
+    }
+
+    private var progressStep: AuthProgressStep {
+        if inlineSeverity == .success && inlineMessage.localizedCaseInsensitiveContains("verified") {
+            return .verify
+        }
+        if isSubmitting || (activePendingRequest?.isExpired == false) {
+            return .checkInbox
+        }
+        return .enterEmail
+    }
+
+    private var statusTransition: AnyTransition {
+        .opacity
+    }
+
+    private var commandTitle: String {
+        switch mode {
+        case .signIn:
+            return "Sign in with one secure email link"
+        case .createAccount:
+            return "Create your account with one secure email link"
+        }
+    }
+
+    private var commandDetail: String {
+        if let pending = activePendingRequest, !pending.isExpired {
+            return "A link is active for \(pending.email). Use the most recent email to continue."
+        }
+        switch mode {
+        case .signIn:
+            return "No password required. Request a sign-in link and continue from your inbox."
+        case .createAccount:
+            return "No password setup. Request a sign-up link and continue from your inbox."
+        }
+    }
+
+    private var commandMetric: String {
+        if let pending = activePendingRequest, !pending.isExpired {
+            return "Inbox check"
+        }
+        return "\(store.magicLinkTTLMinutes) min expiry"
+    }
+
     private var normalizedEmail: String {
         email
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -54,83 +125,63 @@ struct AuthView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: MindSenseRhythm.section) {
-                    authHeader
-                        .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
+            ZStack(alignment: .top) {
+                Color.clear
+                    .mindSensePageBackground()
 
-                    FocusSurface {
-                        VStack(alignment: .leading, spacing: MindSenseRhythm.regular) {
-                            MindSenseSectionHeader(
-                                model: .init(
-                                    title: "Email access link",
-                                    subtitle: mode == .signIn
-                                        ? "Use your email to receive a secure sign-in link."
-                                        : "Create your account with a one-time secure email link."
-                                )
-                            )
+                AuthAmbientBackground()
+                .padding(.top, -34)
 
-                            modeSelector
+                ScrollView {
+                    VStack(spacing: MindSenseRhythm.section) {
+                        authHeader
 
-                            MindSenseSectionDivider(emphasis: 0.24)
-
-                            authField(title: "Email", isFocused: focusedField == .email) {
-                                TextField("name@example.com", text: $email)
-                                    .textContentType(.emailAddress)
-                                    .keyboardType(.emailAddress)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled()
-                                    .focused($focusedField, equals: .email)
-                                    .submitLabel(.go)
-                                    .onSubmit {
-                                        submitMagicLinkRequest()
-                                    }
-                            }
-
-                            magicLinkStatusCard
-
-                            if !inlineMessage.isEmpty {
-                                InlineStatusView(text: inlineMessage, severity: inlineSeverity)
-                                    .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
-                            }
-
-                            InsetSurface {
+                        FocusSurface {
+                            VStack(alignment: .leading, spacing: MindSenseRhythm.regular) {
                                 MindSenseSectionHeader(
                                     model: .init(
-                                        title: "Integration",
-                                        subtitle: "Configuration currently active for auth routing."
+                                        title: "Email access",
+                                        subtitle: mode == .signIn
+                                            ? "Use your email to receive a secure sign-in link."
+                                            : "Use your email to create your account with a secure sign-up link.",
+                                        icon: "lock.shield.fill"
                                     )
                                 )
 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(store.magicLinkProviderLine)
-                                        .font(MindSenseTypography.caption)
-                                        .foregroundStyle(.secondary)
-                                    Text(store.magicLinkRouteLine)
-                                        .font(MindSenseTypography.caption)
-                                        .foregroundStyle(.secondary)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                    Text(store.magicLinkDeliveryLine)
-                                        .font(MindSenseTypography.caption)
-                                        .foregroundStyle(.secondary)
-                                        .fixedSize(horizontal: false, vertical: true)
-                                    Text("Link expiry: \(store.magicLinkTTLMinutes) minutes")
-                                        .font(MindSenseTypography.caption)
-                                        .foregroundStyle(.secondary)
+                                modeSelector
+
+                                flowPreview
+
+                                MindSenseSectionDivider(emphasis: 0.24)
+
+                                emailField
+
+                                helperHint
+
+                                if isSubmitting {
+                                    submittingState
+                                        .transition(statusTransition)
+                                }
+
+                                if !inlineMessage.isEmpty {
+                                    InlineStatusView(text: inlineMessage, severity: inlineSeverity)
+                                        .transition(statusTransition)
                                 }
                             }
-
                         }
+                        .disabled(isSubmitting)
+                        .overlay(alignment: .topTrailing) {
+                            MindSenseLogoWatermark(height: 110, tint: MindSensePalette.signalCoolStrong)
+                                .padding(.top, 8)
+                                .padding(.trailing, 6)
+                        }
+
+                        magicLinkStatusCard
                     }
-                    .disabled(isSubmitting)
-                    .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                    .mindSensePageInsets(bottom: bottomContentPadding)
                 }
-                .mindSensePageInsets(bottom: bottomContentPadding)
-                .animation(reduceMotion ? nil : MindSenseMotion.confirmation, value: inlineMessage)
-                .animation(reduceMotion ? nil : MindSenseMotion.confirmation, value: mode)
+                .scrollBounceBehavior(.always, axes: .vertical)
             }
-            .scrollBounceBehavior(.always, axes: .vertical)
-            .mindSensePageBackground()
             .navigationTitle(screenTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -143,8 +194,10 @@ struct AuthView: View {
                     Spacer()
                         .frame(height: 12)
 
-                    Button(primaryActionTitle) {
+                    Button {
                         submitMagicLinkRequest()
+                    } label: {
+                        primaryButtonLabel
                     }
                     .accessibilityIdentifier("auth_primary_cta")
                     .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
@@ -152,11 +205,13 @@ struct AuthView: View {
                 }
             }
             .onAppear {
-                didAppear = true
                 if email.isEmpty, let pending = store.pendingMagicLinkRequest {
                     email = pending.email
                 }
-                store.track(event: .screenView, surface: .auth)
+                if !didTrackScreenView {
+                    didTrackScreenView = true
+                    store.track(event: .screenView, surface: .auth)
+                }
             }
             .onChange(of: mode) { _, _ in
                 focusedField = nil
@@ -168,10 +223,12 @@ struct AuthView: View {
     private var authHeader: some View {
         MindSenseCommandDeck(
             label: screenTitle,
-            title: mode == .signIn ? "Sign in with magic link" : "Create account with magic link",
-            detail: "No password required. A secure one-time link is sent to your email.",
-            metric: "\(store.magicLinkTTLMinutes) min expiry"
+            title: commandTitle,
+            detail: commandDetail,
+            metric: commandMetric
         )
+        .id(mode)
+        .transition(statusTransition)
     }
 
     private var modeSelector: some View {
@@ -185,36 +242,142 @@ struct AuthView: View {
         )
     }
 
+    private var flowPreview: some View {
+        InsetSurface {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    ForEach(AuthProgressStep.allCases) { step in
+                        PillChip(label: step.chipTitle, state: chipState(for: step))
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+
+                Text(progressStep.hint)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private var emailField: some View {
+        authField(title: "Email", isFocused: focusedField == .email) {
+            HStack(spacing: 8) {
+                Image(systemName: "envelope")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(focusedField == .email ? MindSensePalette.signalCoolStrong : .secondary)
+
+                TextField("name@example.com", text: $email)
+                    .textContentType(.emailAddress)
+                    .keyboardType(.emailAddress)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .focused($focusedField, equals: .email)
+                    .submitLabel(.go)
+                    .onSubmit {
+                        submitMagicLinkRequest()
+                    }
+
+                if !email.isEmpty {
+                    Button {
+                        email = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear email")
+                }
+            }
+        }
+    }
+
+    private var helperHint: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "info.circle.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(MindSensePalette.signalCool)
+                .padding(.top, 1)
+                .accessibilityHidden(true)
+
+            Text("Use the email you want linked to this account. You can request another link after the cooldown.")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var submittingState: some View {
+        HStack(spacing: 10) {
+            ProgressView()
+                .controlSize(.small)
+
+            Text("Sending magic link...")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(11)
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                .fill(MindSenseSurfaceLevel.glass.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+    }
+
     @ViewBuilder
     private var magicLinkStatusCard: some View {
-        if let pending = store.pendingMagicLinkRequest {
-            InsetSurface {
+        if let pending = activePendingRequest {
+            PrimarySurface(tone: pending.isExpired ? .warning : .accent) {
                 MindSenseSectionHeader(
                     model: .init(
-                        title: pending.isExpired ? "Magic link expired" : "Magic link sent",
+                        title: pending.isExpired ? "Magic link expired" : "Check your inbox",
                         subtitle: pending.isExpired
                             ? "Request a new link to continue."
-                            : "Sent to \(pending.email). Expires at \(pending.expiresAt.formatted(date: .omitted, time: .shortened))."
+                            : "Sent to \(pending.email). Expires at \(pending.expiresAt.formatted(date: .omitted, time: .shortened)).",
+                        icon: pending.isExpired ? "clock.fill" : "paperplane.fill"
                     )
                 )
 
-                if let previewURL = store.magicLinkDebugPreviewURL {
-                    VStack(alignment: .leading, spacing: 6) {
-                        MindSenseSectionDivider(emphasis: 0.2)
-                        Text("Preview link")
-                            .font(MindSenseTypography.micro)
-                            .foregroundStyle(.secondary)
-                            .tracking(0.8)
-                        Text(previewURL.absoluteString)
-                            .font(MindSenseTypography.caption)
-                            .foregroundStyle(.secondary)
-                            .textSelection(.enabled)
-                            .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: 8) {
+                    PillChip(
+                        label: pending.intent == .signIn ? "Sign in link" : "Sign up link",
+                        state: .selected
+                    )
+                    PillChip(
+                        label: pending.isExpired ? "Expired" : "Active",
+                        state: pending.isExpired ? .disabled : .unselected
+                    )
+                }
 
-                        Button("Complete using preview link") {
-                            completePendingMagicLinkFromPreview()
+                if let previewURL = store.magicLinkDebugPreviewURL {
+                    DisclosureGroup(isExpanded: $showDebugPreview) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(previewURL.absoluteString)
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .textSelection(.enabled)
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            Button("Complete using preview link") {
+                                completePendingMagicLinkFromPreview()
+                            }
+                            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 40))
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 40))
+                        .padding(.top, 6)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "wrench.and.screwdriver.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(MindSensePalette.signalCoolStrong)
+                            Text("Debug preview link")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
 
@@ -234,8 +397,26 @@ struct AuthView: View {
                     .disabled(isSubmitting)
                 }
             }
-            .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
+            .transition(statusTransition)
         }
+    }
+
+    private var primaryButtonLabel: some View {
+        HStack(spacing: 8) {
+            if isSubmitting {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(MindSensePalette.onAccent)
+            }
+            Text(primaryActionTitle)
+        }
+    }
+
+    private func chipState(for step: AuthProgressStep) -> MindSenseChipState {
+        if step.rawValue <= progressStep.rawValue {
+            return .selected
+        }
+        return .disabled
     }
 
     private func authField<Content: View>(title: String, isFocused: Bool, @ViewBuilder content: () -> Content) -> some View {
@@ -247,7 +428,7 @@ struct AuthView: View {
             content()
                 .font(MindSenseTypography.body)
                 .padding(.horizontal, 12)
-                .frame(minHeight: 44)
+                .frame(minHeight: 46)
                 .background(
                     RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
                         .fill(MindSenseSurfaceLevel.base.fill)
@@ -256,7 +437,6 @@ struct AuthView: View {
                     RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
                         .stroke(isFocused ? MindSensePalette.strokeEdge : MindSensePalette.strokeSubtle, lineWidth: 1)
                 )
-                .animation(reduceMotion ? nil : MindSenseMotion.selection, value: isFocused)
         }
     }
 
@@ -310,5 +490,23 @@ struct AuthView: View {
             inlineSeverity = .success
             inlineMessage = "Magic link verified."
         }
+    }
+}
+
+private struct AuthAmbientBackground: View {
+    var body: some View {
+        LinearGradient(
+            colors: [
+                MindSensePalette.signalCoolSoft.opacity(0.26),
+                MindSensePalette.glowWarmSoft.opacity(0.18),
+                .clear
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .frame(maxWidth: .infinity)
+        .frame(height: 246)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

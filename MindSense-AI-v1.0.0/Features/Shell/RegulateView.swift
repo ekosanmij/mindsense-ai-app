@@ -194,7 +194,6 @@ struct RegulateView: View {
                     }
                 }
                 .toolbar(shouldHideTabBar ? .hidden : .automatic, for: .tabBar)
-                .tabBarMinimizeBehavior(.onScrollDown)
                 .safeAreaInset(edge: .bottom) {
                     if case .ready = resolvedState, let primaryCTAConfig {
                         MindSenseBottomActionDock {
@@ -225,13 +224,18 @@ struct RegulateView: View {
                     )
                 }
                 .onAppear {
-                    didAppear = true
+                    let firstAppearance = !didAppear
+                    if firstAppearance {
+                        didAppear = true
+                    }
                     if selectedPresetID == nil {
                         selectedPresetID = presets.first?.id
                     }
                     consumeLaunchRequestIfNeeded()
                     store.prepareCoreScreen(.regulate)
-                    store.track(event: .screenView, surface: .regulate)
+                    if firstAppearance {
+                        store.track(event: .screenView, surface: .regulate)
+                    }
                 }
                 .onReceive(timer) { date in
                     guard store.activeRegulateSession?.isInProgress == true else { return }

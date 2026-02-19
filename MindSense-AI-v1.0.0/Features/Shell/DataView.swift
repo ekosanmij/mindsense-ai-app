@@ -209,12 +209,17 @@ struct DataView: View {
                     TrendFilterSheet(window: $window)
                 }
                 .onAppear {
-                    didAppear = true
+                    let firstAppearance = !didAppear
+                    if firstAppearance {
+                        didAppear = true
+                    }
                     if selectedExperimentID == nil {
                         selectedExperimentID = focusExperiments.first?.id
                     }
                     store.prepareCoreScreen(.data)
-                    store.track(event: .screenView, surface: .data)
+                    if firstAppearance {
+                        store.track(event: .screenView, surface: .data)
+                    }
                 }
                 .onChange(of: window) { _, newWindow in
                     if reduceMotion {

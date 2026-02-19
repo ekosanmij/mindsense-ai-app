@@ -9,6 +9,7 @@ final class MagicLinkAuthConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.redirectScheme, "mindsense")
         XCTAssertEqual(configuration.redirectHost, "auth")
         XCTAssertEqual(configuration.normalizedRedirectPath, "/verify")
+        XCTAssertNil(configuration.requestEndpointURL)
         XCTAssertEqual(configuration.tokenTTLMinutes, 15)
         XCTAssertEqual(configuration.resendCooldownSeconds, 20)
     }
@@ -18,6 +19,8 @@ final class MagicLinkAuthConfigurationTests: XCTestCase {
             environment: [
                 "MINDSENSE_MAGIC_LINK_PROVIDER": "Supabase",
                 "MINDSENSE_MAGIC_LINK_API_BASE_URL": "https://api.example.com/v1",
+                "MINDSENSE_MAGIC_LINK_REQUEST_URL": "https://api.example.com/v1/auth/send-magic-link",
+                "MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY": "supabase-anon-key",
                 "MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME": "msapp",
                 "MINDSENSE_MAGIC_LINK_REDIRECT_HOST": "login",
                 "MINDSENSE_MAGIC_LINK_REDIRECT_PATH": "verify",
@@ -31,6 +34,8 @@ final class MagicLinkAuthConfigurationTests: XCTestCase {
 
         XCTAssertEqual(configuration.providerName, "Supabase")
         XCTAssertEqual(configuration.apiBaseURL?.absoluteString, "https://api.example.com/v1")
+        XCTAssertEqual(configuration.requestEndpointURL?.absoluteString, "https://api.example.com/v1/auth/send-magic-link")
+        XCTAssertEqual(configuration.supabaseAnonKey, "supabase-anon-key")
         XCTAssertEqual(configuration.redirectScheme, "msapp")
         XCTAssertEqual(configuration.redirectHost, "login")
         XCTAssertEqual(configuration.normalizedRedirectPath, "/verify")
@@ -39,6 +44,18 @@ final class MagicLinkAuthConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.resendCooldownSeconds, 45)
         XCTAssertTrue(configuration.debugShowLinkPreview)
         XCTAssertTrue(configuration.debugAutoOpenReceivedLink)
+    }
+
+    func testSupabaseConfigurationDerivesOTPRequestEndpointFromAPIBase() {
+        let configuration = MagicLinkAuthConfiguration.live(
+            environment: [
+                "MINDSENSE_MAGIC_LINK_PROVIDER": "Supabase",
+                "MINDSENSE_MAGIC_LINK_API_BASE_URL": "https://api.example.com"
+            ]
+        )
+
+        XCTAssertNil(configuration.requestEndpointURL)
+        XCTAssertEqual(configuration.resolvedRequestEndpointURL?.absoluteString, "https://api.example.com/auth/v1/otp")
     }
 
     func testVerificationURLContainsTokenEmailAndIntent() throws {

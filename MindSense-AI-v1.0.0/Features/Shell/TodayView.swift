@@ -164,10 +164,15 @@ struct TodayView: View {
                 )
             }
             .onAppear {
-                didAppear = true
+                let firstAppearance = !didAppear
+                if firstAppearance {
+                    didAppear = true
+                }
                 loadSlider = Double(max(0, min(10, store.demoMetrics.load / 10)))
                 store.prepareCoreScreen(.today)
-                store.track(event: .screenView, surface: .today)
+                if firstAppearance {
+                    store.track(event: .screenView, surface: .today)
+                }
             }
             .onChange(of: store.demoScenario) { _, _ in
                 store.prepareCoreScreen(.today)

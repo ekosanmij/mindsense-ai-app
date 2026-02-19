@@ -34,7 +34,7 @@ Core promise (from design/brand docs and reflected in UI structure):
 Current implementation posture:
 - Mostly simulated intelligence and simulated health signals.
 - Passwordless email magic-link auth UX is implemented with local persistence and routing.
-- No external auth-provider handshake in this build.
+- External magic-link email dispatch is supported when a delivery endpoint is configured.
 - No real HealthKit ingestion pipeline.
 - No real billing/StoreKit purchase flow.
 
@@ -153,6 +153,8 @@ Validation rules:
 
 Auth data behavior:
 - Uses passwordless email magic-link requests and deep-link verification.
+- Requests can dispatch to a configured HTTP delivery endpoint (`MINDSENSE_MAGIC_LINK_REQUEST_URL` or derived from `MINDSENSE_MAGIC_LINK_API_BASE_URL`).
+- Supabase provider mode is supported with direct `/auth/v1/otp` dispatch when configured.
 - Persists pending link request state locally (`email`, `token`, `intent`, `requestedAt`, `expiresAt`, `verificationURL`).
 - Supports resend and cancel of pending magic-link requests.
 - On successful link consumption, app persists session email and routes forward.
@@ -161,6 +163,8 @@ Auth data behavior:
 Magic-link configuration (env-driven):
 - `MINDSENSE_MAGIC_LINK_PROVIDER`
 - `MINDSENSE_MAGIC_LINK_API_BASE_URL`
+- `MINDSENSE_MAGIC_LINK_REQUEST_URL`
+- `MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY` (required when using Supabase direct dispatch)
 - `MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME`
 - `MINDSENSE_MAGIC_LINK_REDIRECT_HOST`
 - `MINDSENSE_MAGIC_LINK_REDIRECT_PATH`
@@ -680,7 +684,7 @@ UI tests (`MindSenseCoreScreensUITests`):
 
 Current posture:
 - Data is local-only and mostly simulated.
-- Auth uses local fallback session + local pending magic-link persistence; it is not federated/server-backed in this build.
+- Auth uses local fallback session + local pending magic-link persistence, with optional network dispatch for magic-link email delivery.
 - No PHI transport pipeline and no network sync path in audited code.
 - Crisis/support messaging is informational; app explicitly frames itself as non-emergency support.
 
