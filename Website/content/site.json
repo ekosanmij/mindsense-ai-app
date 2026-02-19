@@ -1,0 +1,221 @@
+{
+  "appName": "MindSense AI",
+  "companyName": "MindSense Labs",
+  "siteUrl": "https://example.com",
+  "email": "hello@mindsense.ai",
+  "tagline": "A calmer way to turn readiness into output",
+  "description": "MindSense AI tracks readiness, load, and consistency, then guides regulation protocols to protect recovery and focused work.",
+  "hero": {
+    "headline": "A calmer way to turn readiness into output",
+    "subheadline": "Track readiness, load, and consistency, then run guided regulation protocols to protect recovery and focus.",
+    "trustLine": "Works with Apple Watch and Apple Health"
+  },
+  "links": {
+    "bookDemo": "https://calendly.com/your-team/demo",
+    "joinWaitlist": "https://example.com/waitlist",
+    "download": "https://example.com/download",
+    "testflight": "https://testflight.apple.com/join/your-code",
+    "privacy": "https://example.com/privacy"
+  },
+  "socials": [
+    {
+      "label": "X",
+      "href": "https://x.com/your-handle"
+    },
+    {
+      "label": "LinkedIn",
+      "href": "https://linkedin.com/company/your-company"
+    },
+    {
+      "label": "GitHub",
+      "href": "https://github.com/your-org"
+    }
+  ],
+  "outcomes": [
+    {
+      "title": "Clarity",
+      "description": "Know your current state in seconds."
+    },
+    {
+      "title": "Action",
+      "description": "Run a regulation protocol in minutes."
+    },
+    {
+      "title": "Consistency",
+      "description": "Compound readiness over time."
+    }
+  ],
+  "productPreview": [
+    {
+      "id": "today",
+      "title": "Today",
+      "image": "/screens/today-overview.svg",
+      "bullets": [
+        "Readiness, load, and consistency in one view.",
+        "One clear next-step recommendation with rationale."
+      ]
+    },
+    {
+      "id": "regulate",
+      "title": "Regulate",
+      "image": "/screens/regulate-flow.svg",
+      "bullets": [
+        "Guided protocol flow with timing support.",
+        "Quick impact check-in after each session."
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Data",
+      "image": "/screens/data-trends.svg",
+      "bullets": [
+        "Trend view for readiness versus load.",
+        "Experiments and history with actionable learning."
+      ]
+    }
+  ],
+  "differentiators": [
+    "Scenario-based recommendations instead of generic tips.",
+    "7-day experiments to validate what actually works.",
+    "Estimate and rationale transparency with confidence framing.",
+    "Low-friction nudges with quiet hours support.",
+    "Privacy-first design with export and delete pathways.",
+    "Safety language with clear boundaries and resources."
+  ],
+  "audienceCards": [
+    "Built for individuals",
+    "Built for founders and operators",
+    "Built for teams and managers",
+    "Built for clinicians and coaches"
+  ],
+  "testimonials": [
+    {
+      "quote": "Placeholder testimonial: this product made state-to-action simple for our team.",
+      "author": "Pilot Participant",
+      "role": "Operations Lead"
+    },
+    {
+      "quote": "Placeholder testimonial: clean UX, clear rationale, and practical guidance.",
+      "author": "Early User",
+      "role": "Founder"
+    }
+  ],
+  "productPillars": [
+    {
+      "title": "Today",
+      "summary": "State snapshot and next best step with confidence context."
+    },
+    {
+      "title": "Regulate",
+      "summary": "Guided protocols with timers, cues, and post-session impact."
+    },
+    {
+      "title": "Data",
+      "summary": "Trends, experiments, history, and transparent rationale."
+    }
+  ],
+  "productFeatures": [
+    "Smart stress nudge",
+    "Recovery window alerts",
+    "Weekly review",
+    "Quiet hours",
+    "Reduced motion support",
+    "Haptics controls",
+    "Data export",
+    "Delete account data"
+  ],
+  "faq": [
+    {
+      "question": "What is readiness?",
+      "answer": "Readiness is a practical estimate of how prepared your system is for focused effort, based on recent signals and context."
+    },
+    {
+      "question": "What devices are supported?",
+      "answer": "MindSense AI is designed for iPhone and supports Apple Watch plus Apple Health data where available."
+    },
+    {
+      "question": "What data do you collect?",
+      "answer": "Signals, check-ins, and protocol interaction data needed to deliver guidance and improve recommendations."
+    },
+    {
+      "question": "Is MindSense AI medical care?",
+      "answer": "No. MindSense AI is a wellness support product and not a medical or emergency service."
+    },
+    {
+      "question": "Can teams use it?",
+      "answer": "Yes. The product supports B2B pilot workflows and can be configured for team-oriented programs."
+    }
+  ],
+  "teams": {
+    "forWho": [
+      "Performance teams",
+      "Startups and operators",
+      "Clinics and coaching practices",
+      "Enterprise wellbeing pilots"
+    ],
+    "valueProps": [
+      "Improve consistency and reduce burnout risk signals.",
+      "Introduce lightweight daily regulation actions.",
+      "Turn subjective stress into measurable routines.",
+      "Provide clear pilot outcomes and recommendations."
+    ],
+    "pilot": [
+      "Week 1: kickoff + onboarding",
+      "Week 2-4: usage monitoring + adoption coaching",
+      "Week 5-6: outcomes review + rollout recommendation"
+    ]
+  },
+  "privacySummary": [
+    "Plain-language data handling and controls.",
+    "Export and delete pathways are available.",
+    "No emergency-service claims and clear safety boundaries."
+  ],
+  "roadmap": {
+    "now": [
+      "Readiness, load, consistency daily loop",
+      "Guided regulation protocols",
+      "Experiment tracking and weekly review"
+    ],
+    "next": [
+      "Improved team pilot dashboards",
+      "Expanded protocol personalization",
+      "Refined recommendation confidence labels"
+    ],
+    "later": [
+      "Broader wearables compatibility",
+      "Aggregated team insights with strong privacy controls",
+      "Enterprise deployment tooling"
+    ]
+  },
+  "pilotPackage": [
+    "Tailored onboarding workflow",
+    "Pilot success metrics setup",
+    "Weekly performance summary",
+    "Implementation and rollout recommendation"
+  ],
+  "metadata": {
+    "defaultTitle": "MindSense AI | Readiness + Regulation Platform",
+    "defaultDescription": "MindSense AI helps people and teams track readiness, run guided regulation protocols, and build consistency.",
+    "homeTitle": "MindSense AI | Calm, Data-Driven Readiness",
+    "homeDescription": "See your state, run the right protocol, and compound consistency with a calm, transparent workflow.",
+    "productTitle": "Product | MindSense AI",
+    "productDescription": "Explore Today, Regulate, and Data workflows with screenshots, feature walkthroughs, and FAQ.",
+    "howTitle": "How It Works | MindSense AI",
+    "howDescription": "Understand the input-to-output workflow, estimate philosophy, and experiment learning loop.",
+    "teamsTitle": "For Teams | MindSense AI",
+    "teamsDescription": "Pilot MindSense AI with your organization to improve consistency and reduce burnout risk.",
+    "privacyTitle": "Privacy | MindSense AI",
+    "privacyDescription": "Plain-English data handling, retention, and user control details.",
+    "updatesTitle": "Updates | MindSense AI",
+    "updatesDescription": "Latest product updates and changelog entries from the MindSense AI team.",
+    "contactTitle": "Contact | MindSense AI",
+    "contactDescription": "Contact MindSense AI for demos, partnerships, pilot programs, and support.",
+    "pressTitle": "Press Kit | MindSense AI",
+    "pressDescription": "Download logos, app visuals, and boilerplate information for press and partners."
+  },
+  "analytics": {
+    "enabled": false,
+    "provider": "posthog",
+    "key": ""
+  }
+}

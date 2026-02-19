@@ -1,0 +1,18 @@
+<svg width="1200" height="1200" viewBox="0 0 1200 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="600" y1="880" x2="600" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#070B10"/>
+      <stop offset="1" stop-color="#0E1520"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="1200" rx="72" fill="#0B0F14"/>
+  <rect x="220" y="120" width="760" height="760" rx="176" fill="url(#bg)"/>
+
+  <path d="M417.6 500H524Q553.7 500 577.2 549.3Q607.9 522.7 638.4 450.6Q661.9 469.9 691.6 530H767.6" stroke="#56D3FF" stroke-opacity="0.44" stroke-width="86" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="804.2" cy="530" r="49" fill="#56D3FF" fill-opacity="0.30"/>
+  <path d="M417.6 500H524Q553.7 500 577.2 549.3Q607.9 522.7 638.4 450.6Q661.9 469.9 691.6 530H767.6" stroke="#D7F4FF" stroke-width="62.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="804.2" cy="530" r="25.4" fill="#D7F4FF"/>
+
+  <text x="600" y="1030" text-anchor="middle" fill="#EAF7FF" font-size="172" font-weight="600" font-family="SF Pro Display, Manrope, sans-serif" letter-spacing="-3">MindSense</text>
+</svg>

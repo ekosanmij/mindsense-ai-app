@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Xcode user-specific files
+*.xcworkspace/xcuserdata/
+*.xcuserdatad/
+*.xcuserstate
+xcuserdata/
+
+# Build artifacts
+DerivedData/
+DerivedData*/
+.build/
+Artifacts/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+GoogleService-Info.plist
+*.p12
+*.mobileprovision
+*.pem
+*.key
+*.jks
+*.keystore
+
+# Tooling
+.idea/
+.vscode/
+
+# Logs
+*.log
