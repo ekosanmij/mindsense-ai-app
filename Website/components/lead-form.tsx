@@ -1,8 +1,9 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { trackEvent } from "@/lib/tracking";
 
-type LeadFormMode = "waitlist" | "contact";
+type LeadFormMode = "waitlist" | "contact" | "investor";
 
 type LeadFormProps = {
   mode: LeadFormMode;
@@ -21,19 +22,22 @@ export function LeadForm({ mode, endpoint, submitLabel, className }: LeadFormPro
   const [values, setValues] = useState({
     name: "",
     email: "",
-    message: "",
+    role: "",
     company: "",
+    message: "",
     honeypot: "",
   });
 
   const isContactMode = mode === "contact";
+  const isInvestorMode = mode === "investor";
 
   const validationError = useMemo(() => {
     if (!values.email || !emailRegex.test(values.email)) return "Enter a valid email address.";
-    if (isContactMode && !values.name.trim()) return "Please add your name.";
-    if (isContactMode && values.message.trim().length < 10) return "Please add a short message (10+ characters).";
+    if ((isContactMode || isInvestorMode) && !values.name.trim()) return "Please add your name.";
+    if ((isContactMode || isInvestorMode) && !values.role.trim()) return "Please choose your role.";
+    if (isContactMode && values.message.trim().length < 12) return "Please add a short message (12+ characters).";
     return "";
-  }, [isContactMode, values.email, values.message, values.name]);
+  }, [isContactMode, isInvestorMode, values.email, values.message, values.name, values.role]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -57,6 +61,7 @@ export function LeadForm({ mode, endpoint, submitLabel, className }: LeadFormPro
         type: mode,
         name: values.name.trim(),
         email: values.email.trim(),
+        role: values.role.trim(),
         company: values.company.trim(),
         message: values.message.trim(),
         submittedAt: new Date().toISOString(),
@@ -73,8 +78,14 @@ export function LeadForm({ mode, endpoint, submitLabel, className }: LeadFormPro
           throw new Error("Unable to submit at the moment.");
         }
       } else {
-        // Placeholder until a provider endpoint is connected.
-        console.info("Lead form placeholder submission", payload);
+        console.info("Lead form submission", payload);
+      }
+
+      if (mode === "waitlist") {
+        trackEvent("cta_join_beta_submitted", { source: "form", form: mode });
+      }
+      if (mode === "investor") {
+        trackEvent("cta_investor_deck_submitted", { source: "form", form: mode });
       }
 
       setStatus("success");
@@ -92,7 +103,7 @@ export function LeadForm({ mode, endpoint, submitLabel, className }: LeadFormPro
       noValidate
     >
       <div className="grid gap-3">
-        {isContactMode ? (
+        {isContactMode || isInvestorMode ? (
           <label className="grid gap-1 text-sm text-ink-700 dark:text-ink-200">
             Name
             <input
@@ -119,6 +130,26 @@ export function LeadForm({ mode, endpoint, submitLabel, className }: LeadFormPro
           />
         </label>
 
+        {isContactMode || isInvestorMode ? (
+          <label className="grid gap-1 text-sm text-ink-700 dark:text-ink-200">
+            Role
+            <select
+              value={values.role}
+              onChange={(event) => setValues((prev) => ({ ...prev, role: event.target.value }))}
+              className="rounded-xl border border-ink-200 bg-white px-3 py-2 text-ink-900 outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-200 dark:border-ink-700 dark:bg-ink-950 dark:text-ink-100 dark:focus:ring-accent-800"
+              required
+            >
+              <option value="">Select role</option>
+              <option value="founder">Founder</option>
+              <option value="operator">Operator</option>
+              <option value="team_lead">Team lead</option>
+              <option value="clinician">Clinician / Coach</option>
+              <option value="investor">Investor</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+        ) : null}
+
         <label className="grid gap-1 text-sm text-ink-700 dark:text-ink-200">
           Company (optional)
           <input
@@ -139,8 +170,21 @@ export function LeadForm({ mode, endpoint, submitLabel, className }: LeadFormPro
               value={values.message}
               onChange={(event) => setValues((prev) => ({ ...prev, message: event.target.value }))}
               className="rounded-xl border border-ink-200 bg-white px-3 py-2 text-ink-900 outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-200 dark:border-ink-700 dark:bg-ink-950 dark:text-ink-100 dark:focus:ring-accent-800"
-              placeholder="Tell us about your use case."
+              placeholder="Tell us about your pilot or deployment goals."
               required
+            />
+          </label>
+        ) : null}
+
+        {isInvestorMode ? (
+          <label className="grid gap-1 text-sm text-ink-700 dark:text-ink-200">
+            Message (optional)
+            <textarea
+              rows={4}
+              value={values.message}
+              onChange={(event) => setValues((prev) => ({ ...prev, message: event.target.value }))}
+              className="rounded-xl border border-ink-200 bg-white px-3 py-2 text-ink-900 outline-none transition focus:border-accent-500 focus:ring-2 focus:ring-accent-200 dark:border-ink-700 dark:bg-ink-950 dark:text-ink-100 dark:focus:ring-accent-800"
+              placeholder="Add context for your request."
             />
           </label>
         ) : null}
@@ -166,7 +210,7 @@ export function LeadForm({ mode, endpoint, submitLabel, className }: LeadFormPro
 
       {status === "success" ? (
         <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-300">
-          Submission received. We will follow up soon.
+          Thanks. We received your request and typically respond within 1–2 business days.
         </p>
       ) : null}
       {status === "error" && errorMessage ? (

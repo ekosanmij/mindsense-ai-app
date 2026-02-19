@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { TrackedLink } from "@/components/tracked-link";
 import { siteConfig } from "@/lib/site-config";
 
 type CtaBandProps = {
@@ -15,20 +15,22 @@ export function CtaBand({ title, subtitle }: CtaBandProps) {
           <p className="mt-2 text-sm text-ink-600 dark:text-ink-300">{subtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
-            href={siteConfig.links.bookDemo}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="inline-flex items-center justify-center rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-600"
-          >
-            Book a demo
-          </Link>
-          <Link
-            href="/contact"
+          <TrackedLink
+            href={siteConfig.links.bookPilot}
+            eventName="cta_book_pilot_clicked"
+            eventPayload={{ source: "cta_band" }}
             className="inline-flex items-center justify-center rounded-full border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 transition hover:border-accent-400 hover:text-accent-700 dark:border-ink-600 dark:text-ink-100 dark:hover:border-accent-500 dark:hover:text-accent-300"
           >
-            Join waitlist
-          </Link>
+            Book a pilot
+          </TrackedLink>
+          <TrackedLink
+            href={siteConfig.links.getApp}
+            eventName="cta_get_app_clicked"
+            eventPayload={{ source: "cta_band" }}
+            className="inline-flex items-center justify-center rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-600"
+          >
+            Get the app
+          </TrackedLink>
         </div>
       </div>
     </section>

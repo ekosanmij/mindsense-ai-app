@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TrackedLink } from "@/components/tracked-link";
 import { siteConfig, topNavLinks } from "@/lib/site-config";
 
 export function SiteHeader() {
@@ -46,14 +47,22 @@ export function SiteHeader() {
             })}
           </nav>
 
-          <Link
-            href={siteConfig.links.bookDemo}
-            target="_blank"
-            rel="noreferrer noopener"
+          <TrackedLink
+            href={siteConfig.links.bookPilot}
+            eventName="cta_book_pilot_clicked"
+            eventPayload={{ source: "header" }}
+            className="rounded-full border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 transition hover:border-accent-400 hover:text-accent-700 dark:border-ink-700 dark:text-ink-100 dark:hover:border-accent-500 dark:hover:text-accent-300"
+          >
+            Book a pilot
+          </TrackedLink>
+          <TrackedLink
+            href={siteConfig.links.getApp}
+            eventName="cta_get_app_clicked"
+            eventPayload={{ source: "header" }}
             className="rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-600"
           >
-            Book a demo
-          </Link>
+            Get the app
+          </TrackedLink>
           <ThemeToggle />
         </div>
 
@@ -95,14 +104,24 @@ export function SiteHeader() {
               </Link>
             );
           })}
-          <Link
-            href={siteConfig.links.bookDemo}
-            target="_blank"
-            rel="noreferrer noopener"
-            className="mt-2 inline-flex items-center justify-center rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white"
+          <TrackedLink
+            href={siteConfig.links.bookPilot}
+            eventName="cta_book_pilot_clicked"
+            eventPayload={{ source: "mobile_menu" }}
+            onClick={() => setMenuOpen(false)}
+            className="mt-2 inline-flex items-center justify-center rounded-full border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 dark:border-ink-700 dark:text-ink-100"
           >
-            Book a demo
-          </Link>
+            Book a pilot
+          </TrackedLink>
+          <TrackedLink
+            href={siteConfig.links.getApp}
+            eventName="cta_get_app_clicked"
+            eventPayload={{ source: "mobile_menu" }}
+            onClick={() => setMenuOpen(false)}
+            className="inline-flex items-center justify-center rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white"
+          >
+            Get the app
+          </TrackedLink>
         </nav>
       </div>
     </header>

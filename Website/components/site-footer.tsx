@@ -20,13 +20,10 @@ export function SiteFooter() {
           </div>
           <p className="max-w-sm text-sm text-ink-600 dark:text-ink-300">{siteConfig.description}</p>
           <p className="text-sm text-ink-600 dark:text-ink-300">
-            Contact:{" "}
-            <a href={`mailto:${siteConfig.email}`} className="text-accent-700 dark:text-accent-300">
-              {siteConfig.email}
-            </a>
+            Contact: <a href={siteConfig.links.support} className="text-accent-700 dark:text-accent-300">{siteConfig.email}</a>
           </p>
           <p className="text-xs text-ink-500 dark:text-ink-400">
-            MindSense AI is a wellness support product and not an emergency service.
+            MindSense AI is wellness support technology and not emergency or diagnostic care.
           </p>
         </div>
 
@@ -62,9 +59,7 @@ export function SiteFooter() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 text-xs text-ink-500 dark:text-ink-400">
-            © {new Date().getFullYear()} {siteConfig.companyName}
-          </p>
+          <p className="mt-4 text-xs text-ink-500 dark:text-ink-400">© {new Date().getFullYear()} {siteConfig.companyName}</p>
         </div>
       </div>
     </footer>

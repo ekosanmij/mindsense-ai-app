@@ -35,31 +35,48 @@ export type SiteConfig = {
     trustLine: string;
   };
   links: {
-    bookDemo: string;
-    joinWaitlist: string;
-    download: string;
-    testflight: string;
+    getApp: string;
+    joinBeta: string;
+    bookPilot: string;
+    requestDeck: string;
     privacy: string;
+    support: string;
   };
   formEndpoints: {
     waitlist: string;
     contact: string;
+    investor: string;
   };
   socials: SocialLink[];
   outcomes: Array<{ title: string; description: string }>;
   productPreview: ProductPreviewItem[];
   differentiators: string[];
-  audienceCards: string[];
-  testimonials: Array<{ quote: string; author: string; role: string }>;
+  proofPoints: string[];
   productPillars: Array<{ title: string; summary: string }>;
   productFeatures: string[];
   faq: FAQItem[];
+  protocols: Array<{
+    name: string;
+    duration: string;
+    when: string;
+    immediate: string;
+    week: string;
+  }>;
   teams: {
     forWho: string[];
     valueProps: string[];
     pilot: string[];
+    tiers: string[];
+    weeklyDeliverables: string[];
+    successMetrics: string[];
+    operators: string[];
   };
-  privacySummary: string[];
+  trust: {
+    privacy: string[];
+    security: string[];
+    safety: string[];
+    dataRights: string[];
+  };
   roadmap: {
     now: string[];
     next: string[];
@@ -78,19 +95,21 @@ export const siteConfig = siteData as SiteConfig;
 
 export const topNavLinks: NavLink[] = [
   { href: "/product", label: "Product" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/for-teams", label: "For Teams" },
+  { href: "/protocols", label: "Protocols" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/trust", label: "Trust" },
+  { href: "/teams", label: "Teams" },
   { href: "/updates", label: "Updates" },
   { href: "/press", label: "Press" },
-  { href: "/contact", label: "Contact" },
 ];
 
 export const footerNavLinks: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/product", label: "Product" },
-  { href: "/how-it-works", label: "How It Works" },
-  { href: "/for-teams", label: "For Teams" },
-  { href: "/privacy", label: "Privacy" },
+  { href: "/protocols", label: "Protocols" },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/trust", label: "Trust Center" },
+  { href: "/teams", label: "Teams" },
   { href: "/updates", label: "Updates" },
   { href: "/contact", label: "Contact" },
   { href: "/press", label: "Press Kit" },
@@ -99,9 +118,14 @@ export const footerNavLinks: NavLink[] = [
 export const routesForSitemap = [
   "/",
   "/product",
+  "/protocols",
   "/how-it-works",
-  "/for-teams",
-  "/privacy",
+  "/trust",
+  "/trust/privacy",
+  "/trust/security",
+  "/trust/safety",
+  "/trust/data-rights",
+  "/teams",
   "/updates",
   "/contact",
   "/press",

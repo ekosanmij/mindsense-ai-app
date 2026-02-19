@@ -1,23 +1,23 @@
 import Image from "next/image";
-import Link from "next/link";
 import { CtaBand } from "@/components/cta-band";
-import { LeadForm } from "@/components/lead-form";
+import { InteractiveLoopDemo } from "@/components/interactive-loop-demo";
 import { MetricTiles } from "@/components/metric-tiles";
 import { ProductPreviewTabs } from "@/components/product-preview-tabs";
 import { Reveal } from "@/components/reveal";
 import { SectionHeading } from "@/components/section-heading";
+import { TrackedLink } from "@/components/tracked-link";
 import { buildMetadata } from "@/lib/metadata";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata = buildMetadata(siteConfig.metadata.homeTitle, siteConfig.metadata.homeDescription);
 
-export default function HomePage() {
-  const outcomeValues: Record<string, string> = {
-    Clarity: "Know your state",
-    Action: "Run a protocol",
-    Consistency: "Compound over time",
-  };
+const outcomeValues: Record<string, string> = {
+  Clarity: "Know your state",
+  Action: "Run one protocol",
+  Consistency: "Compound readiness",
+};
 
+export default function HomePage() {
   return (
     <div className="space-y-14 md:space-y-20">
       <Reveal>
@@ -33,44 +33,37 @@ export default function HomePage() {
             <p className="mt-3 text-sm text-ink-500 dark:text-ink-400">{siteConfig.hero.trustLine}</p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href={siteConfig.links.bookDemo}
-                target="_blank"
-                rel="noreferrer noopener"
+              <TrackedLink
+                href={siteConfig.links.getApp}
+                eventName="cta_get_app_clicked"
+                eventPayload={{ source: "hero_primary" }}
                 className="inline-flex items-center justify-center rounded-full bg-accent-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-600"
               >
-                Book a demo
-              </Link>
-              <Link
-                href="/contact"
+                Get the app
+              </TrackedLink>
+              <TrackedLink
+                href={siteConfig.links.bookPilot}
+                eventName="cta_book_pilot_clicked"
+                eventPayload={{ source: "hero_secondary" }}
                 className="inline-flex items-center justify-center rounded-full border border-ink-300 px-5 py-2.5 text-sm font-semibold text-ink-900 transition hover:border-accent-500 hover:text-accent-700 dark:border-ink-700 dark:text-ink-100 dark:hover:border-accent-500 dark:hover:text-accent-300"
               >
-                Join waitlist
-              </Link>
+                Book a pilot
+              </TrackedLink>
             </div>
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-              <Link
-                href={siteConfig.links.download}
-                target="_blank"
-                rel="noreferrer noopener"
+
+            <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
+              <TrackedLink
+                href={siteConfig.links.joinBeta}
                 className="text-accent-700 hover:text-accent-900 dark:text-accent-300 dark:hover:text-accent-100"
               >
-                Download
-              </Link>
-              <Link
-                href={siteConfig.links.testflight}
-                target="_blank"
-                rel="noreferrer noopener"
+                Join beta
+              </TrackedLink>
+              <TrackedLink
+                href={siteConfig.links.requestDeck}
                 className="text-accent-700 hover:text-accent-900 dark:text-accent-300 dark:hover:text-accent-100"
               >
-                TestFlight
-              </Link>
-              <Link
-                href="/contact"
-                className="text-accent-700 hover:text-accent-900 dark:text-accent-300 dark:hover:text-accent-100"
-              >
-                Contact
-              </Link>
+                Request investor deck
+              </TrackedLink>
             </div>
           </div>
 
@@ -100,11 +93,35 @@ export default function HomePage() {
       </Reveal>
 
       <Reveal>
+        <section className="section-space">
+          <InteractiveLoopDemo />
+        </section>
+      </Reveal>
+
+      <Reveal>
+        <section className="section-space space-y-6">
+          <SectionHeading
+            eyebrow="Product Loop"
+            title="Today → Regulate → Data"
+            description="The loop is intentionally simple: understand state, execute one protocol, and learn from outcomes."
+          />
+          <div className="grid gap-4 md:grid-cols-3">
+            {siteConfig.productPillars.map((pillar) => (
+              <article key={pillar.title} className="surface-card p-5">
+                <h2 className="text-xl font-semibold text-ink-900 dark:text-white">{pillar.title}</h2>
+                <p className="mt-2 text-sm text-ink-600 dark:text-ink-300">{pillar.summary}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </Reveal>
+
+      <Reveal>
         <section className="section-space space-y-6">
           <SectionHeading
             eyebrow="Product Preview"
-            title="A polished workflow across Today, Regulate, and Data"
-            description="Switch tabs to preview each product surface and see how the loop stays clear from signal to action."
+            title="See the core surfaces in motion"
+            description="Switch between Today, Regulate, and Data previews to understand the end-to-end experience."
           />
           <ProductPreviewTabs items={siteConfig.productPreview} />
         </section>
@@ -113,45 +130,9 @@ export default function HomePage() {
       <Reveal>
         <section className="section-space space-y-6">
           <SectionHeading
-            eyebrow="Live Capture"
-            title="Recorded app flow from test runs"
-            description="Use these captures as placeholders until final App Store screenshots are exported."
-          />
-          <div className="grid gap-4 md:grid-cols-2">
-            <article className="surface-card overflow-hidden p-3">
-              <video
-                src="/media/preview-small.mp4"
-                className="h-auto w-full rounded-2xl"
-                controls
-                muted
-                playsInline
-                loop
-                preload="none"
-              />
-              <p className="mt-3 text-sm text-ink-600 dark:text-ink-300">Compact device run</p>
-            </article>
-            <article className="surface-card overflow-hidden p-3">
-              <video
-                src="/media/preview-large.mp4"
-                className="h-auto w-full rounded-2xl"
-                controls
-                muted
-                playsInline
-                loop
-                preload="none"
-              />
-              <p className="mt-3 text-sm text-ink-600 dark:text-ink-300">Large device run</p>
-            </article>
-          </div>
-        </section>
-      </Reveal>
-
-      <Reveal>
-        <section className="section-space space-y-6">
-          <SectionHeading
-            eyebrow="Why It Is Different"
-            title="Built for transparent, scenario-based guidance"
-            description="MindSense is designed for trust and practical daily use, not generic one-size-fits-all advice."
+            eyebrow="Why it is different"
+            title="Designed for decision quality under stress"
+            description="MindSense emphasizes practical action and transparent reasoning rather than opaque wellness scoring."
           />
           <div className="grid gap-3 md:grid-cols-2">
             {siteConfig.differentiators.map((line) => (
@@ -170,64 +151,110 @@ export default function HomePage() {
       <Reveal>
         <section className="section-space space-y-6">
           <SectionHeading
-            eyebrow="Credibility"
-            title="Built for real-world users and pilot partners"
-            description="Use these placeholder slots while you finalize testimonials and customer logos."
+            eyebrow="Protocols"
+            title="Three protocol paths for real contexts"
+            description="Each protocol is designed for a specific state profile and feeds learning back into future recommendations."
           />
-
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            {siteConfig.audienceCards.map((item) => (
-              <div
-                key={item}
-                className="rounded-full border border-ink-300 bg-white px-4 py-2 text-center text-sm text-ink-700 dark:border-ink-700 dark:bg-ink-900 dark:text-ink-200"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {siteConfig.testimonials.map((quote) => (
-              <article key={quote.quote} className="surface-card p-5">
-                <p className="text-sm text-ink-700 dark:text-ink-200">“{quote.quote}”</p>
-                <p className="mt-3 text-xs font-medium uppercase tracking-[0.14em] text-ink-500 dark:text-ink-400">
-                  {quote.author} — {quote.role}
-                </p>
+          <div className="grid gap-4 md:grid-cols-3">
+            {siteConfig.protocols.map((protocol) => (
+              <article key={protocol.name} className="surface-card p-5">
+                <h3 className="text-xl font-semibold text-ink-900 dark:text-white">{protocol.name}</h3>
+                <p className="mt-1 text-sm text-accent-700 dark:text-accent-300">{protocol.duration}</p>
+                <p className="mt-3 text-sm text-ink-600 dark:text-ink-300"><span className="font-semibold">When:</span> {protocol.when}</p>
+                <p className="mt-2 text-sm text-ink-600 dark:text-ink-300"><span className="font-semibold">Immediate:</span> {protocol.immediate}</p>
               </article>
             ))}
           </div>
+          <TrackedLink
+            href="/protocols"
+            className="inline-flex text-sm font-semibold text-accent-700 hover:text-accent-900 dark:text-accent-300 dark:hover:text-accent-100"
+          >
+            Explore all protocols →
+          </TrackedLink>
+        </section>
+      </Reveal>
+
+      <Reveal>
+        <section className="section-space space-y-6">
+          <SectionHeading
+            eyebrow="Trust"
+            title="Built for transparency and safety"
+            description="Privacy, security, safety boundaries, and data rights are part of the product experience, not legal afterthoughts."
+          />
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {Object.entries(siteConfig.trust).map(([key, points]) => (
+              <article key={key} className="surface-card p-4">
+                <h3 className="text-base font-semibold capitalize text-ink-900 dark:text-white">{key.replace(/([A-Z])/g, " $1")}</h3>
+                <p className="mt-2 text-sm text-ink-600 dark:text-ink-300">{points[0]}</p>
+              </article>
+            ))}
+          </div>
+          <TrackedLink
+            href="/trust"
+            className="inline-flex text-sm font-semibold text-accent-700 hover:text-accent-900 dark:text-accent-300 dark:hover:text-accent-100"
+          >
+            View Trust Center →
+          </TrackedLink>
+        </section>
+      </Reveal>
+
+      <Reveal>
+        <section className="section-space grid gap-4 md:grid-cols-2">
+          <article className="surface-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent-700 dark:text-accent-300">For individuals</p>
+            <h2 className="mt-2 text-2xl font-semibold text-ink-900 dark:text-white">Get guided support today</h2>
+            <p className="mt-2 text-sm text-ink-600 dark:text-ink-300">
+              Start with daily state clarity, one next protocol, and trend learning that gets sharper over time.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <TrackedLink
+                href={siteConfig.links.getApp}
+                eventName="cta_get_app_clicked"
+                eventPayload={{ source: "audience_lane_individual" }}
+                className="inline-flex rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Get the app
+              </TrackedLink>
+              <TrackedLink
+                href={siteConfig.links.joinBeta}
+                className="inline-flex rounded-full border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 dark:border-ink-700 dark:text-ink-100"
+              >
+                Join beta
+              </TrackedLink>
+            </div>
+          </article>
+
+          <article className="surface-card p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-accent-700 dark:text-accent-300">For teams and investors</p>
+            <h2 className="mt-2 text-2xl font-semibold text-ink-900 dark:text-white">Evaluate a pilot pathway</h2>
+            <p className="mt-2 text-sm text-ink-600 dark:text-ink-300">
+              Review pilot structure, outcomes framework, trust model, and implementation support for real-world deployment.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <TrackedLink
+                href={siteConfig.links.bookPilot}
+                eventName="cta_book_pilot_clicked"
+                eventPayload={{ source: "audience_lane_team" }}
+                className="inline-flex rounded-full border border-ink-300 px-4 py-2 text-sm font-semibold text-ink-900 dark:border-ink-700 dark:text-ink-100"
+              >
+                Book pilot
+              </TrackedLink>
+              <TrackedLink
+                href={siteConfig.links.requestDeck}
+                className="inline-flex rounded-full bg-accent-500 px-4 py-2 text-sm font-semibold text-white"
+              >
+                Request deck
+              </TrackedLink>
+            </div>
+          </article>
         </section>
       </Reveal>
 
       <Reveal>
         <section className="section-space">
           <CtaBand
-            title="See a demo tailored to your use case"
-            subtitle="For investors, prospective clients, and pilot teams. We will walk through state logic, protocol flow, and rollout options."
-          />
-        </section>
-      </Reveal>
-
-      <Reveal>
-        <section className="section-space grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <SectionHeading
-              eyebrow="Waitlist"
-              title="Get product updates and pilot openings"
-              description="Join the waitlist to receive release updates, pilot invites, and roadmap milestones."
-            />
-            <p className="mt-4 text-sm text-ink-600 dark:text-ink-300">
-              Prefer direct contact? Email{" "}
-              <a className="text-accent-700 dark:text-accent-300" href={`mailto:${siteConfig.email}`}>
-                {siteConfig.email}
-              </a>
-              .
-            </p>
-          </div>
-          <LeadForm
-            mode="waitlist"
-            submitLabel="Join waitlist"
-            endpoint={siteConfig.formEndpoints.waitlist || undefined}
+            title="From signal awareness to reliable action"
+            subtitle="Get started as an individual or book a pilot to evaluate deployment across your team."
           />
         </section>
       </Reveal>

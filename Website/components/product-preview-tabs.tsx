@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useState } from "react";
+import { TrackedLink } from "@/components/tracked-link";
+import { trackEvent } from "@/lib/tracking";
 
 type PreviewItem = {
   id: string;
@@ -28,7 +29,10 @@ export function ProductPreviewTabs({ items }: ProductPreviewTabsProps) {
           <button
             key={item.id}
             type="button"
-            onClick={() => setActiveId(item.id)}
+            onClick={() => {
+              setActiveId(item.id);
+              trackEvent("protocol_preview_opened", { surface: "home_tabs", tab: item.id });
+            }}
             className={`rounded-full px-4 py-2 text-sm font-medium transition ${
               item.id === active.id
                 ? "bg-accent-500 text-white"
@@ -63,12 +67,14 @@ export function ProductPreviewTabs({ items }: ProductPreviewTabsProps) {
               </li>
             ))}
           </ul>
-          <Link
+          <TrackedLink
             href="/product"
+            eventName="protocol_preview_opened"
+            eventPayload={{ surface: "home_tabs", target: "product_page", tab: active.id }}
             className="mt-4 inline-flex items-center text-sm font-semibold text-accent-700 transition hover:text-accent-900 dark:text-accent-300 dark:hover:text-accent-100"
           >
-            See more product details →
-          </Link>
+            Explore full product tour →
+          </TrackedLink>
         </div>
       </div>
     </div>

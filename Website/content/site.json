@@ -1,52 +1,54 @@
 {
   "appName": "MindSense AI",
   "companyName": "MindSense Labs",
-  "siteUrl": "https://example.com",
+  "siteUrl": "https://mindsense-ai-app.vercel.app",
   "email": "hello@mindsense.ai",
-  "tagline": "A calmer way to turn readiness into output",
-  "description": "MindSense AI tracks readiness, load, and consistency, then guides regulation protocols to protect recovery and focused work.",
+  "tagline": "Know your state. Take one next step.",
+  "description": "MindSense AI is a physiology-aware readiness and regulation platform for focused work and recovery.",
   "hero": {
-    "headline": "A calmer way to turn readiness into output",
-    "subheadline": "Track readiness, load, and consistency, then run guided regulation protocols to protect recovery and focus.",
+    "headline": "Know your state. Take one next step.",
+    "subheadline": "Track readiness, load, and consistency, then run guided regulation protocols that protect recovery and focused output.",
     "trustLine": "Works with Apple Watch and Apple Health"
   },
   "links": {
-    "bookDemo": "https://calendly.com/your-team/demo",
-    "joinWaitlist": "https://example.com/waitlist",
-    "download": "https://example.com/download",
-    "testflight": "https://testflight.apple.com/join/your-code",
-    "privacy": "https://example.com/privacy"
+    "getApp": "https://testflight.apple.com/join/mindsense",
+    "joinBeta": "/contact?intent=beta",
+    "bookPilot": "https://calendly.com/mindsense/pilot",
+    "requestDeck": "/contact?intent=investor",
+    "privacy": "/trust/privacy",
+    "support": "mailto:hello@mindsense.ai"
   },
   "formEndpoints": {
     "waitlist": "",
-    "contact": ""
+    "contact": "",
+    "investor": ""
   },
   "socials": [
     {
       "label": "X",
-      "href": "https://x.com/your-handle"
+      "href": "https://x.com/mindsenseai"
     },
     {
       "label": "LinkedIn",
-      "href": "https://linkedin.com/company/your-company"
+      "href": "https://linkedin.com/company/mindsense-ai"
     },
     {
-      "label": "GitHub",
-      "href": "https://github.com/your-org"
+      "label": "YouTube",
+      "href": "https://youtube.com/@mindsenseai"
     }
   ],
   "outcomes": [
     {
       "title": "Clarity",
-      "description": "Know your current state in seconds."
+      "description": "Know your current state without guesswork."
     },
     {
       "title": "Action",
-      "description": "Run a regulation protocol in minutes."
+      "description": "Run one protocol in minutes with clear guidance."
     },
     {
       "title": "Consistency",
-      "description": "Compound readiness over time."
+      "description": "Build recovery and focus stability over time."
     }
   ],
   "productPreview": [
@@ -55,8 +57,8 @@
       "title": "Today",
       "image": "/screens/today-overview.svg",
       "bullets": [
-        "Readiness, load, and consistency in one view.",
-        "One clear next-step recommendation with rationale."
+        "Readiness, load, and consistency in one command view.",
+        "One recommendation with confidence and rationale."
       ]
     },
     {
@@ -64,8 +66,8 @@
       "title": "Regulate",
       "image": "/screens/regulate-flow.svg",
       "bullets": [
-        "Guided protocol flow with timing support.",
-        "Quick impact check-in after each session."
+        "Guided session flow with pacing cues and timers.",
+        "Post-session impact check-in to learn what works."
       ]
     },
     {
@@ -73,81 +75,92 @@
       "title": "Data",
       "image": "/screens/data-trends.svg",
       "bullets": [
-        "Trend view for readiness versus load.",
-        "Experiments and history with actionable learning."
+        "Trend visibility across readiness and load.",
+        "7-day experiments with adherence and effect context."
       ]
     }
   ],
   "differentiators": [
-    "Scenario-based recommendations instead of generic tips.",
-    "7-day experiments to validate what actually works.",
-    "Estimate and rationale transparency with confidence framing.",
-    "Low-friction nudges with quiet hours support.",
-    "Privacy-first design with export and delete pathways.",
-    "Safety language with clear boundaries and resources."
+    "Scenario-driven recommendations, not generic wellness tips.",
+    "Estimate + rationale transparency so users understand why.",
+    "7-day experiments that validate personal response patterns.",
+    "Confidence and coverage framing to prevent false certainty.",
+    "Low-friction protocol UX designed for high-stress moments.",
+    "Clear safety boundaries and escalation guidance."
   ],
-  "audienceCards": [
-    "Built for individuals",
-    "Built for founders and operators",
-    "Built for teams and managers",
-    "Built for clinicians and coaches"
-  ],
-  "testimonials": [
-    {
-      "quote": "Placeholder testimonial: this product made state-to-action simple for our team.",
-      "author": "Pilot Participant",
-      "role": "Operations Lead"
-    },
-    {
-      "quote": "Placeholder testimonial: clean UX, clear rationale, and practical guidance.",
-      "author": "Early User",
-      "role": "Founder"
-    }
+  "proofPoints": [
+    "Built for individuals who need calm, practical decisions.",
+    "Built for operators and founders managing cognitive load.",
+    "Pilot-ready for performance teams and coaching groups.",
+    "Trust-focused design with privacy and safety controls."
   ],
   "productPillars": [
     {
       "title": "Today",
-      "summary": "State snapshot and next best step with confidence context."
+      "summary": "State snapshot and one next best step."
     },
     {
       "title": "Regulate",
-      "summary": "Guided protocols with timers, cues, and post-session impact."
+      "summary": "Guided protocols with impact capture."
     },
     {
       "title": "Data",
-      "summary": "Trends, experiments, history, and transparent rationale."
+      "summary": "Trends, experiments, and history."
     }
   ],
   "productFeatures": [
     "Smart stress nudge",
     "Recovery window alerts",
-    "Weekly review",
-    "Quiet hours",
-    "Reduced motion support",
-    "Haptics controls",
+    "Weekly review summary",
+    "Quiet hours control",
+    "Reduce motion support",
+    "Haptics preferences",
     "Data export",
-    "Delete account data"
+    "Data deletion"
   ],
   "faq": [
     {
-      "question": "What is readiness?",
-      "answer": "Readiness is a practical estimate of how prepared your system is for focused effort, based on recent signals and context."
+      "question": "What signals are used?",
+      "answer": "MindSense uses wearable-adjacent state signals, check-ins, and protocol outcomes to generate practical readiness guidance."
     },
     {
-      "question": "What devices are supported?",
-      "answer": "MindSense AI is designed for iPhone and supports Apple Watch plus Apple Health data where available."
+      "question": "How are recommendations decided?",
+      "answer": "The app matches current pattern context to a scenario, then surfaces one best next protocol with rationale and confidence framing."
     },
     {
-      "question": "What data do you collect?",
-      "answer": "Signals, check-ins, and protocol interaction data needed to deliver guidance and improve recommendations."
+      "question": "What if confidence is low?",
+      "answer": "MindSense indicates lower confidence and prompts additional context capture rather than overstating recommendation certainty."
     },
     {
-      "question": "Is MindSense AI medical care?",
-      "answer": "No. MindSense AI is a wellness support product and not a medical or emergency service."
+      "question": "Is this medical care?",
+      "answer": "No. MindSense AI is a wellness support product and not emergency or diagnostic medical care."
     },
     {
       "question": "Can teams use it?",
-      "answer": "Yes. The product supports B2B pilot workflows and can be configured for team-oriented programs."
+      "answer": "Yes. Teams can run structured 4–6 week pilots with adoption support and outcome reporting."
+    }
+  ],
+  "protocols": [
+    {
+      "name": "Calm Now",
+      "duration": "4–6 minutes",
+      "when": "Acute stress spikes or emotional overactivation",
+      "immediate": "Downshift arousal and restore cognitive control",
+      "week": "More reliable recovery after stress events"
+    },
+    {
+      "name": "Focus Prep",
+      "duration": "5–7 minutes",
+      "when": "Before deep work or cognitively demanding blocks",
+      "immediate": "Stabilize attention and reduce distractibility",
+      "week": "Higher consistency in focused execution"
+    },
+    {
+      "name": "Sleep Downshift",
+      "duration": "8–10 minutes",
+      "when": "Evening wind-down or elevated pre-sleep load",
+      "immediate": "Reduce activation before bedtime",
+      "week": "Improved overnight recovery readiness"
     }
   ],
   "teams": {
@@ -158,64 +171,108 @@
       "Enterprise wellbeing pilots"
     ],
     "valueProps": [
-      "Improve consistency and reduce burnout risk signals.",
-      "Introduce lightweight daily regulation actions.",
-      "Turn subjective stress into measurable routines.",
-      "Provide clear pilot outcomes and recommendations."
+      "Improve consistency and reduce burnout-risk patterns.",
+      "Convert stress awareness into concrete daily actions.",
+      "Support adoption with low-friction protocol workflows.",
+      "Generate pilot-ready outcomes and implementation guidance."
     ],
     "pilot": [
       "Week 1: kickoff + onboarding",
-      "Week 2-4: usage monitoring + adoption coaching",
-      "Week 5-6: outcomes review + rollout recommendation"
+      "Week 2–4: usage, adoption coaching, and check-ins",
+      "Week 5–6: outcomes review and rollout recommendation"
+    ],
+    "tiers": [
+      "Starter Pilot (single team)",
+      "Growth Pilot (multi-team)",
+      "Strategic Pilot (custom implementation)"
+    ],
+    "weeklyDeliverables": [
+      "Adoption snapshot",
+      "Protocol engagement summary",
+      "Risk and consistency signals",
+      "Action recommendations"
+    ],
+    "successMetrics": [
+      "Protocol adherence rate",
+      "Readiness-load stability movement",
+      "Self-reported focus consistency",
+      "Pilot retention and usage depth"
+    ],
+    "operators": [
+      "Team manager",
+      "Performance coach",
+      "Clinical lead",
+      "People/HR partner"
     ]
   },
-  "privacySummary": [
-    "Plain-language data handling and controls.",
-    "Export and delete pathways are available.",
-    "No emergency-service claims and clear safety boundaries."
-  ],
+  "trust": {
+    "privacy": [
+      "Collect only data needed for guidance and learning loops.",
+      "No ad-tech profiling posture.",
+      "User controls for export and deletion."
+    ],
+    "security": [
+      "Local-first posture where supported.",
+      "Device-level protections and transport security.",
+      "Operational access controls with minimal privilege."
+    ],
+    "safety": [
+      "Clear non-emergency boundaries.",
+      "Calm language and escalation guidance.",
+      "Crisis resource direction where appropriate."
+    ],
+    "dataRights": [
+      "Request data export.",
+      "Request deletion.",
+      "Request privacy clarification from support."
+    ]
+  },
   "roadmap": {
     "now": [
-      "Readiness, load, consistency daily loop",
-      "Guided regulation protocols",
+      "Readiness-load-consistency daily loop",
+      "Guided protocol sessions",
       "Experiment tracking and weekly review"
     ],
     "next": [
-      "Improved team pilot dashboards",
       "Expanded protocol personalization",
-      "Refined recommendation confidence labels"
+      "Pilot dashboards for team operators",
+      "Improved recommendation confidence modeling"
     ],
     "later": [
-      "Broader wearables compatibility",
-      "Aggregated team insights with strong privacy controls",
-      "Enterprise deployment tooling"
+      "Additional wearable integrations",
+      "Expanded team analytics controls",
+      "Enterprise deployment automation"
     ]
   },
   "pilotPackage": [
     "Tailored onboarding workflow",
     "Pilot success metrics setup",
-    "Weekly performance summary",
-    "Implementation and rollout recommendation"
+    "Weekly operating summary",
+    "Rollout recommendation"
   ],
   "metadata": {
     "defaultTitle": "MindSense AI | Readiness + Regulation Platform",
-    "defaultDescription": "MindSense AI helps people and teams track readiness, run guided regulation protocols, and build consistency.",
-    "homeTitle": "MindSense AI | Calm, Data-Driven Readiness",
-    "homeDescription": "See your state, run the right protocol, and compound consistency with a calm, transparent workflow.",
+    "defaultDescription": "MindSense AI helps people and teams turn readiness signals into guided regulation and consistent output.",
+    "homeTitle": "MindSense AI | Know your state. Take one next step.",
+    "homeDescription": "Track readiness, load, and consistency. Run guided protocols and compound recovery with transparent recommendations.",
     "productTitle": "Product | MindSense AI",
-    "productDescription": "Explore Today, Regulate, and Data workflows with screenshots, feature walkthroughs, and FAQ.",
+    "productDescription": "Explore the Today, Regulate, and Data product loop with concrete feature walkthroughs.",
+    "protocolsTitle": "Protocols | MindSense AI",
+    "protocolsDescription": "Calm Now, Focus Prep, and Sleep Downshift: when to use each protocol and what changes over time.",
     "howTitle": "How It Works | MindSense AI",
-    "howDescription": "Understand the input-to-output workflow, estimate philosophy, and experiment learning loop.",
-    "teamsTitle": "For Teams | MindSense AI",
-    "teamsDescription": "Pilot MindSense AI with your organization to improve consistency and reduce burnout risk.",
+    "howDescription": "Understand inputs, recommendation logic, confidence framing, and experiment learning flow.",
+    "teamsTitle": "Teams | MindSense AI",
+    "teamsDescription": "Run a 4–6 week pilot with clear adoption support and measurable outcome framing.",
+    "trustTitle": "Trust Center | MindSense AI",
+    "trustDescription": "Privacy, security, safety, and data-rights practices in clear language.",
     "privacyTitle": "Privacy | MindSense AI",
-    "privacyDescription": "Plain-English data handling, retention, and user control details.",
+    "privacyDescription": "Plain-language privacy posture and data handling controls.",
     "updatesTitle": "Updates | MindSense AI",
-    "updatesDescription": "Latest product updates and changelog entries from the MindSense AI team.",
+    "updatesDescription": "Product, trust, and pilot updates from the MindSense AI team.",
     "contactTitle": "Contact | MindSense AI",
-    "contactDescription": "Contact MindSense AI for demos, partnerships, pilot programs, and support.",
+    "contactDescription": "Request beta access, book a pilot call, or request the investor deck.",
     "pressTitle": "Press Kit | MindSense AI",
-    "pressDescription": "Download logos, app visuals, and boilerplate information for press and partners."
+    "pressDescription": "Download logos, screenshots, demo clips, and press boilerplate."
   },
   "analytics": {
     "enabled": false,
