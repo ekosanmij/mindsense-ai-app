@@ -153,98 +153,87 @@ struct DataView: View {
         }
     }
 
-    private func tabBarCollapseScrollRunway(containerHeight: CGFloat) -> CGFloat {
-        let base: CGFloat = 120
-        guard submode == .experiments else { return base }
-        return max(320, containerHeight * 0.9)
-    }
-
     var body: some View {
-        GeometryReader { proxy in
-            NavigationStack {
-                ScrollView {
-                    ScreenStateContainer(state: resolvedState, retryAction: { store.retryCoreScreen(.data) }) {
-                        VStack(spacing: MindSenseRhythm.section) {
-                            workspaceSwitcher
-                                .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
-                            currentStateBlock
-                                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
-                            signalsTrendStripBlock
-                                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
-                            activeModeContent
-                                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
-                            if submode != .experiments {
-                                whatsWorkingBlock
-                                    .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
-                            }
-                            Color.clear
-                                .frame(height: tabBarCollapseScrollRunway(containerHeight: proxy.size.height))
-                                .accessibilityHidden(true)
-                        }
-                        .mindSensePageInsets()
-                    }
-                }
-                .scrollBounceBehavior(.always, axes: .vertical)
-                .mindSensePageBackground()
-                .navigationTitle(AppIA.data)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        MindSenseNavTitleLockup(title: AppIA.data)
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        ProfileAccessMenu()
-                    }
-                }
-                .sheet(isPresented: $showCompletionSheet) {
-                    ExperimentCompletionSheet(
-                        perceivedShift: $completionShift,
-                        summary: $completionSummary,
-                        scenarioTitle: store.demoScenario.title,
-                        onCancel: { showCompletionSheet = false },
-                        onSubmit: submitExperimentCompletion
-                    )
-                }
-                .sheet(isPresented: $showTrendFilterSheet) {
-                    TrendFilterSheet(window: $window)
-                }
-                .onAppear {
-                    let firstAppearance = !didAppear
-                    if firstAppearance {
-                        didAppear = true
-                    }
-                    if selectedExperimentID == nil {
-                        selectedExperimentID = focusExperiments.first?.id
-                    }
-                    store.prepareCoreScreen(.data)
-                    if firstAppearance {
-                        store.track(event: .screenView, surface: .data)
-                    }
-                }
-                .onChange(of: window) { _, newWindow in
-                    if reduceMotion {
-                        selectedPoint = nil
-                    } else {
-                        withAnimation(MindSenseMotion.chartInteraction) {
-                            selectedPoint = nil
+        NavigationStack {
+            ScrollView {
+                ScreenStateContainer(state: resolvedState, retryAction: { store.retryCoreScreen(.data) }) {
+                    VStack(spacing: MindSenseRhythm.section) {
+                        workspaceSwitcher
+                            .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
+                        currentStateBlock
+                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                        signalsTrendStripBlock
+                            .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                        activeModeContent
+                            .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                        if submode != .experiments {
+                            whatsWorkingBlock
+                                .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                     }
-                    store.track(event: .chartInteraction, surface: .data, metadata: ["window": newWindow.rawValue])
+                    .mindSensePageInsets()
                 }
-                .onChange(of: selectedSignal) { _, _ in
-                    self.selectedExperimentID = focusExperiments.first?.id
+            }
+            .scrollBounceBehavior(.always, axes: .vertical)
+            .mindSensePageBackground()
+            .navigationTitle(AppIA.data)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: AppIA.data)
                 }
-                .onChange(of: store.experiments) { _, _ in
-                    if let selectedExperimentID,
-                       !store.experiments.contains(where: { $0.id == selectedExperimentID && $0.focus == selectedSignal }) {
-                        self.selectedExperimentID = focusExperiments.first?.id
-                    }
+                ToolbarItem(placement: .topBarTrailing) {
+                    ProfileAccessMenu()
                 }
-                .onChange(of: store.demoScenario) { _, _ in
+            }
+            .sheet(isPresented: $showCompletionSheet) {
+                ExperimentCompletionSheet(
+                    perceivedShift: $completionShift,
+                    summary: $completionSummary,
+                    scenarioTitle: store.demoScenario.title,
+                    onCancel: { showCompletionSheet = false },
+                    onSubmit: submitExperimentCompletion
+                )
+            }
+            .sheet(isPresented: $showTrendFilterSheet) {
+                TrendFilterSheet(window: $window)
+            }
+            .onAppear {
+                let firstAppearance = !didAppear
+                if firstAppearance {
+                    didAppear = true
+                }
+                if selectedExperimentID == nil {
+                    selectedExperimentID = focusExperiments.first?.id
+                }
+                store.prepareCoreScreen(.data)
+                if firstAppearance {
+                    store.track(event: .screenView, surface: .data)
+                }
+            }
+            .onChange(of: window) { _, newWindow in
+                if reduceMotion {
                     selectedPoint = nil
-                    self.selectedExperimentID = focusExperiments.first?.id
-                    store.prepareCoreScreen(.data)
+                } else {
+                    withAnimation(MindSenseMotion.chartInteraction) {
+                        selectedPoint = nil
+                    }
                 }
+                store.track(event: .chartInteraction, surface: .data, metadata: ["window": newWindow.rawValue])
+            }
+            .onChange(of: selectedSignal) { _, _ in
+                self.selectedExperimentID = focusExperiments.first?.id
+            }
+            .onChange(of: store.experiments) { _, _ in
+                if let selectedExperimentID,
+                   !store.experiments.contains(where: { $0.id == selectedExperimentID && $0.focus == selectedSignal }) {
+                    self.selectedExperimentID = focusExperiments.first?.id
+                }
+            }
+            .onChange(of: store.demoScenario) { _, _ in
+                selectedPoint = nil
+                self.selectedExperimentID = focusExperiments.first?.id
+                store.prepareCoreScreen(.data)
             }
         }
     }

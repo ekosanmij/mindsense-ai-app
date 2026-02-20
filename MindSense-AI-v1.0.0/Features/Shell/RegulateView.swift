@@ -155,101 +155,91 @@ struct RegulateView: View {
         16
     }
 
-    private func tabBarCollapseScrollRunway(containerHeight: CGFloat) -> CGFloat {
-        guard !shouldHideTabBar else { return 0 }
-        return max(360, containerHeight)
-    }
-
     var body: some View {
-        GeometryReader { proxy in
-            NavigationStack {
-                ScrollView {
-                    ScreenStateContainer(state: resolvedState, retryAction: { store.retryCoreScreen(.regulate) }) {
-                        VStack(spacing: MindSenseRhythm.section) {
-                            commandDeck
-                                .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
-                            stepProgressBlock
-                                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
-                            sessionStatusBlock
-                                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
-                            activeStepBlock
-                                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
-                            Color.clear
-                                .frame(height: tabBarCollapseScrollRunway(containerHeight: proxy.size.height))
-                                .accessibilityHidden(true)
-                        }
-                        .mindSensePageInsets(bottom: bottomContentPadding)
+        NavigationStack {
+            ScrollView {
+                ScreenStateContainer(state: resolvedState, retryAction: { store.retryCoreScreen(.regulate) }) {
+                    VStack(spacing: MindSenseRhythm.section) {
+                        commandDeck
+                            .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
+                        stepProgressBlock
+                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                        sessionStatusBlock
+                            .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                        activeStepBlock
+                            .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
                     }
+                    .mindSensePageInsets(bottom: bottomContentPadding)
                 }
-                .scrollBounceBehavior(.always, axes: .vertical)
-                .mindSensePageBackground()
-                .navigationTitle(AppIA.regulate)
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        MindSenseNavTitleLockup(title: AppIA.regulate)
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        ProfileAccessMenu()
-                    }
+            }
+            .scrollBounceBehavior(.always, axes: .vertical)
+            .mindSensePageBackground()
+            .navigationTitle(AppIA.regulate)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: AppIA.regulate)
                 }
-                .toolbar(shouldHideTabBar ? .hidden : .automatic, for: .tabBar)
-                .tabBarMinimizeBehavior(.onScrollDown)
-                .safeAreaInset(edge: .bottom) {
-                    if case .ready = resolvedState, let primaryCTAConfig {
-                        MindSenseBottomActionDock {
-                            Spacer()
-                                .frame(height: 12)
+                ToolbarItem(placement: .topBarTrailing) {
+                    ProfileAccessMenu()
+                }
+            }
+            .toolbar(shouldHideTabBar ? .hidden : .automatic, for: .tabBar)
+            .tabBarMinimizeBehavior(.onScrollDown)
+            .safeAreaInset(edge: .bottom) {
+                if case .ready = resolvedState, let primaryCTAConfig {
+                    MindSenseBottomActionDock {
+                        Spacer()
+                            .frame(height: 12)
 
-                            Button(primaryCTAConfig.label) {
-                                guard !primaryCTAConfig.disabled else { return }
-                                store.triggerHaptic(intent: .primary)
-                                primaryCTAConfig.action()
-                            }
-                            .accessibilityIdentifier(primaryCTAConfig.id)
-                            .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
-                            .disabled(primaryCTAConfig.disabled)
-                        }
-                    }
-                }
-                .sheet(isPresented: $store.shouldPresentPostActivationPaywall) {
-                    PostActivationPaywallSheet(
-                        onMaybeLater: {
-                            store.triggerHaptic(intent: .selection)
-                            store.dismissPostActivationPaywall(accepted: false)
-                        },
-                        onStartTrial: {
+                        Button(primaryCTAConfig.label) {
+                            guard !primaryCTAConfig.disabled else { return }
                             store.triggerHaptic(intent: .primary)
-                            store.dismissPostActivationPaywall(accepted: true)
+                            primaryCTAConfig.action()
                         }
-                    )
-                }
-                .onAppear {
-                    let firstAppearance = !didAppear
-                    if firstAppearance {
-                        didAppear = true
-                    }
-                    if selectedPresetID == nil {
-                        selectedPresetID = presets.first?.id
-                    }
-                    consumeLaunchRequestIfNeeded()
-                    store.prepareCoreScreen(.regulate)
-                    if firstAppearance {
-                        store.track(event: .screenView, surface: .regulate)
+                        .accessibilityIdentifier(primaryCTAConfig.id)
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                        .disabled(primaryCTAConfig.disabled)
                     }
                 }
-                .onReceive(timer) { date in
-                    guard store.activeRegulateSession?.isInProgress == true else { return }
-                    now = date
-                    store.syncActiveRegulateSessionState(now: date)
+            }
+            .sheet(isPresented: $store.shouldPresentPostActivationPaywall) {
+                PostActivationPaywallSheet(
+                    onMaybeLater: {
+                        store.triggerHaptic(intent: .selection)
+                        store.dismissPostActivationPaywall(accepted: false)
+                    },
+                    onStartTrial: {
+                        store.triggerHaptic(intent: .primary)
+                        store.dismissPostActivationPaywall(accepted: true)
+                    }
+                )
+            }
+            .onAppear {
+                let firstAppearance = !didAppear
+                if firstAppearance {
+                    didAppear = true
                 }
-                .onChange(of: store.regulateLaunchRequest) { _, _ in
-                    consumeLaunchRequestIfNeeded()
-                }
-                .onChange(of: store.demoScenario) { _, _ in
+                if selectedPresetID == nil {
                     selectedPresetID = presets.first?.id
-                    store.prepareCoreScreen(.regulate)
                 }
+                consumeLaunchRequestIfNeeded()
+                store.prepareCoreScreen(.regulate)
+                if firstAppearance {
+                    store.track(event: .screenView, surface: .regulate)
+                }
+            }
+            .onReceive(timer) { date in
+                guard store.activeRegulateSession?.isInProgress == true else { return }
+                now = date
+                store.syncActiveRegulateSessionState(now: date)
+            }
+            .onChange(of: store.regulateLaunchRequest) { _, _ in
+                consumeLaunchRequestIfNeeded()
+            }
+            .onChange(of: store.demoScenario) { _, _ in
+                selectedPresetID = presets.first?.id
+                store.prepareCoreScreen(.regulate)
             }
         }
     }
