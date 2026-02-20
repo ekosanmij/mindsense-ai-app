@@ -33,8 +33,8 @@ Core promise (from design/brand docs and reflected in UI structure):
 
 Current implementation posture:
 - Mostly simulated intelligence and simulated health signals.
-- Passwordless email magic-link auth UX is implemented with local persistence and routing.
-- External magic-link email dispatch is supported when a delivery endpoint is configured.
+- Sign in with Apple auth UX is implemented with local session persistence and routing.
+- No email-link dispatch/deep-link verification flow in current build.
 - No real HealthKit ingestion pipeline.
 - No real billing/StoreKit purchase flow.
 
@@ -138,41 +138,24 @@ Purpose:
 
 Behavior:
 - Shows three value highlights.
-- CTA `Continue to email sign in` sets `hasSeenIntro = true`.
-- Secondary “Restore purchase” currently shows informational banner only.
+- CTA `Continue with Apple` sets `hasSeenIntro = true`.
+- No secondary purchase action is shown on Intro in current UI.
 
 ## 7.2 Auth
 
-Modes:
-- `Sign In`
-- `Create Account`
-
-Validation rules:
-- Email must contain `@` and `.` and be length >= 5.
-- Resend requests are cooldown-gated (`MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS`, default 20s).
-
 Auth data behavior:
-- Uses passwordless email magic-link requests and deep-link verification.
-- Requests can dispatch to a configured HTTP delivery endpoint (`MINDSENSE_MAGIC_LINK_REQUEST_URL` or derived from `MINDSENSE_MAGIC_LINK_API_BASE_URL`).
-- Supabase provider mode is supported with direct `/auth/v1/otp` dispatch when configured.
-- Persists pending link request state locally (`email`, `token`, `intent`, `requestedAt`, `expiresAt`, `verificationURL`).
-- Supports resend and cancel of pending magic-link requests.
-- On successful link consumption, app persists session email and routes forward.
-- Debug preview completion is optional and build-config gated.
-
-Magic-link configuration (env-driven):
-- `MINDSENSE_MAGIC_LINK_PROVIDER`
-- `MINDSENSE_MAGIC_LINK_API_BASE_URL`
-- `MINDSENSE_MAGIC_LINK_REQUEST_URL`
-- `MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY` (required when using Supabase direct dispatch)
-- `MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME`
-- `MINDSENSE_MAGIC_LINK_REDIRECT_HOST`
-- `MINDSENSE_MAGIC_LINK_REDIRECT_PATH`
-- `MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST`
-- `MINDSENSE_MAGIC_LINK_TTL_MINUTES`
-- `MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS`
-- `MINDSENSE_MAGIC_LINK_DEBUG_SHOW_LINK_PREVIEW`
-- `MINDSENSE_MAGIC_LINK_DEBUG_AUTO_OPEN`
+- Uses a single `Continue with Apple` flow (`SignInWithAppleButton(.continue)`).
+- Requests Apple credential scopes for `fullName` and `email`.
+- Persists session as `AuthSession(email, appleUserID, displayName)`.
+- Email resolution order:
+  - credential email when available,
+  - cached email for the same Apple user ID,
+  - generated local fallback (`apple-<id>@mindsense.local`) when no email is available.
+- Display-name resolution order:
+  - Apple credential full name when available,
+  - previously stored session display name,
+  - no explicit name (UI falls back to email prefix).
+- No provider-dispatched email-link requests, resend/cancel requests, or auth deep-link token verification.
 
 ## 7.3 Onboarding
 
@@ -554,8 +537,11 @@ Storage strategy:
 
 Major keys:
 - Session/auth:
-  - `auth.fallback_session_email`
-  - `auth.magic_link.pending.v1`
+  - `auth.fallback_session_email` (legacy compatibility key)
+  - `auth.session.email.v2`
+  - `auth.session.apple_user_id.v1`
+  - `auth.session.display_name.v1`
+  - `auth.apple.email_lookup.<appleUserID>`
 - Intro/onboarding:
   - `hasSeenIntro`
   - `onboarding.progress.<email>`
@@ -684,7 +670,7 @@ UI tests (`MindSenseCoreScreensUITests`):
 
 Current posture:
 - Data is local-only and mostly simulated.
-- Auth uses local fallback session + local pending magic-link persistence, with optional network dispatch for magic-link email delivery.
+- Auth uses local Apple credential completion and local session persistence.
 - No PHI transport pipeline and no network sync path in audited code.
 - Crisis/support messaging is informational; app explicitly frames itself as non-emergency support.
 
@@ -701,7 +687,7 @@ Product and wiring gaps:
 Integration gaps:
 - No real HealthKit integration (diagnostics are currently simulated).
 - No push/local notification scheduling despite settings toggles.
-- No backend auth/session infrastructure.
+- No backend identity/session sync beyond local Apple sign-in session state.
 - No StoreKit billing flow behind post-activation paywall.
 
 Data and trust risks:
@@ -736,7 +722,7 @@ Debug/latent surfaces:
 - Resolve guided-path dead-end references.
 
 2. Real integration milestone:
-- Replace fallback auth with production auth backend.
+- Add backend identity/session sync on top of Apple sign-in.
 - Implement HealthKit read pipeline and permission sync.
 - Implement notification scheduling logic respecting quiet hours.
 

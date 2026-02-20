@@ -41,8 +41,6 @@ Include:
 
 High-priority areas include:
 
-- Magic-link auth request/verification flow
-- URL/deep-link parsing and token handling
+- Sign in with Apple credential handling and fallback resolution
+- Apple sign-in capability/signing configuration handling
 - Local persistence and session lifecycle
-- External auth provider request handling
-

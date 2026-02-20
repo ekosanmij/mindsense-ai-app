@@ -12,7 +12,8 @@ Primary coverage:
 - Recommendation logic (`RecommendationEngineTests`)
 - Metric delta logic (`MindSenseDeltaEngineTests`)
 - Health-signal model refresh behavior (`DemoHealthSignalEngineTests`)
-- Magic-link configuration parsing and URL composition (`MagicLinkAuthConfigurationTests`)
+- Apple sign-in session and identity fallback handling (`AppleSignInSessionFlowTests`)
+- Apple session persistence key behavior (`AppleSessionPersistenceTests`)
 
 ### UI tests (`MindSense-AI-v1.0.0UITests`)
 
@@ -130,7 +131,7 @@ If tests fail:
 
 - Confirm simulator/device name exists in `xcrun simctl list devices available`.
 - Re-run with `-uitest-reset` to clear stale app state.
-- Verify auth/env scheme settings if auth screens behave unexpectedly.
+- Verify Apple Sign In capability/signing settings if auth screens behave unexpectedly.
 - Check script logs under `Artifacts/phase6-quality-gates/<timestamp>/`.
 
 ## 8) Suggested CI sequence
@@ -139,4 +140,3 @@ If tests fail:
 2. Run unit tests.
 3. Run targeted UI suite.
 4. Run `Scripts/design_qa.sh` for UI-sensitive changes.
-

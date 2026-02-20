@@ -74,43 +74,6 @@
             ReferencedContainer = "container:MindSense-AI-v1.0.0.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <EnvironmentVariables>
-         <EnvironmentVariable
-            key = "MINDSENSE_MAGIC_LINK_PROVIDER"
-            value = "Supabase"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MINDSENSE_MAGIC_LINK_API_BASE_URL"
-            value = "https://ilwmfsnsqcsjkpelkurn.supabase.co"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY"
-            value = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlsd21mc25zcWNzamtwZWxrdXJuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE1MzE2ODcsImV4cCI6MjA4NzEwNzY4N30.G_lwzDEf_u6GmJWq0bH0CubbqXAQa_C2hMqJ8vBurrI"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME"
-            value = "mindsense"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MINDSENSE_MAGIC_LINK_REDIRECT_HOST"
-            value = "auth"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MINDSENSE_MAGIC_LINK_REDIRECT_PATH"
-            value = "/verify"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST"
-            value = "mindsense-ai-app.vercel.app"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-      </EnvironmentVariables>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

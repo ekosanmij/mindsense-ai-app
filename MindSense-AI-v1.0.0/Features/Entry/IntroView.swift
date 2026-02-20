@@ -7,9 +7,9 @@ struct IntroView: View {
     @State private var didAppear = false
 
     private let highlights: [(title: String, detail: String, icon: String)] = [
-        ("Status in 10 seconds", "See Load, Readiness, and Consistency with plain-English definitions.", "gauge.with.dots.needle.bottom.50percent"),
-        ("One clear next action", "Get one regulate action with expected outcome and duration.", "figure.mind.and.body"),
-        ("Data with rationale", "Each modeled insight includes estimate language and why it was recommended.", "chart.line.uptrend.xyaxis")
+        ("Status in 10 seconds", "Load, Readiness, and Consistency in one clear view.", "gauge.with.dots.needle.bottom.50percent"),
+        ("One next action", "Get one regulate step with duration and expected outcome.", "figure.mind.and.body"),
+        ("Rationale built in", "Recommendations include estimate language and why they matter.", "chart.line.uptrend.xyaxis")
     ]
 
     private var reduceMotion: Bool {
@@ -22,12 +22,9 @@ struct IntroView: View {
                 introHero
                     .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
 
-                trustLine
-                    .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
-
                 InsetSurface {
                     MindSenseSectionHeader(
-                        model: .init(title: "What you unlock", subtitle: "One focused flow from status to action.")
+                        model: .init(title: "What you get", subtitle: "Clear status, clear action.")
                     )
 
                     ForEach(Array(highlights.enumerated()), id: \.element.title) { index, item in
@@ -38,28 +35,15 @@ struct IntroView: View {
                         }
                     }
                 }
-                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
 
-                Button("Continue to email sign in") {
+                Button("Continue with Apple") {
                     store.triggerHaptic(intent: .primary)
                     store.completeIntro()
                 }
                 .accessibilityIdentifier("intro_primary_cta")
                 .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
-                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
-
-                Menu("More options") {
-                    Button("Restore purchase") {
-                        store.showBanner(
-                            title: "Restore purchase",
-                            detail: "Billing restore can be connected after activation.",
-                            severity: .info
-                        )
-                    }
-                }
-                .font(MindSenseTypography.bodyStrong)
-                .foregroundStyle(.secondary)
-                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
             }
             .mindSensePageInsets()
         }
@@ -83,32 +67,15 @@ struct IntroView: View {
                     .foregroundStyle(MindSensePalette.signalCoolStrong)
                     .tracking(1)
                 Spacer()
-                PillChip(label: "Setup < 60s", state: .selected)
+                PillChip(label: "Setup < 1 min", state: .selected)
             }
 
             MindSenseSectionHeader(
                 model: .init(
-                    title: "Clinical guidance for daily nervous-system regulation",
-                    subtitle: "Email magic-link sign in unlocks your first regulate session and data baseline."
+                    title: "Daily nervous-system guidance, simplified",
+                    subtitle: "Continue with Apple to start your account."
                 )
             )
-        }
-    }
-
-    private var trustLine: some View {
-        InsetSurface {
-            HStack(alignment: .top, spacing: 10) {
-                MindSenseIconBadge(systemName: "lock.shield.fill", tint: MindSensePalette.signalCoolStrong, style: .filled, size: 30)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Trusted clinical tone")
-                        .font(MindSenseTypography.bodyStrong)
-                    Text("Encrypted account access, transparent estimate language, and one clear next action every day.")
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

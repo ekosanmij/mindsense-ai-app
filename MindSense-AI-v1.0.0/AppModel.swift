@@ -69,230 +69,13 @@ struct AppBanner: Identifiable, Equatable {
 
 struct AuthSession: Codable {
     let email: String
-}
+    let appleUserID: String?
+    let displayName: String?
 
-enum MagicLinkIntent: String, CaseIterable, Hashable, Codable {
-    case signIn
-    case createAccount
-
-    var title: String {
-        switch self {
-        case .signIn:
-            return "Sign in"
-        case .createAccount:
-            return "Create account"
-        }
-    }
-
-    var analyticsSuffix: String {
-        switch self {
-        case .signIn:
-            return "sign_in"
-        case .createAccount:
-            return "create_account"
-        }
-    }
-}
-
-struct PendingMagicLinkRequest: Codable, Equatable {
-    let email: String
-    let token: String
-    let intent: MagicLinkIntent
-    let requestedAt: Date
-    let expiresAt: Date
-    let verificationURL: URL
-
-    var isExpired: Bool {
-        Date() >= expiresAt
-    }
-}
-
-struct MagicLinkAuthConfiguration {
-    let providerName: String
-    let apiBaseURL: URL?
-    let requestEndpointURL: URL?
-    let supabaseAnonKey: String?
-    let redirectScheme: String
-    let redirectHost: String
-    let redirectPath: String
-    let universalLinkHost: String?
-    let tokenTTLMinutes: Int
-    let resendCooldownSeconds: Int
-    let debugShowLinkPreview: Bool
-    let debugAutoOpenReceivedLink: Bool
-
-    var normalizedRedirectPath: String {
-        let trimmed = redirectPath.trimmingCharacters(in: .whitespacesAndNewlines)
-        let withPrefix = trimmed.hasPrefix("/") ? trimmed : "/\(trimmed)"
-        return withPrefix == "/" ? "/verify" : withPrefix
-    }
-
-    var redirectRouteDescription: String {
-        "\(redirectScheme)://\(redirectHost)\(normalizedRedirectPath)"
-    }
-
-    var verificationRouteDescription: String {
-        if let universalHost = universalLinkHost {
-            return "https://\(universalHost)\(normalizedRedirectPath)"
-        }
-        return redirectRouteDescription
-    }
-
-    private var isSupabaseProvider: Bool {
-        providerName.lowercased().contains("supabase")
-    }
-
-    var resolvedRequestEndpointURL: URL? {
-        if let requestEndpointURL {
-            return requestEndpointURL
-        }
-
-        if isSupabaseProvider,
-           let apiBaseURL {
-            let trimmed = apiBaseURL.path.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            if trimmed.hasPrefix("/auth/v1") {
-                return apiBaseURL.appendingPathComponent("otp")
-            }
-            return apiBaseURL
-                .appendingPathComponent("auth")
-                .appendingPathComponent("v1")
-                .appendingPathComponent("otp")
-        }
-
-        return nil
-    }
-
-    var requestEndpointDescription: String {
-        resolvedRequestEndpointURL?.absoluteString ?? "Not configured"
-    }
-
-    func verificationURL(email: String, token: String, intent: MagicLinkIntent) -> URL {
-        var components = URLComponents()
-        if let universalHost = universalLinkHost {
-            components.scheme = "https"
-            components.host = universalHost
-        } else {
-            components.scheme = redirectScheme
-            components.host = redirectHost
-        }
-        components.path = normalizedRedirectPath
-        components.queryItems = [
-            URLQueryItem(name: "token", value: token),
-            URLQueryItem(name: "email", value: email),
-            URLQueryItem(name: "intent", value: intent.rawValue)
-        ]
-        return components.url ?? URL(string: verificationRouteDescription) ?? URL(fileURLWithPath: "/")
-    }
-
-    static func live(environment: [String: String] = ProcessInfo.processInfo.environment) -> MagicLinkAuthConfiguration {
-        func env(_ key: String, default defaultValue: String) -> String {
-            let trimmed = environment[key]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            return trimmed.isEmpty ? defaultValue : trimmed
-        }
-
-        func envInt(_ key: String, default defaultValue: Int, min minValue: Int, max maxValue: Int) -> Int {
-            guard let raw = environment[key], let value = Int(raw) else {
-                return defaultValue
-            }
-            return max(minValue, min(maxValue, value))
-        }
-
-        func envBool(_ key: String, default defaultValue: Bool) -> Bool {
-            guard let raw = environment[key] else {
-                return defaultValue
-            }
-            switch raw.lowercased() {
-            case "1", "true", "yes", "on":
-                return true
-            case "0", "false", "no", "off":
-                return false
-            default:
-                return defaultValue
-            }
-        }
-
-        let provider = env("MINDSENSE_MAGIC_LINK_PROVIDER", default: "MindSense Auth")
-        let apiBase = URL(string: env("MINDSENSE_MAGIC_LINK_API_BASE_URL", default: ""))
-        let explicitRequestURL = URL(string: env("MINDSENSE_MAGIC_LINK_REQUEST_URL", default: ""))
-        let supabaseKeyRaw = env("MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY", default: "")
-        let supabaseKey = supabaseKeyRaw.isEmpty ? nil : supabaseKeyRaw
-        let isSupabaseProvider = provider.lowercased().contains("supabase")
-        let requestEndpoint: URL?
-        if let explicitRequestURL {
-            requestEndpoint = explicitRequestURL
-        } else if !isSupabaseProvider, let apiBase {
-            requestEndpoint = apiBase
-                .appendingPathComponent("magic-links")
-                .appendingPathComponent("request")
-        } else {
-            requestEndpoint = nil
-        }
-        let scheme = env("MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME", default: "mindsense")
-        let host = env("MINDSENSE_MAGIC_LINK_REDIRECT_HOST", default: "auth")
-        let path = env("MINDSENSE_MAGIC_LINK_REDIRECT_PATH", default: "/verify")
-        let universalHost = normalizedUniversalHost(
-            environment["MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST"]
-        )
-        let ttlMinutes = envInt("MINDSENSE_MAGIC_LINK_TTL_MINUTES", default: 15, min: 5, max: 60)
-        let resendCooldown = envInt("MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS", default: 20, min: 5, max: 120)
-        #if DEBUG
-        let debugPreviewDefault = true
-        #else
-        let debugPreviewDefault = false
-        #endif
-        let debugPreview = envBool("MINDSENSE_MAGIC_LINK_DEBUG_SHOW_LINK_PREVIEW", default: debugPreviewDefault)
-        let debugAutoOpen = envBool("MINDSENSE_MAGIC_LINK_DEBUG_AUTO_OPEN", default: false)
-
-        return MagicLinkAuthConfiguration(
-            providerName: provider,
-            apiBaseURL: apiBase,
-            requestEndpointURL: requestEndpoint,
-            supabaseAnonKey: supabaseKey,
-            redirectScheme: scheme,
-            redirectHost: host,
-            redirectPath: path,
-            universalLinkHost: universalHost,
-            tokenTTLMinutes: ttlMinutes,
-            resendCooldownSeconds: resendCooldown,
-            debugShowLinkPreview: debugPreview,
-            debugAutoOpenReceivedLink: debugAutoOpen
-        )
-    }
-
-    private static func normalizedUniversalHost(_ value: String?) -> String? {
-        guard let value else {
-            return nil
-        }
-
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
-            return nil
-        }
-
-        if let components = URLComponents(string: trimmed),
-           let host = components.host?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !host.isEmpty {
-            return host.lowercased()
-        }
-
-        let withoutScheme: String
-        if let separatorRange = trimmed.range(of: "://") {
-            withoutScheme = String(trimmed[separatorRange.upperBound...])
-        } else {
-            withoutScheme = trimmed
-        }
-
-        guard let candidateHost = withoutScheme
-            .split(separator: "/", maxSplits: 1, omittingEmptySubsequences: true)
-            .first else {
-            return nil
-        }
-
-        let normalized = String(candidateHost)
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-
-        return normalized.isEmpty ? nil : normalized
+    init(email: String, appleUserID: String? = nil, displayName: String? = nil) {
+        self.email = email
+        self.appleUserID = appleUserID
+        self.displayName = displayName
     }
 }
 
@@ -1499,7 +1282,6 @@ final class MindSenseStore: ObservableObject {
     @Published var appState: AppLaunchState = .launching
     @Published var hasSeenIntro = false
     @Published var session: AuthSession?
-    @Published var pendingMagicLinkRequest: PendingMagicLinkRequest?
     @Published var onboarding = OnboardingProgress()
     @Published var banner: AppBanner?
     @Published var selectedTab: MainTab = .today
@@ -1526,7 +1308,6 @@ final class MindSenseStore: ObservableObject {
 
     private let persistence = MindSensePersistenceService()
     private let bootstrap = MindSenseBootstrapService()
-    private let magicLinkConfiguration = MagicLinkAuthConfiguration.live()
     private let defaults = UserDefaults.standard
     private var bannerTask: Task<Void, Never>?
     private let primaryImpactFeedback = UIImpactFeedbackGenerator(style: .soft)
@@ -1535,34 +1316,6 @@ final class MindSenseStore: ObservableObject {
     private static let analyticsTimestampFormatter = ISO8601DateFormatter()
     private static let relativeDateFormatter = RelativeDateTimeFormatter()
 
-    private struct IncomingMagicLinkPayload {
-        let email: String
-        let token: String
-    }
-
-    private struct MagicLinkDispatchPayload: Encodable {
-        let email: String
-        let intent: String
-        let token: String
-        let redirectURL: String
-        let requestedAt: String
-        let expiresAt: String
-    }
-
-    private struct SupabaseMagicLinkDispatchPayload: Encodable {
-        let email: String
-        let createUser: Bool
-        let emailRedirectTo: String
-        let redirectTo: String
-
-        enum CodingKeys: String, CodingKey {
-            case email
-            case createUser = "create_user"
-            case emailRedirectTo = "email_redirect_to"
-            case redirectTo = "redirect_to"
-        }
-    }
-
     init() {
         bootstrap.seedDefaultsIfNeeded()
         bootstrap.applyLaunchOverridesIfNeeded()
@@ -1570,35 +1323,12 @@ final class MindSenseStore: ObservableObject {
     }
 
     var userDisplayName: String {
+        if let displayName = session?.displayName,
+           !displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return displayName
+        }
         guard let email = session?.email else { return "Friend" }
         return email.split(separator: "@").first.map(String.init)?.capitalized ?? "Friend"
-    }
-
-    var magicLinkProviderLine: String {
-        if let apiBaseURL = magicLinkConfiguration.apiBaseURL,
-           let host = apiBaseURL.host {
-            return "Provider: \(magicLinkConfiguration.providerName) (\(host))"
-        }
-        return "Provider: \(magicLinkConfiguration.providerName)"
-    }
-
-    var magicLinkRouteLine: String {
-        "Route: \(magicLinkConfiguration.verificationRouteDescription)"
-    }
-
-    var magicLinkDeliveryLine: String {
-        "Delivery: \(magicLinkConfiguration.requestEndpointDescription)"
-    }
-
-    var magicLinkTTLMinutes: Int {
-        magicLinkConfiguration.tokenTTLMinutes
-    }
-
-    var magicLinkDebugPreviewURL: URL? {
-        guard magicLinkConfiguration.debugShowLinkPreview || AppFeatureFlags.demoControlsEnabled else {
-            return nil
-        }
-        return pendingMagicLinkRequest?.verificationURL
     }
 
     var scenarioProfile: DemoScenarioProfile {
@@ -2510,136 +2240,54 @@ final class MindSenseStore: ObservableObject {
         track(event: .primaryCTATapped, surface: .intro, action: "continue_to_auth")
     }
 
-    func requestMagicLink(email: String, intent: MagicLinkIntent) async -> String? {
-        let normalizedEmail = normalizedEmail(from: email)
-        guard isValidEmail(normalizedEmail) else {
-            return "Please enter a valid email address."
+    func completeSignInWithApple(
+        userID: String,
+        email: String?,
+        fullName: PersonNameComponents?
+    ) -> String? {
+        let normalizedUserID = userID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalizedUserID.isEmpty else {
+            return "Apple sign-in didn’t return a valid account identifier."
         }
 
-        if let pendingMagicLinkRequest,
-           pendingMagicLinkRequest.email == normalizedEmail {
-            let elapsed = Date().timeIntervalSince(pendingMagicLinkRequest.requestedAt)
-            let cooldown = Double(magicLinkConfiguration.resendCooldownSeconds)
-            if elapsed < cooldown {
-                let remaining = max(1, Int((cooldown - elapsed).rounded(.up)))
-                return "Please wait \(remaining)s before requesting another link."
-            }
+        let normalizedProvidedEmail = normalizedEmail(from: email ?? "")
+        let emailSource: String
+        let resolvedEmail: String
+        if isValidEmail(normalizedProvidedEmail) {
+            resolvedEmail = normalizedProvidedEmail
+            emailSource = "credential"
+            persistence.persistKnownAppleEmail(normalizedProvidedEmail, for: normalizedUserID)
+        } else if let knownEmail = persistence.loadKnownAppleEmail(for: normalizedUserID),
+                  isValidEmail(knownEmail) {
+            resolvedEmail = knownEmail
+            emailSource = "cached"
+        } else {
+            resolvedEmail = generatedFallbackAppleEmail(for: normalizedUserID)
+            emailSource = "generated"
         }
 
-        let now = Date()
-        let expiresAt = now.addingTimeInterval(Double(magicLinkConfiguration.tokenTTLMinutes * 60))
-        let token = Self.generateMagicLinkToken()
-        let verificationURL = magicLinkConfiguration.verificationURL(
-            email: normalizedEmail,
-            token: token,
-            intent: intent
+        let displayName = resolvedDisplayName(from: fullName)
+        persistSession(
+            email: resolvedEmail,
+            appleUserID: normalizedUserID,
+            displayName: displayName
         )
-        let request = PendingMagicLinkRequest(
-            email: normalizedEmail,
-            token: token,
-            intent: intent,
-            requestedAt: now,
-            expiresAt: expiresAt,
-            verificationURL: verificationURL
-        )
 
-        if let dispatchError = await dispatchMagicLink(request) {
-            track(
-                event: .secondaryActionTapped,
-                surface: .auth,
-                action: "magic_link_delivery_failed_\(intent.analyticsSuffix)",
-                metadata: [
-                    "provider": magicLinkConfiguration.providerName,
-                    "reason": dispatchError
-                ]
-            )
-            return dispatchError
-        }
-
-        pendingMagicLinkRequest = request
-        persistence.persistPendingMagicLinkRequest(request)
         track(
             event: .actionCompleted,
             surface: .auth,
-            action: "magic_link_requested_\(intent.analyticsSuffix)",
+            action: "apple_sign_in_completed",
             metadata: [
-                "provider": magicLinkConfiguration.providerName,
-                "ttl_minutes": "\(magicLinkConfiguration.tokenTTLMinutes)",
-                "route": magicLinkConfiguration.verificationRouteDescription,
-                "delivery": magicLinkConfiguration.requestEndpointDescription
+                "email_source": emailSource,
+                "has_name": displayName == nil ? "false" : "true"
             ]
         )
         triggerHaptic(intent: .success)
-
-        if magicLinkConfiguration.debugAutoOpenReceivedLink {
-            _ = handleIncomingURL(verificationURL)
-        }
-
         return nil
-    }
-
-    func resendMagicLink() async -> String? {
-        guard let pendingMagicLinkRequest else {
-            return "Request a magic link first."
-        }
-        return await requestMagicLink(email: pendingMagicLinkRequest.email, intent: pendingMagicLinkRequest.intent)
-    }
-
-    @discardableResult
-    func handleIncomingURL(_ url: URL) -> Bool {
-        guard let payload = parseIncomingMagicLink(url) else {
-            return false
-        }
-
-        if let error = consumeMagicLink(email: payload.email, token: payload.token, source: "deeplink") {
-            showBanner(
-                title: "Link could not be verified",
-                detail: error,
-                severity: .warning
-            )
-            triggerHaptic(intent: .error)
-            return true
-        }
-
-        showBanner(
-            title: "Signed in",
-            detail: "Magic link verified. Your account is ready.",
-            severity: .success
-        )
-        triggerHaptic(intent: .success)
-        return true
-    }
-
-    func completePendingMagicLinkForDebug() -> String? {
-        guard magicLinkConfiguration.debugShowLinkPreview || AppFeatureFlags.demoControlsEnabled else {
-            return "Magic link preview is disabled for this build."
-        }
-        guard let pendingMagicLinkRequest else {
-            return "Request a magic link first."
-        }
-        let handled = handleIncomingURL(pendingMagicLinkRequest.verificationURL)
-        return handled ? nil : "Magic link could not be parsed."
-    }
-
-    func signIn(email: String, password: String) async -> String? {
-        _ = password
-        return await requestMagicLink(email: email, intent: .signIn)
-    }
-
-    func createAccount(email: String, password: String, confirm: String) async -> String? {
-        _ = password
-        _ = confirm
-        return await requestMagicLink(email: email, intent: .createAccount)
-    }
-
-    func cancelPendingMagicLinkRequest() {
-        clearPendingMagicLinkRequest()
-        triggerHaptic(intent: .success)
     }
 
     func signOut() {
         persistence.clearSession()
-        clearPendingMagicLinkRequest()
         session = nil
         onboarding = OnboardingProgress()
         appState = AppStateResolver.reduce(state: appState, event: .signedOut)
@@ -2830,13 +2478,6 @@ final class MindSenseStore: ObservableObject {
 
         hasSeenIntro = persistence.hasSeenIntro
         session = loadSession()
-        pendingMagicLinkRequest = persistence.loadPendingMagicLinkRequest()
-        if pendingMagicLinkRequest?.isExpired == true {
-            clearPendingMagicLinkRequest()
-        }
-        if session != nil {
-            clearPendingMagicLinkRequest()
-        }
         if let currentEmail = session?.email {
             onboarding = loadOnboarding(for: currentEmail)
         } else {
@@ -2920,13 +2561,24 @@ final class MindSenseStore: ObservableObject {
         persistence.loadSession()
     }
 
-    private func persistSession(email: String) {
+    private func persistSession(
+        email: String,
+        appleUserID: String? = nil,
+        displayName: String? = nil
+    ) {
         let normalized = normalizedEmail(from: email)
 
-        persistence.persistSession(email: normalized)
-        clearPendingMagicLinkRequest()
+        persistence.persistSession(
+            email: normalized,
+            appleUserID: appleUserID,
+            displayName: normalizedDisplayName(displayName)
+        )
 
-        session = AuthSession(email: normalized)
+        session = AuthSession(
+            email: normalized,
+            appleUserID: appleUserID,
+            displayName: normalizedDisplayName(displayName)
+        )
         onboarding = loadOnboarding(for: normalized)
         activeRegulateSession = loadActiveRegulateSession()
         regulateSessionHistory = loadRegulateSessionHistory()
@@ -2985,231 +2637,41 @@ final class MindSenseStore: ObservableObject {
             .lowercased()
     }
 
-    private func clearPendingMagicLinkRequest() {
-        pendingMagicLinkRequest = nil
-        persistence.persistPendingMagicLinkRequest(nil)
+    private func normalizedDisplayName(_ rawName: String?) -> String? {
+        guard let rawName else { return nil }
+        let trimmed = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 
-    private func dispatchMagicLink(_ request: PendingMagicLinkRequest) async -> String? {
-        let isSupabaseProvider = magicLinkConfiguration.providerName.lowercased().contains("supabase")
-
-        guard let endpointURL = magicLinkConfiguration.resolvedRequestEndpointURL else {
-            if isSupabaseProvider {
-                return "Supabase magic-link delivery is not configured. Set MINDSENSE_MAGIC_LINK_API_BASE_URL or MINDSENSE_MAGIC_LINK_REQUEST_URL."
-            }
-            return "Magic-link delivery is not configured. Set MINDSENSE_MAGIC_LINK_REQUEST_URL or MINDSENSE_MAGIC_LINK_API_BASE_URL."
+    private func resolvedDisplayName(from components: PersonNameComponents?) -> String? {
+        guard let components else { return session?.displayName }
+        let formatter = PersonNameComponentsFormatter()
+        formatter.style = .default
+        let formatted = formatter.string(from: components)
+        if let normalized = normalizedDisplayName(formatted) {
+            return normalized
         }
 
-        var urlRequest = URLRequest(url: endpointURL)
-        urlRequest.httpMethod = "POST"
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Accept")
-
-        do {
-            if isSupabaseProvider {
-                guard let anonKey = magicLinkConfiguration.supabaseAnonKey,
-                      !anonKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    return "Supabase anon key is missing. Set MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY."
-                }
-
-                urlRequest.setValue(anonKey, forHTTPHeaderField: "apikey")
-                urlRequest.setValue("Bearer \(anonKey)", forHTTPHeaderField: "Authorization")
-
-                let payload = SupabaseMagicLinkDispatchPayload(
-                    email: request.email,
-                    createUser: request.intent == .createAccount,
-                    emailRedirectTo: request.verificationURL.absoluteString,
-                    redirectTo: request.verificationURL.absoluteString
-                )
-                urlRequest.httpBody = try JSONEncoder().encode(payload)
-            } else {
-                let payload = MagicLinkDispatchPayload(
-                    email: request.email,
-                    intent: request.intent.rawValue,
-                    token: request.token,
-                    redirectURL: request.verificationURL.absoluteString,
-                    requestedAt: Self.analyticsTimestampFormatter.string(from: request.requestedAt),
-                    expiresAt: Self.analyticsTimestampFormatter.string(from: request.expiresAt)
-                )
-                urlRequest.httpBody = try JSONEncoder().encode(payload)
-            }
-        } catch {
-            return "Magic-link request could not be prepared."
-        }
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: urlRequest)
-            guard let httpResponse = response as? HTTPURLResponse else {
-                return "Magic-link request failed due to an invalid server response."
-            }
-
-            guard (200...299).contains(httpResponse.statusCode) else {
-                if let message = providerFailureMessage(from: data) {
-                    return message
-                }
-                return "Magic-link request failed with status \(httpResponse.statusCode)."
-            }
-
-            return nil
-        } catch {
-            if let urlError = error as? URLError {
-                switch urlError.code {
-                case .timedOut:
-                    return "Magic-link request timed out. Please try again."
-                case .notConnectedToInternet:
-                    return "No internet connection. Connect and try again."
-                default:
-                    break
-                }
-            }
-            return "Couldn’t reach the magic-link provider. Check endpoint config and network access."
-        }
+        let first = components.givenName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let last = components.familyName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let joined = [first, last]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        return normalizedDisplayName(joined)
     }
 
-    private func providerFailureMessage(from data: Data) -> String? {
-        guard !data.isEmpty,
-              let raw = try? JSONSerialization.jsonObject(with: data) else {
-            return nil
-        }
-
-        func message(in dictionary: [String: Any]) -> String? {
-            let directKeys = ["message", "detail", "error_description"]
-            for key in directKeys {
-                if let value = dictionary[key] as? String,
-                   !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    return value
-                }
-            }
-
-            if let nestedError = dictionary["error"] as? [String: Any] {
-                return message(in: nestedError)
-            }
-
-            if let errorString = dictionary["error"] as? String,
-               !errorString.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                return errorString
-            }
-
-            return nil
-        }
-
-        guard let dictionary = raw as? [String: Any] else {
-            return nil
-        }
-        return message(in: dictionary)
+    private func generatedFallbackAppleEmail(for userID: String) -> String {
+        let fragment = sanitizedIdentifierFragment(from: userID)
+        return "apple-\(fragment)@mindsense.local"
     }
 
-    private func parseIncomingMagicLink(_ url: URL) -> IncomingMagicLinkPayload? {
-        let path = normalizedPath(url.path)
-        let expectedPath = normalizedPath(magicLinkConfiguration.normalizedRedirectPath)
-        let scheme = url.scheme?.lowercased() ?? ""
-        let host = url.host?.lowercased() ?? ""
-
-        let matchesCustomRoute =
-            scheme == magicLinkConfiguration.redirectScheme.lowercased() &&
-            host == magicLinkConfiguration.redirectHost.lowercased() &&
-            path == expectedPath
-
-        let matchesUniversalRoute: Bool
-        if let universalHost = magicLinkConfiguration.universalLinkHost?.lowercased() {
-            matchesUniversalRoute = (scheme == "https" || scheme == "http") &&
-                host == universalHost &&
-                path == expectedPath
-        } else {
-            matchesUniversalRoute = false
-        }
-
-        guard matchesCustomRoute || matchesUniversalRoute else {
-            return nil
-        }
-
-        let queryItems = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
-        let token = queryItems.first(where: { ["token", "code", "magic_token"].contains($0.name.lowercased()) })?.value
-        let email = queryItems.first(where: { $0.name.caseInsensitiveCompare("email") == .orderedSame })?.value
-
-        guard let token, !token.isEmpty else {
-            return nil
-        }
-        guard let email else {
-            return nil
-        }
-
-        let normalizedEmail = normalizedEmail(from: email)
-        guard isValidEmail(normalizedEmail) else {
-            return nil
-        }
-
-        return .init(email: normalizedEmail, token: token)
-    }
-
-    private func consumeMagicLink(email: String, token: String, source: String) -> String? {
-        guard let pendingMagicLinkRequest else {
-            track(
-                event: .secondaryActionTapped,
-                surface: .auth,
-                action: "magic_link_verification_failed",
-                metadata: ["reason": "no_pending_request", "source": source]
-            )
-            return "Request a new magic link to continue."
-        }
-
-        if pendingMagicLinkRequest.isExpired {
-            clearPendingMagicLinkRequest()
-            track(
-                event: .secondaryActionTapped,
-                surface: .auth,
-                action: "magic_link_verification_failed",
-                metadata: ["reason": "expired", "source": source]
-            )
-            return "This magic link has expired. Request a new link."
-        }
-
-        guard pendingMagicLinkRequest.token == token else {
-            track(
-                event: .secondaryActionTapped,
-                surface: .auth,
-                action: "magic_link_verification_failed",
-                metadata: ["reason": "token_mismatch", "source": source]
-            )
-            return "This magic link is invalid. Request a new link."
-        }
-
-        guard pendingMagicLinkRequest.email == email else {
-            track(
-                event: .secondaryActionTapped,
-                surface: .auth,
-                action: "magic_link_verification_failed",
-                metadata: ["reason": "email_mismatch", "source": source]
-            )
-            return "This link was issued for \(pendingMagicLinkRequest.email)."
-        }
-
-        let intent = pendingMagicLinkRequest.intent
-        persistSession(email: pendingMagicLinkRequest.email)
-        track(
-            event: .actionCompleted,
-            surface: .auth,
-            action: "magic_link_verified_\(intent.analyticsSuffix)",
-            metadata: [
-                "source": source,
-                "provider": magicLinkConfiguration.providerName
-            ]
-        )
-        return nil
-    }
-
-    private func normalizedPath(_ value: String) -> String {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return "/" }
-        var path = trimmed.hasPrefix("/") ? trimmed : "/\(trimmed)"
-        if path.count > 1 && path.hasSuffix("/") {
-            path.removeLast()
-        }
-        return path
-    }
-
-    private static func generateMagicLinkToken() -> String {
-        UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased()
+    private func sanitizedIdentifierFragment(from value: String) -> String {
+        let lowered = value.lowercased()
+        let compact = lowered.unicodeScalars
+            .filter { CharacterSet.alphanumerics.contains($0) }
+            .prefix(14)
+        let fragment = String(String.UnicodeScalarView(compact))
+        return fragment.isEmpty ? "user" : fragment
     }
 
     private func ratio(_ numerator: Int, _ denominator: Int) -> Double {

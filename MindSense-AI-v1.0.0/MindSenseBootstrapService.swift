@@ -69,6 +69,9 @@ final class MindSenseBootstrapService {
 
         defaults.set(true, forKey: "hasSeenIntro")
         defaults.set("uitest@mindsense.ai", forKey: "auth.fallback_session_email")
+        defaults.set("uitest@mindsense.ai", forKey: "auth.session.email.v2")
+        defaults.set("uitest-apple-user", forKey: "auth.session.apple_user_id.v1")
+        defaults.set("UI Test", forKey: "auth.session.display_name.v1")
 
         var onboarding = OnboardingProgress()
         OnboardingStep.allCases.forEach { onboarding.markComplete($0) }

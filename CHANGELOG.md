@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Initial MindSense AI v1.0.0 app release.
 - Core product surfaces: `Today`, `Regulate`, `Data`.
-- Passwordless magic-link auth UX with configurable provider dispatch.
+- Passwordless `Continue with Apple` auth UX.
 - Local-first persistence and deterministic demo scenario engines.
 - Unit and UI test targets with scenario-seeded launch overrides.
 - Quality-gate scripts for contrast, snapshots, accessibility, and interaction latency.
@@ -25,3 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `Docs/engineering/architecture.md` runtime architecture reference.
 - `Docs/engineering/testing.md` test and QA runbook.
 
+### Changed
+
+- Replaced magic-link auth implementation with `Continue with Apple` session flow.
+- Updated Intro/Auth entry copy and layout to an Apple-first, lower-noise design.
+- Updated documentation set to reflect Apple sign-in behavior and persistence keys.

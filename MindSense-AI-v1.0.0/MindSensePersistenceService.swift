@@ -10,6 +10,10 @@ final class MindSensePersistenceService {
     private static let analyticsMaxEventCount = 400
     private static let analyticsMaxPayloadBytes = 350_000
     private static let analyticsPersistDelay: TimeInterval = 1.0
+    private static let legacySessionEmailKey = "auth.fallback_session_email"
+    private static let sessionEmailKey = "auth.session.email.v2"
+    private static let sessionAppleUserIDKey = "auth.session.apple_user_id.v1"
+    private static let sessionDisplayNameKey = "auth.session.display_name.v1"
 
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
@@ -68,35 +72,66 @@ final class MindSensePersistenceService {
     // MARK: - Session
 
     func loadSession() -> AuthSession? {
-        guard let email = defaults.string(forKey: "auth.fallback_session_email") else {
+        let storedEmail = defaults.string(forKey: Self.sessionEmailKey)
+            ?? defaults.string(forKey: Self.legacySessionEmailKey)
+        guard let email = storedEmail else {
             return nil
         }
-        return AuthSession(email: email)
+        let appleUserID = defaults.string(forKey: Self.sessionAppleUserIDKey)
+        let displayName = defaults.string(forKey: Self.sessionDisplayNameKey)
+        return AuthSession(email: email, appleUserID: appleUserID, displayName: displayName)
     }
 
-    func persistSession(email: String) {
-        defaults.set(email.lowercased(), forKey: "auth.fallback_session_email")
+    func persistSession(email: String, appleUserID: String?, displayName: String?) {
+        let normalizedEmail = email.lowercased()
+        defaults.set(normalizedEmail, forKey: Self.sessionEmailKey)
+        defaults.set(normalizedEmail, forKey: Self.legacySessionEmailKey)
+
+        if let appleUserID = trimmedNonEmpty(appleUserID) {
+            defaults.set(appleUserID, forKey: Self.sessionAppleUserIDKey)
+            persistKnownAppleEmail(normalizedEmail, for: appleUserID)
+        } else {
+            defaults.removeObject(forKey: Self.sessionAppleUserIDKey)
+        }
+
+        if let displayName = trimmedNonEmpty(displayName) {
+            defaults.set(displayName, forKey: Self.sessionDisplayNameKey)
+        } else {
+            defaults.removeObject(forKey: Self.sessionDisplayNameKey)
+        }
     }
 
     func clearSession() {
-        defaults.removeObject(forKey: "auth.fallback_session_email")
+        defaults.removeObject(forKey: Self.legacySessionEmailKey)
+        defaults.removeObject(forKey: Self.sessionEmailKey)
+        defaults.removeObject(forKey: Self.sessionAppleUserIDKey)
+        defaults.removeObject(forKey: Self.sessionDisplayNameKey)
         defaults.removeObject(forKey: "auth.magic_link.pending.v1")
     }
 
-    func loadPendingMagicLinkRequest() -> PendingMagicLinkRequest? {
-        guard let data = defaults.data(forKey: "auth.magic_link.pending.v1") else {
+    func loadKnownAppleEmail(for userID: String) -> String? {
+        guard let userID = trimmedNonEmpty(userID) else {
             return nil
         }
-        return try? decoder.decode(PendingMagicLinkRequest.self, from: data)
+        return defaults.string(forKey: appleEmailLookupKey(for: userID))
     }
 
-    func persistPendingMagicLinkRequest(_ request: PendingMagicLinkRequest?) {
-        if let request,
-           let data = try? encoder.encode(request) {
-            defaults.set(data, forKey: "auth.magic_link.pending.v1")
+    func persistKnownAppleEmail(_ email: String, for userID: String) {
+        guard let userID = trimmedNonEmpty(userID) else {
             return
         }
-        defaults.removeObject(forKey: "auth.magic_link.pending.v1")
+        let normalizedEmail = email.lowercased()
+        defaults.set(normalizedEmail, forKey: appleEmailLookupKey(for: userID))
+    }
+
+    private func appleEmailLookupKey(for userID: String) -> String {
+        "auth.apple.email_lookup.\(userID)"
+    }
+
+    private func trimmedNonEmpty(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 
     // MARK: - Onboarding

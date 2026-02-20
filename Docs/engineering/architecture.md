@@ -89,7 +89,7 @@ Other implemented surfaces currently outside primary tab nav:
 
 Persisted domains include:
 
-- Auth/session + pending magic-link request
+- Auth/session + Apple metadata + cached email lookup
 - Onboarding progress per email
 - Active and historical regulate sessions
 - Experiments and results
@@ -102,17 +102,15 @@ Design constraints:
 - Corrupt payloads fall back safely and raise user-facing recovery issues where needed
 - Event history is bounded to avoid unbounded growth
 
-## 6) Auth flow (magic-link)
+## 6) Auth flow (Sign in with Apple)
 
 Flow summary:
 
-1. Validate email and cooldown.
-2. Generate token + verification URL.
-3. Dispatch POST request to configured provider endpoint.
-4. Persist pending request locally.
-5. Consume incoming deep/universal link.
-6. Validate token/email/expiry against pending request.
-7. Persist session and continue routing.
+1. Present native Apple auth sheet from `SignInWithAppleButton`.
+2. Validate returned Apple user identifier.
+3. Resolve email using credential email, cached email for Apple user ID, or generated local fallback.
+4. Resolve display name using returned full name or previously stored display name.
+5. Persist `AuthSession` and route based on onboarding state.
 
 Sequence:
 
@@ -121,17 +119,14 @@ sequenceDiagram
   participant U as User
   participant A as AuthView
   participant S as MindSenseStore
-  participant P as Provider
-  participant D as DeepLink
+  participant I as Apple ID
 
-  U->>A: Request sign-in/create-account
-  A->>S: requestMagicLink(email, intent)
-  S->>P: POST dispatch payload
-  P-->>S: 2xx accepted
-  S-->>A: pending request persisted
-  D->>S: onOpenURL(token,email,intent)
-  S->>S: consumeMagicLink validation
-  S-->>A: session persisted + signed in banner
+  U->>A: Tap Continue with Apple
+  A->>I: Request authorization
+  I-->>A: userID + email? + fullName?
+  A->>S: completeSignInWithApple(...)
+  S->>S: Resolve identity fallbacks + persist session
+  S-->>A: Session persisted + route forward
 ```
 
 ## 7) Onboarding and activation
@@ -165,4 +160,3 @@ Current implementation is local persistence only (no external analytics transpor
 - Set appearance, haptics, reduce-motion flags
 
 See `Docs/engineering/testing.md` for command-level workflows.
-

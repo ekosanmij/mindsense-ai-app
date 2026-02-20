@@ -1,109 +1,95 @@
 import XCTest
 @testable import MindSense_AI_v1_0_0
 
-final class MagicLinkAuthConfigurationTests: XCTestCase {
-    func testLiveConfigurationUsesDefaultsWhenEnvironmentIsEmpty() {
-        let configuration = MagicLinkAuthConfiguration.live(environment: [:])
+@MainActor
+final class AppleSignInSessionFlowTests: XCTestCase {
+    func testCompleteSignInWithAppleStoresCredentialEmail() {
+        clearAuthState()
+        let store = MindSenseStore()
 
-        XCTAssertEqual(configuration.providerName, "MindSense Auth")
-        XCTAssertEqual(configuration.redirectScheme, "mindsense")
-        XCTAssertEqual(configuration.redirectHost, "auth")
-        XCTAssertEqual(configuration.normalizedRedirectPath, "/verify")
-        XCTAssertNil(configuration.requestEndpointURL)
-        XCTAssertEqual(configuration.tokenTTLMinutes, 15)
-        XCTAssertEqual(configuration.resendCooldownSeconds, 20)
+        let message = store.completeSignInWithApple(
+            userID: "apple-user-1",
+            email: "User@Example.com",
+            fullName: nil
+        )
+
+        XCTAssertNil(message)
+        XCTAssertEqual(store.session?.email, "user@example.com")
+        XCTAssertEqual(store.session?.appleUserID, "apple-user-1")
     }
 
-    func testLiveConfigurationAppliesEnvironmentOverrides() {
-        let configuration = MagicLinkAuthConfiguration.live(
-            environment: [
-                "MINDSENSE_MAGIC_LINK_PROVIDER": "Supabase",
-                "MINDSENSE_MAGIC_LINK_API_BASE_URL": "https://api.example.com/v1",
-                "MINDSENSE_MAGIC_LINK_REQUEST_URL": "https://api.example.com/v1/auth/send-magic-link",
-                "MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY": "supabase-anon-key",
-                "MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME": "msapp",
-                "MINDSENSE_MAGIC_LINK_REDIRECT_HOST": "login",
-                "MINDSENSE_MAGIC_LINK_REDIRECT_PATH": "verify",
-                "MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST": "auth.example.com",
-                "MINDSENSE_MAGIC_LINK_TTL_MINUTES": "30",
-                "MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS": "45",
-                "MINDSENSE_MAGIC_LINK_DEBUG_SHOW_LINK_PREVIEW": "1",
-                "MINDSENSE_MAGIC_LINK_DEBUG_AUTO_OPEN": "true"
-            ]
+    func testCompleteSignInWithAppleUsesCachedEmailWhenEmailIsNotReturned() {
+        clearAuthState()
+        let firstStore = MindSenseStore()
+        XCTAssertNil(
+            firstStore.completeSignInWithApple(
+                userID: "apple-user-2",
+                email: "cached@example.com",
+                fullName: nil
+            )
+        )
+        firstStore.signOut()
+
+        let secondStore = MindSenseStore()
+        let message = secondStore.completeSignInWithApple(
+            userID: "apple-user-2",
+            email: nil,
+            fullName: nil
         )
 
-        XCTAssertEqual(configuration.providerName, "Supabase")
-        XCTAssertEqual(configuration.apiBaseURL?.absoluteString, "https://api.example.com/v1")
-        XCTAssertEqual(configuration.requestEndpointURL?.absoluteString, "https://api.example.com/v1/auth/send-magic-link")
-        XCTAssertEqual(configuration.supabaseAnonKey, "supabase-anon-key")
-        XCTAssertEqual(configuration.redirectScheme, "msapp")
-        XCTAssertEqual(configuration.redirectHost, "login")
-        XCTAssertEqual(configuration.normalizedRedirectPath, "/verify")
-        XCTAssertEqual(configuration.universalLinkHost, "auth.example.com")
-        XCTAssertEqual(configuration.tokenTTLMinutes, 30)
-        XCTAssertEqual(configuration.resendCooldownSeconds, 45)
-        XCTAssertTrue(configuration.debugShowLinkPreview)
-        XCTAssertTrue(configuration.debugAutoOpenReceivedLink)
+        XCTAssertNil(message)
+        XCTAssertEqual(secondStore.session?.email, "cached@example.com")
+        XCTAssertEqual(secondStore.session?.appleUserID, "apple-user-2")
     }
 
-    func testSupabaseConfigurationDerivesOTPRequestEndpointFromAPIBase() {
-        let configuration = MagicLinkAuthConfiguration.live(
-            environment: [
-                "MINDSENSE_MAGIC_LINK_PROVIDER": "Supabase",
-                "MINDSENSE_MAGIC_LINK_API_BASE_URL": "https://api.example.com"
-            ]
+    func testCompleteSignInWithAppleCreatesFallbackEmailWhenNoEmailExists() {
+        clearAuthState()
+        let store = MindSenseStore()
+
+        let message = store.completeSignInWithApple(
+            userID: "USER-XYZ_123",
+            email: nil,
+            fullName: nil
         )
 
-        XCTAssertNil(configuration.requestEndpointURL)
-        XCTAssertEqual(configuration.resolvedRequestEndpointURL?.absoluteString, "https://api.example.com/auth/v1/otp")
+        XCTAssertNil(message)
+        XCTAssertEqual(store.session?.email, "apple-userxyz123@mindsense.local")
     }
 
-    func testVerificationURLContainsTokenEmailAndIntent() throws {
-        let configuration = MagicLinkAuthConfiguration.live(environment: [:])
-        let url = configuration.verificationURL(
-            email: "user@example.com",
-            token: "abc123",
-            intent: .createAccount
-        )
-        let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
-        let queryItems = try XCTUnwrap(components.queryItems)
+    func testCompleteSignInWithApplePersistsDisplayNameFromFullName() {
+        clearAuthState()
+        let store = MindSenseStore()
 
-        XCTAssertEqual(components.scheme, "mindsense")
-        XCTAssertEqual(components.host, "auth")
-        XCTAssertEqual(components.path, "/verify")
-        XCTAssertEqual(queryItems.first(where: { $0.name == "token" })?.value, "abc123")
-        XCTAssertEqual(queryItems.first(where: { $0.name == "email" })?.value, "user@example.com")
-        XCTAssertEqual(queryItems.first(where: { $0.name == "intent" })?.value, MagicLinkIntent.createAccount.rawValue)
+        var name = PersonNameComponents()
+        name.givenName = "Taylor"
+        name.familyName = "Ng"
+
+        let message = store.completeSignInWithApple(
+            userID: "apple-user-3",
+            email: "person@example.com",
+            fullName: name
+        )
+
+        XCTAssertNil(message)
+        XCTAssertEqual(store.session?.displayName, "Taylor Ng")
     }
 
-    func testVerificationURLPrefersUniversalLinkHostWhenConfigured() throws {
-        let configuration = MagicLinkAuthConfiguration.live(
-            environment: [
-                "MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME": "msapp",
-                "MINDSENSE_MAGIC_LINK_REDIRECT_HOST": "login",
-                "MINDSENSE_MAGIC_LINK_REDIRECT_PATH": "/verify",
-                "MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST": "auth.example.com"
-            ]
-        )
-        let url = configuration.verificationURL(
-            email: "user@example.com",
-            token: "abc123",
-            intent: .signIn
-        )
-        let components = try XCTUnwrap(URLComponents(url: url, resolvingAgainstBaseURL: false))
-
-        XCTAssertEqual(components.scheme, "https")
-        XCTAssertEqual(components.host, "auth.example.com")
-        XCTAssertEqual(components.path, "/verify")
+    override func tearDown() {
+        clearAuthState()
+        super.tearDown()
     }
 
-    func testLiveConfigurationNormalizesUniversalHostWithSchemeAndPath() {
-        let configuration = MagicLinkAuthConfiguration.live(
-            environment: [
-                "MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST": " https://AUTH.Example.com/verify/path "
-            ]
-        )
+    private func clearAuthState() {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: "auth.fallback_session_email")
+        defaults.removeObject(forKey: "auth.session.email.v2")
+        defaults.removeObject(forKey: "auth.session.apple_user_id.v1")
+        defaults.removeObject(forKey: "auth.session.display_name.v1")
+        defaults.removeObject(forKey: "auth.magic_link.pending.v1")
 
-        XCTAssertEqual(configuration.universalLinkHost, "auth.example.com")
+        let keys = defaults.dictionaryRepresentation().keys
+        for key in keys where key.hasPrefix("auth.apple.email_lookup.") {
+            defaults.removeObject(forKey: key)
+        }
     }
 }

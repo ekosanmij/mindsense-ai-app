@@ -13,7 +13,7 @@ This repository contains the iOS app, unit/UI tests, quality-gate scripts, and p
 5. [Prerequisites](#prerequisites)
 6. [Quick start (Xcode)](#quick-start-xcode)
 7. [Build and test from CLI](#build-and-test-from-cli)
-8. [Magic-link auth configuration](#magic-link-auth-configuration)
+8. [Apple Sign-In Authentication](#apple-sign-in-authentication)
 9. [UI test launch flags](#ui-test-launch-flags)
 10. [Quality gates and scripts](#quality-gates-and-scripts)
 11. [Architecture notes](#architecture-notes)
@@ -63,7 +63,7 @@ Also implemented in codebase (not wired to primary tab navigation by default):
 - Platform: `iOS`
 - State container: single `MindSenseStore` (`ObservableObject`)
 - Persistence: `UserDefaults` + Codable models
-- Auth UX: passwordless email magic-link flow
+- Auth UX: Sign in with Apple
 - Tests: `XCTest` (unit and UI)
 
 ## Repository structure
@@ -156,49 +156,28 @@ xcodebuild \
   test
 ```
 
-## Magic-link auth configuration
+## Apple Sign-In Authentication
 
-MindSense uses a passwordless magic-link flow and can dispatch either to:
+MindSense uses `Sign in with Apple` as the only in-app authentication path.
 
-- A generic backend endpoint (`MINDSENSE_MAGIC_LINK_REQUEST_URL`), or
-- Supabase OTP endpoint (derived from `MINDSENSE_MAGIC_LINK_API_BASE_URL` when provider includes "supabase")
+### Configuration requirements
 
-Set environment variables in your Xcode scheme (`Product -> Scheme -> Edit Scheme -> Run -> Arguments`).
+- App target includes Apple Sign In entitlement (`MindSense-AI-v1.0.0/MindSense-AI-v1.0.0.entitlements`).
+- Matching App ID capability and signing/provisioning must be enabled in Apple Developer.
+- No auth environment variables are required.
 
-### Required for network dispatch
+### Session behavior
 
-- `MINDSENSE_MAGIC_LINK_PROVIDER` (example: `Supabase`)
-- `MINDSENSE_MAGIC_LINK_API_BASE_URL` or `MINDSENSE_MAGIC_LINK_REQUEST_URL`
-
-If using Supabase direct OTP dispatch:
-
-- `MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY` (required)
-
-### Optional routing and behavior
-
-- `MINDSENSE_MAGIC_LINK_REDIRECT_SCHEME` (default: `mindsense`)
-- `MINDSENSE_MAGIC_LINK_REDIRECT_HOST` (default: `auth`)
-- `MINDSENSE_MAGIC_LINK_REDIRECT_PATH` (default: `/verify`)
-- `MINDSENSE_MAGIC_LINK_UNIVERSAL_HOST` (optional)
-- `MINDSENSE_MAGIC_LINK_TTL_MINUTES` (default: `15`, clamped `5...60`)
-- `MINDSENSE_MAGIC_LINK_RESEND_COOLDOWN_SECONDS` (default: `20`, clamped `5...120`)
-- `MINDSENSE_MAGIC_LINK_DEBUG_SHOW_LINK_PREVIEW` (debug helper)
-- `MINDSENSE_MAGIC_LINK_DEBUG_AUTO_OPEN` (debug helper)
-
-### Dispatch payload contract (non-Supabase mode)
-
-POST JSON payload:
-
-```json
-{
-  "email": "user@example.com",
-  "intent": "signIn | createAccount",
-  "token": "<generated-token>",
-  "redirectURL": "mindsense://auth/verify?...",
-  "requestedAt": "<ISO8601>",
-  "expiresAt": "<ISO8601>"
-}
-```
+- Session persists locally with:
+  - `auth.session.email.v2`
+  - `auth.session.apple_user_id.v1`
+  - `auth.session.display_name.v1`
+  - Legacy compatibility: `auth.fallback_session_email`
+- App caches known email by Apple user ID:
+  - `auth.apple.email_lookup.<appleUserID>`
+- If Apple does not return email for a sign-in and no cache exists, app generates:
+  - `apple-<id>@mindsense.local`
+- If Apple does not return full name, app uses previously saved display name when available.
 
 ## UI test launch flags
 
@@ -293,12 +272,11 @@ Data is currently local-first and persisted in `UserDefaults` only.
 
 - Build fails due to missing simulator:
   - Install iOS 26.2 simulator runtimes and retry with an available device name.
-- Magic link request fails immediately:
-  - Verify endpoint env vars (`MINDSENSE_MAGIC_LINK_API_BASE_URL` or `MINDSENSE_MAGIC_LINK_REQUEST_URL`).
-- Supabase mode fails:
-  - Ensure `MINDSENSE_MAGIC_LINK_SUPABASE_ANON_KEY` is set.
-- Link verification fails:
-  - Check redirect scheme/host/path and deep-link route match.
+- Apple sign-in fails or button is unavailable:
+  - Verify Apple Sign In capability is enabled for the app target and App ID.
+  - Verify signing team/provisioning profile supports Apple Sign In.
+- Profile name appears unexpected after sign-in:
+  - Apple may not return name/email after initial authorization; app falls back to stored values or local fallback email prefix.
 - UI tests are flaky due to stale local data:
   - Include `-uitest-reset -uitest-ready` launch args.
 

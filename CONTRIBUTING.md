@@ -24,7 +24,7 @@ Thanks for contributing. This project is an iOS SwiftUI app with deterministic d
 Example:
 
 ```bash
-git checkout -b feat/magic-link-error-handling
+git checkout -b feat/apple-sign-in-polish
 ```
 
 ## Development workflow
@@ -81,7 +81,7 @@ bash Scripts/design_qa.sh
 
 - Never commit private keys, certificates, or production secrets.
 - Do not hardcode credentials in source files.
-- Use Xcode scheme environment variables for local auth configuration.
+- Use Xcode signing/capability settings for local auth configuration.
 - Review `SECURITY.md` for vulnerability handling.
 
 ## Pull request checklist
@@ -92,4 +92,3 @@ bash Scripts/design_qa.sh
 - [ ] Quality-gate scripts run if UI was affected.
 - [ ] Docs updated (`README.md`, `Docs/*`) if behavior/config changed.
 - [ ] No secrets or machine-specific artifacts were committed.
-
