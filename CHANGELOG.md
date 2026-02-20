@@ -22,6 +22,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Root repository `README.md` with setup, architecture, testing, and auth configuration guidance.
 - `CONTRIBUTING.md` workflow for contributors.
 - `SECURITY.md` vulnerability reporting policy.
-- `Docs/ARCHITECTURE.md` runtime architecture reference.
-- `Docs/TESTING.md` test and QA runbook.
+- `Docs/engineering/architecture.md` runtime architecture reference.
+- `Docs/engineering/testing.md` test and QA runbook.
 

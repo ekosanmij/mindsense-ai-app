@@ -2,10 +2,10 @@
 
 Date: February 19, 2026
 Source alignment:
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/PRD-AsBuilt-MindSense-v1.0.0.md`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Phase-1-Brand-Direction.md`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Phase-2-Design-System-v2.md`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Phase-6-Quality-Gates.md`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/product/prd-as-built.md`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/brand-direction.md`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/design-system.md`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/quality/quality-gates.md`
 
 ## 1) Build assumptions
 

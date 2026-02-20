@@ -6,11 +6,11 @@
 - Primary use: app icon, navigation icon, website lockups.
 
 ## Files
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Brand/logo/logo-icon-dark.svg`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Brand/logo/logo-icon-light.svg`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Brand/logo/logo-lockup-horizontal.svg`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Brand/logo/logo-lockup-stacked.svg`
-- Generated PNG exports: `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Brand/logo/generated`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/brand/logo/logo-icon-dark.svg`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/brand/logo/logo-icon-light.svg`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/brand/logo/logo-lockup-horizontal.svg`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/brand/logo/logo-lockup-stacked.svg`
+- Generated PNG exports: `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/brand/logo/generated`
 
 ## Palette
 - Midnight base: `#0B0F14`

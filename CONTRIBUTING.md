@@ -31,8 +31,8 @@ git checkout -b feat/magic-link-error-handling
 
 1. Read current behavior in:
    - `README.md`
-   - `Docs/ARCHITECTURE.md`
-   - `Docs/TESTING.md`
+   - `Docs/engineering/architecture.md`
+   - `Docs/engineering/testing.md`
 2. Implement changes.
 3. Run relevant tests locally.
 4. Run quality scripts when UI/visual behavior is affected.

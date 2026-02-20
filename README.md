@@ -268,7 +268,7 @@ swift Scripts/generate_app_icon.swift
 Outputs icon/favicons into:
 
 - `MindSense-AI-v1.0.0/Assets.xcassets/AppIcon.appiconset`
-- `Docs/Brand/logo/generated`
+- `Docs/brand/logo/generated`
 
 ## Architecture notes
 
@@ -304,14 +304,14 @@ Data is currently local-first and persisted in `UserDefaults` only.
 
 ## Documentation index
 
-- Product as-built PRD: `Docs/PRD-AsBuilt-MindSense-v1.0.0.md`
-- Brand direction: `Docs/Phase-1-Brand-Direction.md`
-- Design system: `Docs/Phase-2-Design-System-v2.md`
-- Quality gates: `Docs/Phase-6-Quality-Gates.md`
-- Website blueprint: `Docs/Website-Implementation-Blueprint.md`
-- Logo system: `Docs/Brand/logo/README.md`
-- Runtime architecture guide: `Docs/ARCHITECTURE.md`
-- Testing and QA runbook: `Docs/TESTING.md`
+- Product as-built PRD: `Docs/product/prd-as-built.md`
+- Brand direction: `Docs/design/brand-direction.md`
+- Design system: `Docs/design/design-system.md`
+- Quality gates: `Docs/quality/quality-gates.md`
+- Website blueprint: `Docs/product/website-implementation-blueprint.md`
+- Logo system: `Docs/brand/logo/readme.md`
+- Runtime architecture guide: `Docs/engineering/architecture.md`
+- Testing and QA runbook: `Docs/engineering/testing.md`
 
 ## Contributing
 

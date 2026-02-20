@@ -164,5 +164,5 @@ Current implementation is local persistence only (no external analytics transpor
 - Seed scenario/metrics/events/experiments
 - Set appearance, haptics, reduce-motion flags
 
-See `Docs/TESTING.md` for command-level workflows.
+See `Docs/engineering/testing.md` for command-level workflows.
 

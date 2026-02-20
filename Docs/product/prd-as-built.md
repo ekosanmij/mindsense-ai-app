@@ -769,6 +769,6 @@ Appendix A: Primary code anchors used for this PRD:
 - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/QAToolsView.swift`
 - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0Tests/*.swift`
 - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests.swift`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Phase-1-Brand-Direction.md`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Phase-2-Design-System-v2.md`
-- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/Phase-6-Quality-Gates.md`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/brand-direction.md`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/design-system.md`
+- `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/quality/quality-gates.md`

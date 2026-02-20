@@ -169,7 +169,7 @@ func writePNG(_ image: CGImage, to outputURL: URL) throws {
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true)
 let appIconSetDir = root.appendingPathComponent("MindSense-AI-v1.0.0/Assets.xcassets/AppIcon.appiconset", isDirectory: true)
-let generatedDir = root.appendingPathComponent("Docs/Brand/logo/generated", isDirectory: true)
+let generatedDir = root.appendingPathComponent("Docs/brand/logo/generated", isDirectory: true)
 
 try FileManager.default.createDirectory(at: appIconSetDir, withIntermediateDirectories: true)
 try FileManager.default.createDirectory(at: generatedDir, withIntermediateDirectories: true)
