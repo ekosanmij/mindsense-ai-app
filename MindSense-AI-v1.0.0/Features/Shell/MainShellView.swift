@@ -22,9 +22,9 @@ struct MainShellView: View {
 
         let selected = UIColor { traits in
             if traits.userInterfaceStyle == .dark {
-                return UIColor(red: 142 / 255, green: 220 / 255, blue: 249 / 255, alpha: 1)
+                return UIColor(red: 134 / 255, green: 210 / 255, blue: 186 / 255, alpha: 1)
             }
-            return UIColor(red: 10 / 255, green: 111 / 255, blue: 167 / 255, alpha: 1)
+            return UIColor(red: 17 / 255, green: 122 / 255, blue: 105 / 255, alpha: 1)
         }
         let normal = UIColor.secondaryLabel.withAlphaComponent(0.74)
 
