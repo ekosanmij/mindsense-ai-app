@@ -66,6 +66,13 @@ struct MainShellView: View {
                 .tabItem { Label(MainTab.data.title, systemImage: MainTab.data.icon) }
                 .tag(MainTab.data)
         }
+        .tabBarMinimizeBehavior(.onScrollDown)
+        .background(
+            TabBarMinimizeConfigurator(
+                behavior: .onScrollDown
+            )
+            .allowsHitTesting(false)
+        )
         .animation(reduceMotion ? nil : MindSenseMotion.screen, value: store.selectedTab)
         .onChange(of: store.selectedTab) { _, newValue in
             store.track(
@@ -103,5 +110,48 @@ struct MainShellView: View {
             return fallback
         }
         return UIFont(descriptor: descriptor, size: size)
+    }
+}
+
+private struct TabBarMinimizeConfigurator: UIViewControllerRepresentable {
+    let behavior: UITabBarController.MinimizeBehavior
+
+    func makeUIViewController(context: Context) -> TabBarMinimizeConfiguratorController {
+        TabBarMinimizeConfiguratorController()
+    }
+
+    func updateUIViewController(_ uiViewController: TabBarMinimizeConfiguratorController, context: Context) {
+        uiViewController.applyMinimizeBehavior(behavior)
+    }
+}
+
+private final class TabBarMinimizeConfiguratorController: UIViewController {
+    private var pendingBehavior: UITabBarController.MinimizeBehavior?
+
+    func applyMinimizeBehavior(_ behavior: UITabBarController.MinimizeBehavior) {
+        pendingBehavior = behavior
+        applyPendingBehaviorIfPossible()
+    }
+
+    override func didMove(toParent parent: UIViewController?) {
+        super.didMove(toParent: parent)
+        applyPendingBehaviorIfPossible()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        applyPendingBehaviorIfPossible()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        applyPendingBehaviorIfPossible()
+    }
+
+    private func applyPendingBehaviorIfPossible() {
+        guard let behavior = pendingBehavior else { return }
+        guard let tabBarController else { return }
+        guard tabBarController.tabBarMinimizeBehavior != behavior else { return }
+        tabBarController.tabBarMinimizeBehavior = behavior
     }
 }

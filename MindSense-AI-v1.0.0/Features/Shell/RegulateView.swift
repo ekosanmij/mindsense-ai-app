@@ -194,6 +194,7 @@ struct RegulateView: View {
                     }
                 }
                 .toolbar(shouldHideTabBar ? .hidden : .automatic, for: .tabBar)
+                .tabBarMinimizeBehavior(.onScrollDown)
                 .safeAreaInset(edge: .bottom) {
                     if case .ready = resolvedState, let primaryCTAConfig {
                         MindSenseBottomActionDock {
