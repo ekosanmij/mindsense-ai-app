@@ -147,12 +147,12 @@ struct RegulateView: View {
         }
     }
 
-    private var shouldHideTabBar: Bool {
-        store.activeRegulateSession?.isInProgress == true
-    }
-
     private var bottomContentPadding: CGFloat {
         16
+    }
+
+    private var tabBarCollapseScrollRunway: CGFloat {
+        return 180
     }
 
     var body: some View {
@@ -168,11 +168,14 @@ struct RegulateView: View {
                             .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
                         activeStepBlock
                             .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                        // Keep a short scroll runway so tab-bar minimize can trigger on shorter layouts.
+                        Color.clear
+                            .frame(height: tabBarCollapseScrollRunway)
+                            .accessibilityHidden(true)
                     }
                     .mindSensePageInsets(bottom: bottomContentPadding)
                 }
             }
-            .scrollBounceBehavior(.always, axes: .vertical)
             .mindSensePageBackground()
             .navigationTitle(AppIA.regulate)
             .navigationBarTitleDisplayMode(.inline)
@@ -184,8 +187,6 @@ struct RegulateView: View {
                     ProfileAccessMenu()
                 }
             }
-            .toolbar(shouldHideTabBar ? .hidden : .automatic, for: .tabBar)
-            .tabBarMinimizeBehavior(.onScrollDown)
             .safeAreaInset(edge: .bottom) {
                 if case .ready = resolvedState, let primaryCTAConfig {
                     MindSenseBottomActionDock {
@@ -245,30 +246,18 @@ struct RegulateView: View {
     }
 
     private var commandDeck: some View {
-        InsetSurface {
-            HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
-                MindSenseLogoBadge(size: 28, tint: MindSensePalette.signalCoolStrong)
-
-                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
-                    Text("Guided regulate flow")
-                        .font(MindSenseTypography.titleCompact)
-                        .tracking(0.15)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.9)
-
-                    Text(commandDetail)
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 8)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-
+        MindSenseTabHero(
+            label: AppIA.regulate,
+            title: "Step \(currentStep.rawValue + 1): \(currentStep.fullTitle)",
+            detail: commandDetail,
+            metric: commandMetric,
+            icon: "waveform.path.ecg",
+            tone: .accent,
+            watermarkTint: MindSensePalette.accent
+        ) {
             HStack(spacing: 8) {
                 PillChip(label: "Step \(currentStep.rawValue + 1) of \(RegulateStep.allCases.count)", state: .selected)
-                PillChip(label: commandMetric, state: .unselected)
+                PillChip(label: flowLabel, state: .unselected)
             }
 
             Text("Select one protocol, run the timer, then record impact.")
@@ -303,8 +292,16 @@ struct RegulateView: View {
 
     private var sessionStatusBlock: some View {
         InsetSurface {
+            MindSenseSectionHeader(
+                model: .init(
+                    title: "Session status",
+                    subtitle: "Live state from your current regulate flow.",
+                    icon: "heart.text.square"
+                )
+            )
+
             Text("Load \(store.demoMetrics.load)  •  Readiness \(store.demoMetrics.readiness)  •  Flow \(flowLabel)")
-                .font(MindSenseTypography.bodyStrong)
+                .font(MindSenseTypography.body)
                 .fixedSize(horizontal: false, vertical: true)
 
             if let runningSessionPreset {

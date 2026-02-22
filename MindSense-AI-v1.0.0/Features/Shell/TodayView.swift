@@ -186,12 +186,16 @@ struct TodayView: View {
     }
 
     private var commandDeck: some View {
-        PrimarySurface(tone: .accent) {
-            Text("STATE NOW")
-                .font(MindSenseTypography.micro)
-                .foregroundStyle(MindSensePalette.signalCoolStrong)
-                .tracking(1.2)
-
+        MindSenseTabHero(
+            label: AppIA.today,
+            title: heroInterpretation,
+            detail: heroReferenceLabel,
+            metric: "Confidence \(store.confidencePercent)%",
+            icon: "sun.max.fill",
+            tone: .accent,
+            watermarkTint: MindSensePalette.accent,
+            watermarkHeight: 128
+        ) {
             Button {
                 showSignalSourceDetails = true
                 store.triggerHaptic(intent: .selection)
@@ -234,15 +238,6 @@ struct TodayView: View {
                 )
             }
 
-            Text(heroInterpretation)
-                .font(MindSenseTypography.display)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(heroReferenceLabel)
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
             Button {
                 if reduceMotion {
                     showHeroWhy.toggle()
@@ -283,11 +278,6 @@ struct TodayView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .overlay(alignment: .topTrailing) {
-            MindSenseLogoWatermark(height: 128, tint: MindSensePalette.accent)
-                .padding(.top, 8)
-                .padding(.trailing, 2)
-        }
     }
 
     private var statusSnapshotBlock: some View {
@@ -302,7 +292,7 @@ struct TodayView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Load \(store.demoMetrics.load) (\(loadStateLabel))  •  Readiness \(store.demoMetrics.readiness) (\(readinessStateLabel))")
-                    .font(MindSenseTypography.bodyStrong)
+                    .font(MindSenseTypography.body)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Consistency \(store.demoMetrics.consistency) (\(consistencyStateLabel))")
                     .font(MindSenseTypography.caption)
@@ -394,7 +384,7 @@ struct TodayView: View {
                         size: 28
                     )
                     Text(recommendation.preset.title)
-                        .font(MindSenseTypography.bodyStrong)
+                        .font(MindSenseTypography.body)
                 }
                 Spacer()
                 PillChip(label: "\(recommendation.timeMinutes) min", state: .unselected)

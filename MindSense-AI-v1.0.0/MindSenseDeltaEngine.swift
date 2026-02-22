@@ -54,7 +54,7 @@ enum MindSenseDeltaEngine {
         }
     }
 
-    static func experimentCompletionSummary(
+    static func experimentCompletionSummary(        
         scenarioTitle: String,
         focusTitle: String,
         adherence: Int,

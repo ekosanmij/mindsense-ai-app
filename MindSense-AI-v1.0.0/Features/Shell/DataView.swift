@@ -14,7 +14,7 @@ struct DataView: View {
         var id: String { rawValue }
     }
 
-    @State private var submode: DataSubmode = .experiments
+    @State private var submode: DataSubmode = .trends
     @State private var window: TrendWindow = .seven
     @State private var selectedPoint: TrendPoint?
     @State private var selectedSignal: SignalFocus = .readiness
@@ -153,12 +153,21 @@ struct DataView: View {
         }
     }
 
+    private var tabBarCollapseScrollRunway: CGFloat {
+        switch submode {
+        case .experiments:
+            return 220
+        case .trends, .history:
+            return 96
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
                 ScreenStateContainer(state: resolvedState, retryAction: { store.retryCoreScreen(.data) }) {
                     VStack(spacing: MindSenseRhythm.section) {
-                        workspaceSwitcher
+                        commandDeck
                             .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
                         currentStateBlock
                             .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
@@ -170,11 +179,14 @@ struct DataView: View {
                             whatsWorkingBlock
                                 .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
+                        // Keep a short scroll runway so tab-bar minimize can trigger on shorter layouts.
+                        Color.clear
+                            .frame(height: tabBarCollapseScrollRunway)
+                            .accessibilityHidden(true)
                     }
                     .mindSensePageInsets()
                 }
             }
-            .scrollBounceBehavior(.always, axes: .vertical)
             .mindSensePageBackground()
             .navigationTitle(AppIA.data)
             .navigationBarTitleDisplayMode(.inline)
@@ -238,13 +250,16 @@ struct DataView: View {
         }
     }
 
-    private var workspaceSwitcher: some View {
-        InsetSurface {
-            Text("Workspace")
-                .font(MindSenseTypography.micro)
-                .foregroundStyle(.secondary)
-                .tracking(0.8)
-
+    private var commandDeck: some View {
+        MindSenseTabHero(
+            label: AppIA.data,
+            title: "One focus, one workspace.",
+            detail: "Review \(store.demoScenario.title) signals across trends, experiments, and history.",
+            metric: submode.rawValue,
+            icon: "chart.xyaxis.line",
+            tone: .accent,
+            watermarkTint: MindSensePalette.accent
+        ) {
             MindSenseSegmentedControl(
                 options: DataSubmode.allCases,
                 selection: $submode,
@@ -259,6 +274,11 @@ struct DataView: View {
                     )
                 }
             )
+
+            HStack(spacing: 8) {
+                PillChip(label: selectedSignal.metric.title, state: .selected)
+                PillChip(label: "Window \(window.rawValue)", state: .unselected)
+            }
         }
     }
 
@@ -321,11 +341,6 @@ struct DataView: View {
                 )
             }
             .buttonStyle(.plain)
-        }
-        .overlay(alignment: .topTrailing) {
-            MindSenseLogoWatermark(height: 124, tint: MindSensePalette.accent)
-                .padding(.top, 8)
-                .padding(.trailing, 2)
         }
     }
 
@@ -498,7 +513,7 @@ struct DataView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Trend view",
-                    subtitle: "Inspect readiness and load across the selected window.",
+                    subtitle: "Inspect the selected signal across the chosen window.",
                     icon: "chart.xyaxis.line",
                     actionTitle: "Filters",
                     action: {
@@ -513,11 +528,15 @@ struct DataView: View {
             InsetSurface {
                 VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                     HStack {
-                        Text("Readiness vs Load")
+                        Text("\(selectedSignal.metric.title) trend")
                             .font(MindSenseTypography.bodyStrong)
                     }
 
-                    DataTrendChart(points: trendPoints, selectedPoint: $selectedPoint)
+                    DataTrendChart(
+                        points: trendPoints,
+                        selectedSignal: selectedSignal,
+                        selectedPoint: $selectedPoint
+                    )
                         .frame(height: 220)
 
                     HStack(spacing: 8) {
@@ -1087,6 +1106,7 @@ private struct TrendFilterSheet: View {
 
 private struct DataTrendChart: View {
     let points: [TrendPoint]
+    let selectedSignal: SignalFocus
     @Binding var selectedPoint: TrendPoint?
 
     var body: some View {
@@ -1094,27 +1114,17 @@ private struct DataTrendChart: View {
             ForEach(points) { point in
                 LineMark(
                     x: .value("Time", point.time),
-                    y: .value(CoreMetric.readiness.title, point.readiness)
+                    y: .value(selectedSignal.metric.title, metricValue(for: point))
                 )
                 .interpolationMethod(.catmullRom)
-                .foregroundStyle(MindSensePalette.success)
+                .foregroundStyle(signalColor)
                 .lineStyle(StrokeStyle(lineWidth: 2.8, lineCap: .round, lineJoin: .round))
 
                 AreaMark(
                     x: .value("Time", point.time),
-                    y: .value(CoreMetric.readiness.title, point.readiness)
+                    y: .value(selectedSignal.metric.title, metricValue(for: point))
                 )
-                .foregroundStyle(MindSensePalette.success.opacity(0.14))
-            }
-
-            ForEach(points) { point in
-                LineMark(
-                    x: .value("Time", point.time),
-                    y: .value(CoreMetric.load.title, point.load)
-                )
-                .interpolationMethod(.catmullRom)
-                .foregroundStyle(MindSensePalette.warning)
-                .lineStyle(StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                .foregroundStyle(signalColor.opacity(0.14))
             }
 
             if let selectedPoint {
@@ -1122,22 +1132,15 @@ private struct DataTrendChart: View {
                     .foregroundStyle(MindSensePalette.strokeStrong)
 
                 PointMark(
-                    x: .value("Readiness point", selectedPoint.time),
-                    y: .value("Readiness value", selectedPoint.readiness)
+                    x: .value("Selected point", selectedPoint.time),
+                    y: .value("Selected value", metricValue(for: selectedPoint))
                 )
-                .foregroundStyle(MindSensePalette.success)
-
-                PointMark(
-                    x: .value("Load point", selectedPoint.time),
-                    y: .value("Load value", selectedPoint.load)
-                )
-                .foregroundStyle(MindSensePalette.warning)
+                .foregroundStyle(signalColor)
             }
         }
         .chartLegend(position: .top) {
             HStack(spacing: 12) {
-                legendItem(title: CoreMetric.readiness.title, color: MindSensePalette.success)
-                legendItem(title: CoreMetric.load.title, color: MindSensePalette.warning)
+                legendItem(title: selectedSignal.metric.title, color: signalColor)
             }
         }
         .chartPlotStyle { plotArea in
@@ -1159,7 +1162,7 @@ private struct DataTrendChart: View {
             }
         }
         .chartYAxis {
-            AxisMarks(position: .leading) { value in
+            AxisMarks(position: .leading, values: .stride(by: 20)) { value in
                 AxisGridLine()
                 AxisValueLabel {
                     if let number = value.as(Double.self) {
@@ -1168,6 +1171,7 @@ private struct DataTrendChart: View {
                 }
             }
         }
+        .chartYScale(domain: 0 ... 100)
         .chartOverlay { proxy in
             GeometryReader { geometry in
                 Rectangle()
@@ -1188,7 +1192,34 @@ private struct DataTrendChart: View {
                     )
             }
         }
-        .accessibilityLabel("Data trend chart for readiness and load")
+        .accessibilityLabel("Data trend chart for \(selectedSignal.metric.title.lowercased())")
+    }
+
+    private var signalColor: Color {
+        switch selectedSignal {
+        case .readiness:
+            return MindSensePalette.success
+        case .load:
+            return MindSensePalette.warning
+        case .consistency:
+            return MindSensePalette.signalCool
+        }
+    }
+
+    private func metricValue(for point: TrendPoint) -> Double {
+        switch selectedSignal {
+        case .readiness:
+            return point.readiness
+        case .load:
+            return point.load
+        case .consistency:
+            return inferredConsistency(for: point)
+        }
+    }
+
+    private func inferredConsistency(for point: TrendPoint) -> Double {
+        let spread = abs(point.readiness - point.load)
+        return max(45, 92 - spread)
     }
 
     private func legendItem(title: String, color: Color) -> some View {

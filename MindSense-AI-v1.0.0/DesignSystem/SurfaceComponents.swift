@@ -164,7 +164,7 @@ private struct CardContainer<Content: View>: View {
         VStack(alignment: .leading, spacing: MindSenseSpacing.md) {
             content
         }
-        .padding(20)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: MindSenseRadius.card, style: .continuous)
@@ -226,26 +226,52 @@ struct FocusSurface<Content: View>: View {
     }
 }
 
-struct MindSenseCommandDeck: View {
+struct MindSenseTabHero<Content: View>: View {
     let label: String
     let title: String
     let detail: String
     var metric: String? = nil
+    var icon: String = "waveform.path.ecg"
     var tone: MindSenseSurfaceTone = .accent
+    var watermarkTint: Color? = nil
+    var watermarkHeight: CGFloat = 124
+    @ViewBuilder var content: Content
+
+    init(
+        label: String,
+        title: String,
+        detail: String,
+        metric: String? = nil,
+        icon: String = "waveform.path.ecg",
+        tone: MindSenseSurfaceTone = .accent,
+        watermarkTint: Color? = nil,
+        watermarkHeight: CGFloat = 124,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.label = label
+        self.title = title
+        self.detail = detail
+        self.metric = metric
+        self.icon = icon
+        self.tone = tone
+        self.watermarkTint = watermarkTint
+        self.watermarkHeight = watermarkHeight
+        self.content = content()
+    }
 
     var body: some View {
         FocusSurface {
-            VStack(alignment: .leading, spacing: MindSenseRhythm.regular) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                 HStack(alignment: .center, spacing: MindSenseSpacing.sm) {
                     HStack(spacing: MindSenseSpacing.xs) {
-                        MindSenseIconBadge(systemName: "waveform.path.ecg", tint: headerTint, style: .filled, size: 30)
+                        MindSenseIconBadge(systemName: icon, tint: headerTint, style: .filled, size: 30)
                         Text(label.uppercased())
                             .font(MindSenseTypography.micro)
                             .foregroundStyle(headerTint.opacity(0.95))
                             .tracking(1.35)
                     }
                     Spacer()
-                    if let metric {
+                    if let metric, !metric.isEmpty {
                         Text(metric)
                             .font(MindSenseTypography.metricCaption)
                             .padding(.horizontal, 12)
@@ -265,28 +291,70 @@ struct MindSenseCommandDeck: View {
                 MindSenseSectionDivider(emphasis: 0.43)
 
                 Text(title.mindSenseHeadlineSafe)
-                    .font(MindSenseTypography.display)
+                    .font(MindSenseTypography.title)
                     .lineSpacing(1.5)
-                    .lineLimit(3)
+                    .lineLimit(2)
                     .minimumScaleFactor(0.92)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(detail)
-                    .font(MindSenseTypography.body)
+                    .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
+                    .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
 
-                HStack(spacing: MindSenseSpacing.xs) {
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(headerTint)
-                    Text("Recommended next step")
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                }
+                content
             }
             .frame(maxWidth: 620, alignment: .leading)
+        }
+        .overlay(alignment: .topTrailing) {
+            if let watermarkTint {
+                MindSenseLogoWatermark(height: watermarkHeight, tint: watermarkTint)
+                    .padding(.top, 8)
+                    .padding(.trailing, 2)
+            }
+        }
+    }
+
+    private var headerTint: Color {
+        switch tone {
+        case .critical:
+            return MindSensePalette.critical
+        case .warning:
+            return MindSensePalette.warning
+        case .standard:
+            return MindSensePalette.signalCool
+        case .accent:
+            return MindSensePalette.signalCoolStrong
+        }
+    }
+}
+
+struct MindSenseCommandDeck: View {
+    let label: String
+    let title: String
+    let detail: String
+    var metric: String? = nil
+    var tone: MindSenseSurfaceTone = .accent
+
+    var body: some View {
+        MindSenseTabHero(
+            label: label,
+            title: title,
+            detail: detail,
+            metric: metric,
+            icon: "waveform.path.ecg",
+            tone: tone
+        ) {
+            HStack(spacing: MindSenseSpacing.xs) {
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(headerTint)
+                Text("Recommended next step")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 
@@ -396,7 +464,7 @@ struct MindSenseSectionHeader: View {
 
             VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 Text(model.title.mindSenseHeadlineSafe)
-                    .font(MindSenseTypography.titleCompact)
+                    .font(MindSenseTypography.bodyStrong)
                     .tracking(0.15)
                     .lineLimit(2)
                     .minimumScaleFactor(0.9)
@@ -404,6 +472,7 @@ struct MindSenseSectionHeader: View {
                     Text(subtitle)
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
+                        .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -509,7 +578,7 @@ struct PillChip: View {
             .font(MindSenseTypography.caption)
             .lineLimit(1)
             .padding(.horizontal, 12)
-            .frame(minHeight: 34)
+            .frame(minHeight: 30)
             .foregroundStyle(foreground)
             .background(
                 Capsule(style: .continuous)
