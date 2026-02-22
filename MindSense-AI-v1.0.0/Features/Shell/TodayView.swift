@@ -221,20 +221,26 @@ struct TodayView: View {
             .buttonStyle(.plain)
 
             HStack(spacing: MindSenseSpacing.xs) {
-                heroDeltaTile(
-                    title: "Load Δ",
-                    value: heroDelta.load,
-                    tint: deltaTint(metric: .load, value: heroDelta.load)
+                heroMetricTile(
+                    title: "Load",
+                    value: store.demoMetrics.load,
+                    delta: latestDailyDelta?.load,
+                    metric: .load,
+                    tint: MindSensePalette.warning
                 )
-                heroDeltaTile(
-                    title: "Readiness Δ",
-                    value: heroDelta.readiness,
-                    tint: deltaTint(metric: .readiness, value: heroDelta.readiness)
+                heroMetricTile(
+                    title: "Readiness",
+                    value: store.demoMetrics.readiness,
+                    delta: latestDailyDelta?.readiness,
+                    metric: .readiness,
+                    tint: MindSensePalette.success
                 )
-                heroDeltaTile(
-                    title: "Consistency Δ",
-                    value: heroDelta.consistency,
-                    tint: deltaTint(metric: .consistency, value: heroDelta.consistency)
+                heroMetricTile(
+                    title: "Consistency",
+                    value: store.demoMetrics.consistency,
+                    delta: latestDailyDelta?.consistency,
+                    metric: .consistency,
+                    tint: MindSensePalette.signalCool
                 )
             }
 
@@ -896,14 +902,30 @@ struct TodayView: View {
         return store.todayInsightDetail
     }
 
-    private func heroDeltaTile(title: String, value: Int, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .tracking(0.5)
-            Text(signed(value))
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
+    private var latestDailyDelta: (load: Int, readiness: Int, consistency: Int)? {
+        guard let delta = store.latestCheckInDeltaSummary else { return nil }
+        return (load: delta.loadDelta, readiness: delta.readinessDelta, consistency: delta.consistencyDelta)
+    }
+
+    private func heroMetricTile(
+        title: String,
+        value: Int,
+        delta: Int?,
+        metric: CoreMetric,
+        tint: Color
+    ) -> some View {
+        let bounded = max(0, min(100, value))
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(title)
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .tracking(0.6)
+                Spacer(minLength: 6)
+                dailyDeltaBadge(metric: metric, delta: delta)
+            }
+            Text("\(bounded)")
+                .font(.system(size: 24, weight: .semibold, design: .rounded))
                 .foregroundStyle(tint)
                 .monospacedDigit()
         }
@@ -919,6 +941,47 @@ struct TodayView: View {
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
         )
+        .overlay(alignment: .topLeading) {
+            Capsule(style: .continuous)
+                .fill(tint.opacity(0.65))
+                .frame(width: 28, height: 4)
+                .padding(.top, 7)
+                .padding(.leading, MindSenseLayout.tileHorizontalInset)
+        }
+    }
+
+    private func dailyDeltaBadge(metric: CoreMetric, delta: Int?) -> some View {
+        let display = delta.map(signed) ?? "—"
+        let tone = delta.map { deltaTint(metric: metric, value: $0) } ?? Color.secondary
+        return HStack(spacing: 4) {
+            Image(systemName: deltaSymbol(for: delta))
+                .font(.system(size: 9, weight: .semibold))
+            Text("1d \(display)")
+                .font(MindSenseTypography.micro)
+                .monospacedDigit()
+        }
+        .foregroundStyle(tone)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            Capsule(style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+    }
+
+    private func deltaSymbol(for delta: Int?) -> String {
+        guard let delta else { return "minus" }
+        if delta > 0 {
+            return "arrow.up.right"
+        }
+        if delta < 0 {
+            return "arrow.down.right"
+        }
+        return "minus"
     }
 
     private func deltaTint(metric: CoreMetric, value: Int) -> Color {
