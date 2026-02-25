@@ -494,7 +494,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
 
 ### F-43 Floating icon layering confusion (again)
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Remove decorative floating affordances that look tappable.
   2. Keep action/navigation controls in predictable bars.
@@ -504,7 +504,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B10) Settings
 
 ### F-44 Floating back affordance is nonstandard for iOS
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Use standard navigation back affordance only.
   2. Remove floating circular back from Settings contexts.
@@ -774,7 +774,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Elevate trust-critical settings (privacy/export/data).
 
 ### R13 Avoid surprising heavy system UI launches
-- Status: `[ ]`
+- Status: `[x]`
 - Deliverables:
   1. Confirmation step before event editor.
   2. Clear intent copy ("Add to calendar").

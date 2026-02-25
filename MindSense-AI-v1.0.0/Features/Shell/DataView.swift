@@ -233,6 +233,9 @@ struct DataView: View {
     @State private var completionSummary = ""
     @State private var completionHelped = true
     @State private var completionDecision: ExperimentOutcomeDecision = .keep
+    @State private var showRecoveryWindowCalendarConfirm = false
+    @State private var pendingRecoveryWindowCalendarSchedule: RecoveryWindowSchedule?
+    @State private var pendingRecoveryWindowCalendarSource = "unknown"
     @State private var recoveryWindowCalendarDraft: RecoveryWindowCalendarDraft?
     @State private var selectedWakeAnchorMissReason: ExperimentMissReason?
     @State private var selectedHistoryEpisode: StressEpisodeRecord?
@@ -803,6 +806,38 @@ struct DataView: View {
                     handleRecoveryCalendarEditorAction(action)
                 }
             }
+            .confirmationDialog(
+                "Add to calendar?",
+                isPresented: $showRecoveryWindowCalendarConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Add to calendar") {
+                    guard let schedule = pendingRecoveryWindowCalendarSchedule else { return }
+                    scheduleRecoveryWindowCalendarBlock(
+                        for: schedule,
+                        source: pendingRecoveryWindowCalendarSource
+                    )
+                    pendingRecoveryWindowCalendarSchedule = nil
+                    pendingRecoveryWindowCalendarSource = "unknown"
+                }
+                Button("Cancel", role: .cancel) {
+                    store.track(
+                        event: .secondaryActionTapped,
+                        surface: .data,
+                        action: "recovery_window_calendar_confirm_cancelled",
+                        metadata: ["source": pendingRecoveryWindowCalendarSource]
+                    )
+                    pendingRecoveryWindowCalendarSchedule = nil
+                    pendingRecoveryWindowCalendarSource = "unknown"
+                    store.triggerHaptic(intent: .selection)
+                }
+            } message: {
+                if let schedule = pendingRecoveryWindowCalendarSchedule {
+                    Text("Open the system event editor to add a recurring block starting at \(schedule.startTimeLabel).")
+                } else {
+                    Text("Open the system event editor to add a recurring recovery block.")
+                }
+            }
             .sheet(isPresented: $showCoverageDiagnostics) {
                 NavigationStack {
                     AppleHealthPermissionsView()
@@ -1116,7 +1151,10 @@ struct DataView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Button("Protect this window") {
-                scheduleRecoveryWindowCalendarBlock(for: schedule)
+                requestRecoveryWindowCalendarConfirmation(
+                    for: schedule,
+                    source: "data_whats_working_recovery_window"
+                )
             }
             .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 42))
             .accessibilityIdentifier("data_protect_recovery_window_cta")
@@ -2020,7 +2058,10 @@ struct DataView: View {
 
                     if let schedule = recoveryAnchorNoMeetingSchedule {
                         Button("Add block") {
-                            scheduleRecoveryWindowCalendarBlock(for: schedule)
+                            requestRecoveryWindowCalendarConfirmation(
+                                for: schedule,
+                                source: "data_recovery_anchor_add_block"
+                            )
                         }
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
                     }
@@ -2160,7 +2201,29 @@ struct DataView: View {
         }
     }
 
-    private func scheduleRecoveryWindowCalendarBlock(for schedule: RecoveryWindowSchedule) {
+    private func requestRecoveryWindowCalendarConfirmation(
+        for schedule: RecoveryWindowSchedule,
+        source: String
+    ) {
+        pendingRecoveryWindowCalendarSchedule = schedule
+        pendingRecoveryWindowCalendarSource = source
+        showRecoveryWindowCalendarConfirm = true
+        store.track(
+            event: .secondaryActionTapped,
+            surface: .data,
+            action: "recovery_window_calendar_confirm_presented",
+            metadata: [
+                "source": source,
+                "start": schedule.startTimeLabel
+            ]
+        )
+        store.triggerHaptic(intent: .selection)
+    }
+
+    private func scheduleRecoveryWindowCalendarBlock(
+        for schedule: RecoveryWindowSchedule,
+        source: String
+    ) {
         Task {
             do {
                 let eventStore = EKEventStore()
@@ -2198,7 +2261,10 @@ struct DataView: View {
                         event: .secondaryActionTapped,
                         surface: .data,
                         action: "recovery_window_calendar_opened",
-                        metadata: ["start": schedule.startTimeLabel]
+                        metadata: [
+                            "source": source,
+                            "start": schedule.startTimeLabel
+                        ]
                     )
                     store.triggerHaptic(intent: .selection)
                 }
