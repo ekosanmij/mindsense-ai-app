@@ -732,7 +732,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Use 16-24 spacing and 1pt dividers internally.
 
 ### R6 Fix truncation and label quality
-- Status: `[ ]`
+- Status: `[x]`
 - Deliverables:
   1. Data mode labels fit without ellipsis at default size.
   2. Minimum horizontal label padding respected.
@@ -756,7 +756,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Details behind disclosure.
 
 ### R10 Data workspace insight-led structure
-- Status: `[ ]`
+- Status: `[x]`
 - Deliverables:
   1. Insight first, controls second.
   2. Contextual primary action only when recommended.

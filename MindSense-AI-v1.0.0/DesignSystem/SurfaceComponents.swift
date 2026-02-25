@@ -1185,7 +1185,7 @@ private struct MindSenseSegmentOptionView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.82)
             .allowsTightening(true)
-            .padding(.horizontal, fillAvailableWidth ? 6 : 12)
+            .padding(.horizontal, fillAvailableWidth ? 8 : 12)
             .frame(maxWidth: fillAvailableWidth ? .infinity : nil)
             .frame(minHeight: 44)
             .background(segmentBackground)

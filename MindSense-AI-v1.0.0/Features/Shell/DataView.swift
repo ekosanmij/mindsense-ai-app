@@ -209,7 +209,6 @@ struct DataView: View {
 
     private enum DataSubmode: String, CaseIterable, Identifiable {
         case patterns = "Trends"
-        case plans = "Plans"
         case experiments = "Experiments"
         case history = "History"
 
@@ -664,14 +663,14 @@ struct DataView: View {
         switch submode {
         case .experiments:
             return 220
-        case .patterns, .plans, .history:
+        case .patterns, .history:
             return 96
         }
     }
 
     private var bottomContentPadding: CGFloat {
         switch submode {
-        case .patterns, .plans, .experiments:
+        case .patterns, .experiments:
             return MindSenseLayout.pageBottom + MindSenseLayout.tabBarClearance(
                 measuredOverlay: tabBarOverlayClearance,
                 tier: .expanded
@@ -961,7 +960,7 @@ struct DataView: View {
         MindSenseTabHero(
             label: AppIA.data,
             title: "One focus, one workspace.",
-            detail: "Convert \(store.demoScenario.title) trends into plans, run experiments, and review history.",
+            detail: "Convert \(store.demoScenario.title) trends into one action, run experiments, and review history.",
             metric: submode.rawValue,
             icon: "chart.xyaxis.line",
             tone: .accent,
@@ -988,8 +987,6 @@ struct DataView: View {
                 switch submode {
                 case .patterns, .experiments:
                     PillChip(label: selectedSignal.metric.title, state: .unselected)
-                case .plans:
-                    PillChip(label: store.primaryRecommendation.preset.title, state: .unselected)
                 case .history:
                     PillChip(label: "Recent activity", state: .unselected)
                 }
@@ -1177,9 +1174,6 @@ struct DataView: View {
             if loadValue >= 88 {
                 EscalationGuidanceView(context: .sustainedHighLoad)
             }
-        case .plans:
-            plansBlock
-            whatsWorkingBlock
         case .experiments:
             experimentsBlock
         case .history:
@@ -1209,10 +1203,22 @@ struct DataView: View {
 
             InsetSurface {
                 VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+                    Text("Key insight: \(trendInsightLeadLine)")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
                     HStack {
                         Text("\(selectedSignal.metric.title) pattern")
                             .font(MindSenseTypography.bodyStrong)
                     }
+
+                    MindSenseSummaryDisclosureText(
+                        summary: selectedSignal.coachTitle,
+                        detail: selectedSignal.coachBody,
+                        collapsedLabel: "Why this matters",
+                        expandedLabel: "Hide why this matters"
+                    )
 
                     DataTrendChart(
                         points: trendPoints,
@@ -1225,11 +1231,6 @@ struct DataView: View {
 
                     Text("X-axis: Date • Y-axis: \(selectedSignal.metric.title) score (%)")
                         .font(MindSenseTypography.micro)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Text("Key insight: \(trendInsightLeadLine)")
-                        .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -1291,11 +1292,6 @@ struct DataView: View {
 
             selectedReadout
 
-            RecommendationRationaleView(
-                estimate: "Focus: \(selectedSignal.coachTitle)",
-                whyRecommended: selectedSignal.coachBody
-            )
-
             HStack {
                 Text("Tap or drag to inspect.")
                     .font(MindSenseTypography.caption)
@@ -1337,73 +1333,6 @@ struct DataView: View {
                     }
                     .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
                 }
-            }
-        }
-    }
-
-    private var plansBlock: some View {
-        FocusSurface {
-            MindSenseSectionHeader(
-                model: .init(
-                    title: "Plan workspace",
-                    subtitle: "Turn pattern findings into one action plan and one measurement plan.",
-                    icon: "list.bullet.rectangle.portrait"
-                )
-            )
-
-            InsetSurface {
-                HStack(alignment: .top, spacing: 10) {
-                    MindSenseIconBadge(
-                        systemName: recommendedPresetIcon(for: store.primaryRecommendation.preset),
-                        tint: MindSensePalette.signalCool,
-                        style: .filled,
-                        size: 28
-                    )
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(store.primaryRecommendation.preset.title)
-                            .font(MindSenseTypography.bodyStrong)
-                        Text(store.primaryRecommendation.summaryLine)
-                            .font(MindSenseTypography.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: 8)
-                    dataMetaPill("\(store.primaryRecommendation.timeMinutes) min")
-                }
-
-                RecommendationRationaleView(
-                    estimate: "Why now",
-                    whyRecommended: store.primaryRecommendation.why
-                )
-
-                Button("Start this plan") {
-                    launchRecommendedAction(source: "data_plan_workspace")
-                }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 48))
-            }
-
-            InsetSurface {
-                MindSenseSectionHeader(
-                    model: .init(
-                        title: "Measurement plan",
-                        subtitle: "Capture this today to sharpen tomorrow's recommendation.",
-                        icon: "checklist"
-                    )
-                )
-
-                Text(store.todayMeasurementPlanLine)
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Text("Next best follow-through")
-                    .font(MindSenseTypography.bodyStrong)
-                Text(weeklySummary.nextBestAction)
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -1578,11 +1507,49 @@ struct DataView: View {
         PrimarySurface {
             MindSenseSectionHeader(
                 model: .init(
-                    title: "7-day experiments",
-                    subtitle: "Run one focused experiment with one daily yes/no check-in.",
+                    title: "Experiments",
+                    subtitle: "Start from one suggested action, then run one focused 7-day experiment.",
                     icon: "flask"
                 )
             )
+
+            InsetSurface {
+                HStack(alignment: .top, spacing: 10) {
+                    MindSenseIconBadge(
+                        systemName: recommendedPresetIcon(for: store.primaryRecommendation.preset),
+                        tint: MindSensePalette.signalCool,
+                        style: .filled,
+                        size: 28
+                    )
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Suggested action: \(store.primaryRecommendation.preset.title)")
+                            .font(MindSenseTypography.bodyStrong)
+                        Text(store.primaryRecommendation.summaryLine)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 8)
+                    dataMetaPill("\(store.primaryRecommendation.timeMinutes) min")
+                }
+
+                Text("Why it matters: \(store.primaryRecommendation.why)")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Measurement plan: \(store.todayMeasurementPlanLine)")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button("Start suggested action") {
+                    launchRecommendedAction(source: "data_experiments_suggested_action")
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
+            }
 
             signalFocusChipBar
 
