@@ -24,6 +24,9 @@ final class MindSenseBootstrapService {
         if defaults.object(forKey: "notifications.weeklyReview") == nil {
             defaults.set(true, forKey: "notifications.weeklyReview")
         }
+        if defaults.object(forKey: "batteryFriendlyMode") == nil {
+            defaults.set(false, forKey: "batteryFriendlyMode")
+        }
         if defaults.object(forKey: "paywall.post_activation.seen") == nil {
             defaults.set(false, forKey: "paywall.post_activation.seen")
         }

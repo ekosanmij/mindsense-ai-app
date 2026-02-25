@@ -15,6 +15,7 @@ struct SettingsView: View {
     @AppStorage("notifications.quietHoursEnabled") private var quietHoursEnabled = false
     @AppStorage("notifications.quietStartMinutes") private var quietStartMinutes = 22 * 60
     @AppStorage("notifications.quietEndMinutes") private var quietEndMinutes = 7 * 60
+    @AppStorage("batteryFriendlyMode") private var batteryFriendlyMode = false
 
     @State private var screenState: ScreenMode = .ready
     @State private var autosaveNotice = ""
@@ -118,6 +119,18 @@ struct SettingsView: View {
         .onChange(of: recoveryWindow) { _, newValue in
             autosaveSetting("Notification preference saved")
             store.track(event: .settingAutosaved, surface: .settings, action: "recovery_window", metadata: ["value": "\(newValue)"])
+            store.triggerHaptic(intent: .selection)
+        }
+        .onChange(of: batteryFriendlyMode) { _, newValue in
+            autosaveSetting("Battery mode preference saved")
+            store.track(event: .settingAutosaved, surface: .settings, action: "battery_friendly_mode", metadata: ["value": "\(newValue)"])
+            store.showBanner(
+                title: "Battery friendly mode",
+                detail: newValue
+                    ? "Battery friendly mode is on. Low Power Mode will reduce refresh frequency, suppress non-essential nudges, and defer heavy processing."
+                    : "Battery friendly mode is off. Standard refresh and notification behavior restored.",
+                severity: .info
+            )
             store.triggerHaptic(intent: .selection)
         }
         .onChange(of: quietHoursEnabled) { _, newValue in
@@ -283,6 +296,32 @@ struct SettingsView: View {
             settingsToggleRow(title: "Recovery window", subtitle: "Notify when physiology stabilizes for a deep-work window.", isOn: $recoveryWindow)
                 .listRowInsets(settingsRowInsets)
                 .listRowBackground(Color.clear)
+            settingsToggleRow(
+                title: "Battery friendly mode",
+                subtitle: batteryFriendlyModeSubtitle,
+                isOn: $batteryFriendlyMode
+            )
+            .listRowInsets(settingsRowInsets)
+            .listRowBackground(Color.clear)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(store.batteryFriendlyModeStatusLine)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if batteryFriendlyMode {
+                    Text("Applies only while iPhone Low Power Mode is on. Manual resync and user-started reminders are still available.")
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .listRowInsets(settingsRowInsets)
+            .listRowBackground(Color.clear)
+
             settingsToggleRow(
                 title: "Quiet hours",
                 subtitle: "Pause nudges during your protected time window.",
@@ -456,6 +495,13 @@ struct SettingsView: View {
         .frame(minHeight: settingsToggleRowMinHeight, alignment: .leading)
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
+    }
+
+    private var batteryFriendlyModeSubtitle: String {
+        if store.isBatteryFriendlyModeActive {
+            return "Low Power Mode is on: use less frequent refreshes, fewer non-essential nudges, and defer heavy processing."
+        }
+        return "When iPhone Low Power Mode is on, use less frequent refreshes, fewer notifications, and no heavy processing."
     }
 
     private func quietTimePicker(title: String, selection: Binding<Date>) -> some View {

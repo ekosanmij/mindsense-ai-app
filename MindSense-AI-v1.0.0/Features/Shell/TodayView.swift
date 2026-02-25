@@ -51,6 +51,7 @@ struct TodayView: View {
         "Poor sleep",
         "Travel"
     ]
+    private let lowCoverageRecommendationThreshold = 25
 
     private struct HeroMetricCard: Identifiable {
         let metric: CoreMetric
@@ -156,7 +157,15 @@ struct TodayView: View {
     }
 
     private var isLowConfidenceDay: Bool {
-        store.confidencePercent < 62
+        store.confidencePercent < 62 || isLowCoverageRecommendationMode
+    }
+
+    private var isLowCoverageRecommendationMode: Bool {
+        store.demoDataCoveragePercent <= lowCoverageRecommendationThreshold
+    }
+
+    private var shouldForceLowCoverageCheckInPrompt: Bool {
+        isLowCoverageRecommendationMode && !hasSavedCheckInToday
     }
 
     private var hasSavedCheckInToday: Bool {
@@ -165,6 +174,10 @@ struct TodayView: View {
 
     private var shouldShowCheckInFatigueOffer: Bool {
         shouldShowCheckInPrompt && checkInPromptMode == .standard && checkInIgnoreStreak >= 3
+    }
+
+    private var effectiveStressNudgeEnabled: Bool {
+        stressNudge && !store.suppressNonEssentialNotificationsForBattery
     }
 
     private var attributionInboxEpisodes: [StressEpisodeRecord] {
@@ -197,6 +210,12 @@ struct TodayView: View {
 
     private func evaluateCheckInPromptVisibilityForVisit() {
         checkInSavedThisVisit = false
+
+        if shouldForceLowCoverageCheckInPrompt {
+            shouldShowCheckInPrompt = true
+            checkInPromptShownThisVisit = true
+            return
+        }
 
         let shouldShow: Bool
         switch checkInPromptMode {
@@ -650,38 +669,79 @@ struct TodayView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Do this next",
-                    subtitle: "Do this now.",
+                    subtitle: isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep
+                        ? "Low confidence mode: add a quick check-in before using a precise protocol."
+                        : "Do this now.",
                     icon: "scope"
                 )
             )
 
-            HStack(alignment: .top, spacing: 10) {
-                HStack(spacing: 8) {
-                    MindSenseIconBadge(
-                        systemName: presetIcon(for: recommendation.preset),
-                        tint: MindSensePalette.accent,
-                        style: .filled,
-                        size: 28
-                    )
-                    Text(recommendation.preset.title)
-                        .font(MindSenseTypography.body)
+            if isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep {
+                HStack(alignment: .top, spacing: 10) {
+                    HStack(spacing: 8) {
+                        MindSenseIconBadge(
+                            systemName: "exclamationmark.triangle.fill",
+                            tint: MindSensePalette.warning,
+                            style: .filled,
+                            size: 28
+                        )
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Low confidence mode")
+                                .font(MindSenseTypography.bodyStrong)
+                            Text("Precise recommendation hidden until coverage improves.")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    VStack(alignment: .trailing, spacing: 6) {
+                        PillChip(label: "Coverage \(store.demoDataCoveragePercent)%", state: .unselected)
+                        PillChip(label: "Rec. confidence \(store.confidencePercent)%", state: .unselected)
+                    }
                 }
-                Spacer()
-                PillChip(label: store.intentMode.shortTitle, state: .selected)
-                PillChip(label: "\(recommendation.timeMinutes) min", state: .unselected)
+            } else {
+                HStack(alignment: .top, spacing: 10) {
+                    HStack(spacing: 8) {
+                        MindSenseIconBadge(
+                            systemName: presetIcon(for: recommendation.preset),
+                            tint: MindSensePalette.accent,
+                            style: .filled,
+                            size: 28
+                        )
+                        Text(recommendation.preset.title)
+                            .font(MindSenseTypography.body)
+                    }
+                    Spacer()
+                    PillChip(label: store.intentMode.shortTitle, state: .selected)
+                    PillChip(label: "\(recommendation.timeMinutes) min", state: .unselected)
+                }
             }
 
             if !hasUnfinishedRegulateStep {
-                Button(inlineActionLabel) {
-                    triggerNextBestAction(source: "today_action_card_cta")
-                }
-                .accessibilityIdentifier("today_action_card_cta")
-                .buttonStyle(
-                    MindSenseButtonStyle(
-                        hierarchy: .primary,
-                        minHeight: 52
+                if isLowCoverageRecommendationMode {
+                    Button("Save prefilled check-in") {
+                        saveCheckIn()
+                    }
+                    .accessibilityIdentifier("today_action_card_cta")
+                    .buttonStyle(
+                        MindSenseButtonStyle(
+                            hierarchy: .primary,
+                            minHeight: 52
+                        )
                     )
-                )
+                } else {
+                    Button(inlineActionLabel) {
+                        triggerNextBestAction(source: "today_action_card_cta")
+                    }
+                    .accessibilityIdentifier("today_action_card_cta")
+                    .buttonStyle(
+                        MindSenseButtonStyle(
+                            hierarchy: .primary,
+                            minHeight: 52
+                        )
+                    )
+                }
             } else {
                 MindSenseSummaryMoreText(
                     summary: "An active session is already running. Use the sticky action below to finish the loop.",
@@ -689,47 +749,60 @@ struct TodayView: View {
                 )
             }
 
-            Button {
-                if reduceMotion {
-                    showActionDetails.toggle()
-                } else {
-                    withAnimation(MindSenseMotion.selection) {
-                        showActionDetails.toggle()
-                    }
-                }
-                store.triggerHaptic(intent: .selection)
-            } label: {
-                HStack(spacing: MindSenseSpacing.xs) {
-                    Text("Why this now?")
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer(minLength: MindSenseSpacing.xs)
-                    Image(systemName: showActionDetails ? "chevron.up" : "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: 44)
-                .padding(.horizontal, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                        .fill(MindSenseSurfaceLevel.base.fill)
+            if isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep {
+                MindSenseSummaryMoreText(
+                    summary: lowCoverageSummaryLine,
+                    detail: "\(lowCoverageReasonLine) \(lowCoverageFixLine)"
                 )
-                .overlay(
-                    RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                        .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("today_action_card_why_now")
 
-            Button("Pick a different protocol") {
+                Button("Open signal diagnostics") {
+                    showSignalSourceDetails = true
+                    store.triggerHaptic(intent: .selection)
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+            } else {
+                Button {
+                    if reduceMotion {
+                        showActionDetails.toggle()
+                    } else {
+                        withAnimation(MindSenseMotion.selection) {
+                            showActionDetails.toggle()
+                        }
+                    }
+                    store.triggerHaptic(intent: .selection)
+                } label: {
+                    HStack(spacing: MindSenseSpacing.xs) {
+                        Text("Why this now?")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer(minLength: MindSenseSpacing.xs)
+                        Image(systemName: showActionDetails ? "chevron.up" : "chevron.down")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(minHeight: 44)
+                    .padding(.horizontal, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                            .fill(MindSenseSurfaceLevel.base.fill)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                            .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("today_action_card_why_now")
+            }
+
+            Button(isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep ? "Choose a protocol manually" : "Pick a different protocol") {
                 openRegulateProtocolPicker(source: "today_action_card_pick_protocol")
             }
             .accessibilityIdentifier("today_action_card_pick_protocol")
             .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
 
-            if showActionDetails {
+            if showActionDetails && !(isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep) {
                 VStack(alignment: .leading, spacing: 8) {
                     actionDetailRow(label: "Why now", value: recommendation.why)
                     actionDetailRow(label: "Expected effect", value: recommendation.expectedEffect)
@@ -924,7 +997,7 @@ struct TodayView: View {
                 )
             )
 
-            if stressNudge, let promptEpisode = recentAttributionPromptEpisode {
+            if effectiveStressNudgeEnabled, let promptEpisode = recentAttributionPromptEpisode {
                 Text("We detected an activation spike. What was happening?")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(MindSensePalette.warning)
@@ -932,6 +1005,11 @@ struct TodayView: View {
                 Text("Detected \(attributionEpisodeAgeLabel(for: promptEpisode)) near \(promptEpisode.end.formattedTimeLabel()).")
                     .font(MindSenseTypography.micro)
                     .foregroundStyle(.secondary)
+            } else if stressNudge, store.isBatteryFriendlyModeActive {
+                Text("Smart stress nudge is paused while Battery Friendly Mode is active in Low Power Mode.")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             VStack(spacing: 8) {
@@ -1099,7 +1177,9 @@ struct TodayView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Quick check-in",
-                    subtitle: "Rate current load in one quick step.",
+                    subtitle: isLowCoverageRecommendationMode
+                        ? "Low confidence mode: add a quick check-in to compensate for missing coverage."
+                        : "Rate current load in one quick step.",
                     icon: "checkmark.circle"
                 )
             )
@@ -1116,9 +1196,16 @@ struct TodayView: View {
                 .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 40))
             }
 
-            Text("Prefilled from your current state.")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
+            if isLowCoverageRecommendationMode {
+                MindSenseSummaryMoreText(
+                    summary: lowCoverageCheckInSummaryLine,
+                    detail: "\(lowCoverageReasonLine) \(lowCoverageFixLine)"
+                )
+            } else {
+                Text("Prefilled from your current state.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Slider(value: $loadSlider, in: 1...10, step: 1)
                 .tint(MindSensePalette.warning)
@@ -1165,7 +1252,11 @@ struct TodayView: View {
             }
 
             if checkInJustSaved {
-                Text("This improves tomorrow's recommendation.")
+                Text(
+                    isLowCoverageRecommendationMode
+                        ? "Check-in saved. Self-report is now available while sensor coverage is low."
+                        : "This improves tomorrow's recommendation."
+                )
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(MindSensePalette.accent)
             }
@@ -1228,6 +1319,57 @@ struct TodayView: View {
             return "No timeline data yet."
         }
         return "\(episodeCount) recent episodes • \(segmentCount) timeline segments"
+    }
+
+    private var lowCoverageSummaryLine: String {
+        "Low confidence mode: \(store.demoDataCoveragePercent)% coverage is too low for a precise recommendation."
+    }
+
+    private var lowCoverageReasonLine: String {
+        let reasons = lowCoverageReasons
+        guard !reasons.isEmpty else {
+            return "What's missing: recent signal collection is incomplete."
+        }
+        return "What's missing: \(reasons.joined(separator: "; "))."
+    }
+
+    private var lowCoverageFixLine: String {
+        let hint = store.demoHealthProfile.quality.actionHint.trimmingCharacters(in: .whitespacesAndNewlines)
+        if hint.isEmpty {
+            return "How to fix it: add a quick check-in now, sync Apple Health, and wear your watch overnight."
+        }
+        return "How to fix it: \(hint)"
+    }
+
+    private var lowCoverageCheckInSummaryLine: String {
+        "Coverage is \(store.demoDataCoveragePercent)%. A quick check-in adds self-report data so today can degrade gracefully."
+    }
+
+    private var lowCoverageReasons: [String] {
+        let quality = store.demoHealthProfile.quality
+        var reasons: [String] = []
+
+        let missingHRVDays = max(0, 7 - capturedDays(from: quality.hrvAvailability))
+        if missingHRVDays > 0 {
+            reasons.append("missing HRV \(missingHRVDays)/7 days")
+        }
+
+        let missingOvernightNights = max(0, 7 - capturedDays(from: quality.sleepCoverage))
+        if missingOvernightNights > 0 {
+            let nightLabel = missingOvernightNights == 1 ? "night" : "nights"
+            reasons.append("watch not worn overnight \(missingOvernightNights) \(nightLabel)")
+        }
+
+        if quality.heartRateDensity < 60 {
+            reasons.append("limited daytime heart-rate coverage")
+        }
+
+        return Array(reasons.prefix(3))
+    }
+
+    private func capturedDays(from qualityPercent: Int) -> Int {
+        let bounded = max(0, min(100, qualityPercent))
+        return Int((Double(bounded) * 7.0 / 100.0).rounded())
     }
 
     private func actionDetailRow(label: String, value: String) -> some View {
@@ -1665,10 +1807,16 @@ struct TodayView: View {
     }
 
     private var heroReferenceLabel: String {
-        "Updated \(store.lastUpdatedLabel)."
+        if isLowCoverageRecommendationMode {
+            return "Updated \(store.lastUpdatedLabel). Add a quick check-in to improve guidance while coverage recovers."
+        }
+        return "Updated \(store.lastUpdatedLabel)."
     }
 
     private var heroInterpretation: String {
+        if isLowCoverageRecommendationMode {
+            return "Low confidence mode is active because signal coverage is limited."
+        }
         if heroDelta.load <= -2 && heroDelta.readiness >= 2 {
             return "Load is easing while readiness is recovering."
         }

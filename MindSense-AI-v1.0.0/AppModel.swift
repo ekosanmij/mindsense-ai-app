@@ -1699,6 +1699,7 @@ final class MindSenseStore: ObservableObject {
     @Published private(set) var coreScreenStates: [CoreScreenID: ScreenMode] = [:]
     @Published var shouldPresentPostActivationPaywall = false
     @Published var kpiLastReviewedAt: Date?
+    @Published private(set) var isLowPowerModeEnabled = ProcessInfo.processInfo.isLowPowerModeEnabled
     private(set) var analyticsEvents: [AnalyticsEventRecord] = []
 
     private let persistence = MindSensePersistenceService()
@@ -1711,11 +1712,21 @@ final class MindSenseStore: ObservableObject {
     private lazy var supportsHapticFeedback = CHHapticEngine.capabilitiesForHardware().supportsHaptics
     private static let analyticsTimestampFormatter = ISO8601DateFormatter()
     private static let relativeDateFormatter = RelativeDateTimeFormatter()
+    private var powerStateObserver: NSObjectProtocol?
+    private var lastAutomaticHealthRefreshAt: Date?
+    private let batteryFriendlyAutoRefreshInterval: TimeInterval = 15 * 60
 
     init() {
         bootstrap.seedDefaultsIfNeeded()
         bootstrap.applyLaunchOverridesIfNeeded()
+        startPowerStateObservation()
         startLaunchSequence()
+    }
+
+    deinit {
+        if let powerStateObserver {
+            NotificationCenter.default.removeObserver(powerStateObserver)
+        }
     }
 
     var userDisplayName: String {
@@ -1880,6 +1891,30 @@ final class MindSenseStore: ObservableObject {
 
     var healthPermissions: [DemoHealthPermissionStatus] {
         demoHealthProfile.permissions
+    }
+
+    var batteryFriendlyModeEnabled: Bool {
+        defaults.bool(forKey: "batteryFriendlyMode")
+    }
+
+    var isBatteryFriendlyModeActive: Bool {
+        batteryFriendlyModeEnabled && isLowPowerModeEnabled
+    }
+
+    var suppressNonEssentialNotificationsForBattery: Bool {
+        isBatteryFriendlyModeActive
+    }
+
+    var batteryFriendlyModeStatusLine: String {
+        let modeLabel = batteryFriendlyModeEnabled ? "On" : "Off"
+        let lowPowerLabel = isLowPowerModeEnabled ? "Low Power Mode On" : "Low Power Mode Off"
+        if isBatteryFriendlyModeActive {
+            return "Battery friendly mode \(modeLabel) • \(lowPowerLabel) • Reduced refresh + fewer nudges active"
+        }
+        if batteryFriendlyModeEnabled {
+            return "Battery friendly mode \(modeLabel) • \(lowPowerLabel) • Will activate when Low Power Mode is on"
+        }
+        return "Battery friendly mode \(modeLabel) • Uses normal refresh and notification behavior"
     }
 
     var stressTimelineSegments: [StressTimelineSegment] {
@@ -2151,7 +2186,10 @@ final class MindSenseStore: ObservableObject {
         regulateSessionHistory = []
         experiments = MindSenseDemoSeedCatalog.defaultExperiments(for: scenario)
         demoEventHistory = MindSenseDemoSeedCatalog.seededEvents(for: scenario)
-        demoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(for: scenario, demoDay: scenario.defaultDay)
+        applyDemoHealthProfile(
+            MindSenseDemoSeedCatalog.seededHealthProfile(for: scenario, demoDay: scenario.defaultDay),
+            emitPermissionRevocationBanner: false
+        )
         demoSavedInsights = []
         guidedDemoPathStep = nil
         demoDataIssue = nil
@@ -2239,7 +2277,10 @@ final class MindSenseStore: ObservableObject {
         activeRegulateSession = nil
         experiments = MindSenseDemoSeedCatalog.defaultExperiments(for: demoScenario)
         demoEventHistory = MindSenseDemoSeedCatalog.seededEvents(for: demoScenario)
-        demoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(for: demoScenario, demoDay: demoScenario.defaultDay)
+        applyDemoHealthProfile(
+            MindSenseDemoSeedCatalog.seededHealthProfile(for: demoScenario, demoDay: demoScenario.defaultDay),
+            emitPermissionRevocationBanner: false
+        )
         demoSavedInsights = []
         persistActiveRegulateSession()
         persistRegulateSessionHistory()
@@ -2286,11 +2327,14 @@ final class MindSenseStore: ObservableObject {
     }
 
     func rebuildDemoHealthDerivedData() {
-        demoHealthProfile = DemoHealthSignalEngine.rebuiltDerivedProfile(
-            existing: demoHealthProfile,
-            scenario: demoScenario,
-            demoDay: demoDay,
-            now: Date()
+        applyDemoHealthProfile(
+            DemoHealthSignalEngine.rebuiltDerivedProfile(
+                existing: demoHealthProfile,
+                scenario: demoScenario,
+                demoDay: demoDay,
+                now: Date()
+            ),
+            emitPermissionRevocationBanner: true
         )
         persistDemoHealthProfile()
         showActionFeedback(.updated, detail: "Derived health baseline rebuilt.")
@@ -2298,9 +2342,12 @@ final class MindSenseStore: ObservableObject {
     }
 
     func deleteDemoHealthDerivedData() {
-        demoHealthProfile = DemoHealthSignalEngine.deletingDerivedProfile(
-            existing: demoHealthProfile,
-            now: Date()
+        applyDemoHealthProfile(
+            DemoHealthSignalEngine.deletingDerivedProfile(
+                existing: demoHealthProfile,
+                now: Date()
+            ),
+            emitPermissionRevocationBanner: false
         )
         persistDemoHealthProfile()
         showActionFeedback(.saved, detail: "Health-derived metrics cleared.")
@@ -2979,7 +3026,10 @@ final class MindSenseStore: ObservableObject {
         useMeetingCallSignals = true
         demoMetrics = DemoScenario.balancedDay.baseMetrics
         demoEventHistory = MindSenseDemoSeedCatalog.seededEvents(for: .balancedDay)
-        demoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(for: .balancedDay, demoDay: DemoScenario.balancedDay.defaultDay)
+        applyDemoHealthProfile(
+            MindSenseDemoSeedCatalog.seededHealthProfile(for: .balancedDay, demoDay: DemoScenario.balancedDay.defaultDay),
+            emitPermissionRevocationBanner: false
+        )
         demoSavedInsights = []
         demoLastUpdatedAt = Date()
         demoDay = DemoScenario.balancedDay.defaultDay
@@ -3176,7 +3226,10 @@ final class MindSenseStore: ObservableObject {
             demoEventHistory = loadDemoEvents()
             demoSavedInsights = loadDemoSavedInsights()
             demoDay = loadDemoDay(for: demoScenario)
-            demoHealthProfile = loadDemoHealthProfile(for: demoScenario, demoDay: demoDay)
+            applyDemoHealthProfile(
+                loadDemoHealthProfile(for: demoScenario, demoDay: demoDay),
+                emitPermissionRevocationBanner: false
+            )
             guidedDemoPathStep = loadGuidedDemoPathStep()
             demoLastUpdatedAt = persistence.demoLastUpdatedAt
             experiments = loadExperiments()
@@ -3203,9 +3256,12 @@ final class MindSenseStore: ObservableObject {
             demoEventHistory = []
             demoSavedInsights = []
             demoDay = DemoScenario.balancedDay.defaultDay
-            demoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(
-                for: .balancedDay,
-                demoDay: DemoScenario.balancedDay.defaultDay
+            applyDemoHealthProfile(
+                MindSenseDemoSeedCatalog.seededHealthProfile(
+                    for: .balancedDay,
+                    demoDay: DemoScenario.balancedDay.defaultDay
+                ),
+                emitPermissionRevocationBanner: false
             )
             guidedDemoPathStep = nil
             demoLastUpdatedAt = Date()
@@ -3274,7 +3330,10 @@ final class MindSenseStore: ObservableObject {
         demoEventHistory = loadDemoEvents()
         demoSavedInsights = loadDemoSavedInsights()
         demoDay = loadDemoDay(for: demoScenario)
-        demoHealthProfile = loadDemoHealthProfile(for: demoScenario, demoDay: demoDay)
+        applyDemoHealthProfile(
+            loadDemoHealthProfile(for: demoScenario, demoDay: demoDay),
+            emitPermissionRevocationBanner: false
+        )
         guidedDemoPathStep = loadGuidedDemoPathStep()
         demoLastUpdatedAt = persistence.demoLastUpdatedAt
         experiments = loadExperiments()
@@ -3493,6 +3552,109 @@ final class MindSenseStore: ObservableObject {
         persistence.persistDemoHealthProfile(demoHealthProfile)
     }
 
+    private func startPowerStateObservation() {
+        powerStateObserver = NotificationCenter.default.addObserver(
+            forName: Notification.Name.NSProcessInfoPowerStateDidChange,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                let wasLowPower = self.isLowPowerModeEnabled
+                let isLowPower = ProcessInfo.processInfo.isLowPowerModeEnabled
+                guard wasLowPower != isLowPower else { return }
+                self.isLowPowerModeEnabled = isLowPower
+
+                guard self.batteryFriendlyModeEnabled else { return }
+                self.showBanner(
+                    title: "Battery friendly mode",
+                    detail: isLowPower
+                        ? "Low Power Mode is on. Refreshes are throttled, non-essential nudges are reduced, and heavy processing is deferred."
+                        : "Low Power Mode is off. Standard refresh and notification behavior resumed.",
+                    severity: .info
+                )
+            }
+        }
+    }
+
+    private func applyDemoHealthProfile(
+        _ profile: DemoHealthProfile,
+        emitPermissionRevocationBanner: Bool = false
+    ) {
+        let previousPermissions = demoHealthProfile.permissions
+        demoHealthProfile = profile
+
+        guard emitPermissionRevocationBanner else { return }
+        maybeShowHealthPermissionRevocationBanner(from: previousPermissions, to: profile.permissions)
+    }
+
+    private func maybeShowHealthPermissionRevocationBanner(
+        from previous: [DemoHealthPermissionStatus],
+        to current: [DemoHealthPermissionStatus]
+    ) {
+        let previousBySignal = Dictionary(uniqueKeysWithValues: previous.map { ($0.signal, $0.state) })
+        let revokedSignals = current.compactMap { permission -> DemoHealthSignalType? in
+            guard previousBySignal[permission.signal] == .granted,
+                  permission.state != .granted else {
+                return nil
+            }
+            return permission.signal
+        }
+
+        guard let firstRevoked = revokedSignals.first else { return }
+
+        let signalLabel = permissionRevocationBannerLabel(for: firstRevoked)
+        let impactLine = permissionRevocationImpactLine(for: firstRevoked)
+
+        let detail: String
+        if revokedSignals.count == 1 {
+            detail = "We lost access to \(signalLabel); \(impactLine)"
+        } else {
+            let extra = revokedSignals.count - 1
+            detail = "We lost access to \(signalLabel) and \(extra) more signal\(extra == 1 ? "" : "s"); \(impactLine)"
+        }
+
+        showBanner(
+            title: "Health permission changed",
+            detail: detail,
+            severity: .warning
+        )
+    }
+
+    private func permissionRevocationBannerLabel(for signal: DemoHealthSignalType) -> String {
+        switch signal {
+        case .hrv:
+            return "HRV"
+        case .heartRate:
+            return "heart rate"
+        case .restingHeartRate:
+            return "resting heart rate"
+        case .respiratoryRate:
+            return "respiratory rate"
+        case .mindfulMinutes:
+            return "mindful minutes"
+        case .environmentalAudio:
+            return "environmental audio"
+        case .sleep:
+            return "Sleep"
+        case .workouts:
+            return "workouts"
+        case .activity:
+            return "activity"
+        }
+    }
+
+    private func permissionRevocationImpactLine(for signal: DemoHealthSignalType) -> String {
+        switch signal {
+        case .sleep, .heartRate, .hrv:
+            return "recommendation confidence will drop until restored."
+        case .restingHeartRate, .workouts, .activity:
+            return "readiness and trend interpretation may be less reliable until restored."
+        case .respiratoryRate, .mindfulMinutes, .environmentalAudio:
+            return "context diagnostics may be less informative until restored."
+        }
+    }
+
     private func loadDemoHealthProfile(for scenario: DemoScenario, demoDay: Int) -> DemoHealthProfile {
         let seeded = MindSenseDemoSeedCatalog.seededHealthProfile(for: scenario, demoDay: demoDay)
         let result = persistence.loadDemoHealthProfile(fallback: seeded)
@@ -3503,16 +3665,30 @@ final class MindSenseStore: ObservableObject {
     }
 
     private func refreshDemoHealthSignals(updateSyncTimestamp: Bool) {
-        demoHealthProfile = DemoHealthSignalEngine.refreshedProfile(
+        let now = Date()
+        if !updateSyncTimestamp,
+           isBatteryFriendlyModeActive,
+           let lastAutomaticHealthRefreshAt,
+           now.timeIntervalSince(lastAutomaticHealthRefreshAt) < batteryFriendlyAutoRefreshInterval {
+            return
+        }
+
+        applyDemoHealthProfile(
+            DemoHealthSignalEngine.refreshedProfile(
             existing: demoHealthProfile,
             scenario: demoScenario,
             metrics: demoMetrics,
             demoDay: demoDay,
             completedSessionCount: regulateSessionHistory.filter(\.isCompleted).count,
             activeExperimentAdherence: activeExperiment?.adherencePercent ?? 0,
-            now: Date(),
+            now: now,
             updateSyncTimestamp: updateSyncTimestamp
+            ),
+            emitPermissionRevocationBanner: true
         )
+        if !updateSyncTimestamp {
+            lastAutomaticHealthRefreshAt = now
+        }
         persistDemoHealthProfile()
     }
 
@@ -3556,7 +3732,10 @@ final class MindSenseStore: ObservableObject {
         demoMetrics = DemoScenario.balancedDay.baseMetrics
         demoDay = DemoScenario.balancedDay.defaultDay
         demoEventHistory = MindSenseDemoSeedCatalog.seededEvents(for: .balancedDay)
-        demoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(for: .balancedDay, demoDay: DemoScenario.balancedDay.defaultDay)
+        applyDemoHealthProfile(
+            MindSenseDemoSeedCatalog.seededHealthProfile(for: .balancedDay, demoDay: DemoScenario.balancedDay.defaultDay),
+            emitPermissionRevocationBanner: false
+        )
         demoSavedInsights = []
         guidedDemoPathStep = nil
         experiments = MindSenseDemoSeedCatalog.defaultExperiments(for: .balancedDay)
