@@ -1557,8 +1557,8 @@ struct DataView: View {
                 )
             )
 
-            InsetSurface {
-                HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.md) {
+                HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
                     MindSenseIconBadge(
                         systemName: recommendedPresetIcon(for: store.primaryRecommendation.preset),
                         tint: MindSensePalette.signalCool,
@@ -1566,7 +1566,7 @@ struct DataView: View {
                         size: MindSenseControlSize.iconBadge
                     )
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                         Text("Suggested action: \(store.primaryRecommendation.preset.title)")
                             .font(MindSenseTypography.bodyStrong)
                         Text(store.primaryRecommendation.summaryLine)
@@ -1575,7 +1575,7 @@ struct DataView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
-                    Spacer(minLength: 8)
+                    Spacer(minLength: MindSenseSpacing.xs)
                     dataMetaPill("\(store.primaryRecommendation.timeMinutes) min")
                 }
 
@@ -1595,6 +1595,7 @@ struct DataView: View {
                 .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: MindSenseControlSize.minimumTapTarget))
             }
 
+            MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
             signalFocusChipBar
 
             if focusExperiments.isEmpty {

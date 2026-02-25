@@ -870,15 +870,17 @@ struct RegulateView: View {
                 .accessibilityIdentifier("regulate_active_preset_label")
 
             if showPostSessionTransition {
-                postSessionTransitionCard(for: runningPreset)
+                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
+                postSessionTransitionSection(for: runningPreset)
+                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
             }
 
             recordImpactForm(runningPreset)
         }
     }
 
-    private func postSessionTransitionCard(for runningPreset: DemoRegulatePreset) -> some View {
-        InsetSurface {
+    private func postSessionTransitionSection(for runningPreset: DemoRegulatePreset) -> some View {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.md) {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Session complete",

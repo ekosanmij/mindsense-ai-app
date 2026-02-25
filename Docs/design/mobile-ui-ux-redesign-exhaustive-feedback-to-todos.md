@@ -726,7 +726,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Episode lists avoid multiple primary-grade actions.
 
 ### R5 Reduce card nesting
-- Status: `[~]`
+- Status: `[x]`
 - Deliverables:
   1. Replace nested cards with section headers + dividers.
   2. Use 16-24 spacing and 1pt dividers internally.
