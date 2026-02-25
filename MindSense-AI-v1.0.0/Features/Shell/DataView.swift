@@ -803,6 +803,7 @@ struct DataView: View {
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
                         .disabled(experimentCTA.disabled)
                     }
+                    .accessibilityIdentifier("data_sticky_experiment_dock")
                     .padding(.bottom, stickyDockBottomOffset)
                 }
             }
@@ -1672,6 +1673,7 @@ struct DataView: View {
             .animation(reduceMotion ? nil : MindSenseMotion.selection, value: selected)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("data_experiment_row_\(experiment.id.uuidString)")
     }
 
     @ViewBuilder

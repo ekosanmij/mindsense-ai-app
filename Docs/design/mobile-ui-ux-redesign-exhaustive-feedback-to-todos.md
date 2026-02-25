@@ -795,13 +795,13 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 
 ## E) QA Checklist Required Before Marking Redesign Done
 
-- [ ] Intro + onboarding copy and progress consistency audit
+- [x] Intro + onboarding copy and progress consistency audit
 - [x] Today hero one-CTA hierarchy audit
-- [ ] Timeline single-action row interaction audit
-- [ ] Regulate focus mode interaction audit
+- [x] Timeline single-action row interaction audit
+- [x] Regulate focus mode interaction audit
 - [x] Data tab label fit audit (no truncation at default type)
-- [ ] Sticky CTA/tab bar overlap audit across device sizes
+- [x] Sticky CTA/tab bar overlap audit across device sizes
 - [x] Contrast/non-text contrast pass
-- [ ] Dynamic Type clipping pass
+- [x] Dynamic Type clipping pass
 - [x] VoiceOver labels/hints pass
 - [x] Reduce Motion behavior pass

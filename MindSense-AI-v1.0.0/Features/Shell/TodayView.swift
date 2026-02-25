@@ -1009,8 +1009,8 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     VStack(spacing: 8) {
-                        ForEach(store.recentStressEpisodes.prefix(3)) { episode in
-                            stressEpisodeRow(episode)
+                        ForEach(Array(store.recentStressEpisodes.prefix(3).enumerated()), id: \.element.id) { index, episode in
+                            stressEpisodeRow(episode, rowIndex: index)
                         }
                     }
                 }
@@ -1061,7 +1061,7 @@ struct TodayView: View {
         )
     }
 
-    private func stressEpisodeRow(_ episode: StressEpisodeRecord) -> some View {
+    private func stressEpisodeRow(_ episode: StressEpisodeRecord, rowIndex: Int) -> some View {
         HStack(alignment: .top, spacing: 10) {
             MindSenseIconBadge(
                 systemName: "waveform.path.ecg",
@@ -1115,6 +1115,7 @@ struct TodayView: View {
                     Button("Add context") {
                         focusContextCapture(for: episode)
                     }
+                    .accessibilityIdentifier("today_timeline_episode_add_context_\(rowIndex)")
                     .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
                 }
 
@@ -1147,6 +1148,7 @@ struct TodayView: View {
             )
             store.triggerHaptic(intent: .selection)
         }
+        .accessibilityIdentifier("today_timeline_episode_row_\(rowIndex)")
         .accessibilityHint("Opens episode details")
         .accessibilityAddTraits(.isButton)
     }
@@ -3720,6 +3722,7 @@ struct TodayEpisodeDetailSheet: View {
                 }
             }
         }
+        .accessibilityIdentifier("today_episode_detail_sheet_root")
         .mindSenseSheetPresentationChrome()
     }
 
