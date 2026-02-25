@@ -314,7 +314,7 @@ struct RegulateView: View {
                             primaryCTAConfig.action()
                         }
                         .accessibilityIdentifier(primaryCTAConfig.id)
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.primaryButton))
                         .disabled(primaryCTAConfig.disabled)
                     }
                     .padding(.bottom, stickyDockBottomOffset)
@@ -635,7 +635,7 @@ struct RegulateView: View {
                     startPreset(activePreset.id, source: "regulate_primary_cta")
                 }
                 .accessibilityIdentifier("regulate_start_cta")
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.primaryButton))
             }
         }
     }
@@ -647,7 +647,7 @@ struct RegulateView: View {
                 selectionMetaPillContent(icon: icon, text: text)
             }
             .buttonStyle(.plain)
-            .frame(minHeight: 44)
+            .frame(minHeight: MindSenseControlSize.minimumTapTarget)
             .accessibilityLabel(text)
             .accessibilityHint("Shows explanation.")
         } else {
@@ -803,7 +803,7 @@ struct RegulateView: View {
                                     .foregroundStyle(phaseStatus.tint)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
-                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .frame(maxWidth: .infinity, minHeight: MindSenseControlSize.minimumTapTarget, alignment: .leading)
                             .padding(.horizontal, 10)
                             .background(
                                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
@@ -819,13 +819,13 @@ struct RegulateView: View {
                     Toggle("Haptic step cues", isOn: $hapticPacingEnabled)
                         .font(MindSenseTypography.caption)
                         .tint(MindSensePalette.accent)
-                        .frame(minHeight: 44)
+                        .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         .accessibilityIdentifier("regulate_haptic_pacing_toggle")
 
                     Toggle("Audio guidance", isOn: $audioGuidanceEnabled)
                         .font(MindSenseTypography.caption)
                         .tint(MindSensePalette.accent)
-                        .frame(minHeight: 44)
+                        .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         .accessibilityIdentifier("regulate_audio_guidance_toggle")
 
                     Text("Cues trigger when the protocol moves to the next step.")
@@ -901,14 +901,14 @@ struct RegulateView: View {
             Button("Log impact") {
                 startImpactLoggingFromPostSession()
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
             .accessibilityIdentifier("regulate_post_session_log_impact_cta")
 
             if let episodeID = activeSessionEpisodeID {
                 Button("Add context") {
                     openEpisodeContextCapture(episodeID)
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
                 .accessibilityIdentifier("regulate_post_session_add_context_cta")
             }
         }
@@ -959,7 +959,7 @@ struct RegulateView: View {
                 .textInputAutocapitalization(.sentences)
                 .disableAutocorrection(false)
                 .padding(.horizontal, 12)
-                .frame(minHeight: 44)
+                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                 .background(
                     RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                         .fill(MindSenseSurfaceLevel.base.fill)
@@ -1055,7 +1055,7 @@ struct RegulateView: View {
                 .font(MindSenseTypography.bodyStrong)
                 .foregroundStyle(selected ? MindSensePalette.signalCoolStrong : .secondary)
                 .frame(maxWidth: .infinity, alignment: .center)
-                .frame(minHeight: 44)
+                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                 .background(
                     RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                         .fill(selected ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
@@ -1077,7 +1077,7 @@ struct RegulateView: View {
         } label: {
             PillChip(label: tag, state: isSelected ? .selected : .unselected)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: 44)
+                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
         }
         .buttonStyle(.plain)
     }
@@ -1149,7 +1149,7 @@ struct RegulateView: View {
                 .foregroundStyle(emphasized ? .primary : .secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        .frame(maxWidth: .infinity, minHeight: MindSenseControlSize.minimumTapTarget, alignment: .leading)
     }
 
     private func protocolTimeline(for preset: DemoRegulatePreset) -> [TimerProtocolPhase] {

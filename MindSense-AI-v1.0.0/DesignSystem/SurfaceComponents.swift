@@ -857,10 +857,10 @@ struct SectionHeader: View {
 }
 
 enum MindSenseRhythm {
-    static let compact: CGFloat = 10
-    static let regular: CGFloat = 16
-    static let section: CGFloat = 24
-    static let page: CGFloat = 32
+    static let compact: CGFloat = MindSenseSpacing.sm
+    static let regular: CGFloat = MindSenseSpacing.md
+    static let section: CGFloat = MindSenseSpacing.lg
+    static let page: CGFloat = MindSenseSpacing.xl
 }
 
 struct MindSenseSectionDivider: View {
@@ -883,9 +883,9 @@ struct MindSenseBottomActionDock<Content: View>: View {
         VStack(spacing: MindSenseSpacing.xs) {
             content
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 4)
-        .padding(.bottom, 2)
+        .padding(.horizontal, MindSenseSpacing.md)
+        .padding(.top, MindSenseSpacing.xxxs)
+        .padding(.bottom, MindSenseSpacing.xxxs)
         .background {
             Rectangle()
                 .fill(MindSenseSurfaceLevel.base.fill.opacity(0.96))
@@ -893,7 +893,7 @@ struct MindSenseBottomActionDock<Content: View>: View {
                     Rectangle()
                         .fill(MindSensePalette.strokeSubtle.opacity(0.7))
                         .frame(height: 1)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, MindSenseSpacing.md)
                 }
         }
     }

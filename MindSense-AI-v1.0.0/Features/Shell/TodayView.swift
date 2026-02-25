@@ -493,7 +493,7 @@ struct TodayView: View {
             .buttonStyle(
                 MindSenseButtonStyle(
                     hierarchy: .primary,
-                    minHeight: 52
+                    minHeight: MindSenseControlSize.primaryButton
                 )
             )
 
@@ -536,7 +536,7 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: 44)
+                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                 .padding(.horizontal, MindSenseSpacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
@@ -580,7 +580,7 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: 44)
+                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
             }
             .buttonStyle(.plain)
 
@@ -605,7 +605,7 @@ struct TodayView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: 44)
+                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
             }
             .buttonStyle(.plain)
         }
@@ -708,7 +708,7 @@ struct TodayView: View {
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(minHeight: 44)
+            .frame(minHeight: MindSenseControlSize.minimumTapTarget)
             .padding(.horizontal, MindSenseSpacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
@@ -841,7 +841,7 @@ struct TodayView: View {
                             systemName: "exclamationmark.triangle.fill",
                             tint: MindSensePalette.warning,
                             style: .filled,
-                            size: 28
+                            size: MindSenseControlSize.iconBadge
                         )
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Low confidence mode")
@@ -865,7 +865,7 @@ struct TodayView: View {
                             systemName: presetIcon(for: recommendation.preset),
                             tint: MindSensePalette.accent,
                             style: .filled,
-                            size: 28
+                            size: MindSenseControlSize.iconBadge
                         )
                         Text(recommendation.preset.title)
                             .font(MindSenseTypography.body)
@@ -885,7 +885,7 @@ struct TodayView: View {
                     .buttonStyle(
                         MindSenseButtonStyle(
                             hierarchy: .primary,
-                            minHeight: 52
+                            minHeight: MindSenseControlSize.primaryButton
                         )
                     )
                 } else {
@@ -896,7 +896,7 @@ struct TodayView: View {
                     .buttonStyle(
                         MindSenseButtonStyle(
                             hierarchy: .primary,
-                            minHeight: 52
+                            minHeight: MindSenseControlSize.primaryButton
                         )
                     )
                 }
@@ -943,7 +943,7 @@ struct TodayView: View {
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .frame(minHeight: 44)
+                    .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                     .padding(.horizontal, 12)
                     .background(
                         RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
@@ -1013,7 +1013,7 @@ struct TodayView: View {
                         ForEach(Array(recentEpisodes.enumerated()), id: \.element.id) { index, episode in
                             stressEpisodeRow(episode, rowIndex: index)
                             if index < recentEpisodes.count - 1 {
-                                MindSenseSectionDivider(emphasis: 0.08)
+                                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.subtle)
                             }
                         }
                     }
@@ -1048,7 +1048,7 @@ struct TodayView: View {
                 TimelineStateSegmentCell(
                     state: segment.state,
                     tint: timelineTint(for: segment.state),
-                    height: 24,
+                    height: MindSenseControlSize.timelineSegmentHeight,
                     prefersExpandedLabel: false
                 )
             }
@@ -1071,7 +1071,7 @@ struct TodayView: View {
                 systemName: "waveform.path.ecg",
                 tint: timelineTint(for: .activated),
                 style: .filled,
-                size: 28
+                size: MindSenseControlSize.iconBadge
             )
 
             VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
@@ -1217,7 +1217,7 @@ struct TodayView: View {
                         .textInputAutocapitalization(.sentences)
                         .disableAutocorrection(false)
                         .padding(.horizontal, 12)
-                        .frame(minHeight: 44)
+                        .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         .background(
                             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -1240,7 +1240,7 @@ struct TodayView: View {
                 Button("Save context") {
                     saveContext(for: episode.id)
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.primaryButton))
                 .disabled(contextSaveDisabled)
             }
         }
@@ -1259,7 +1259,7 @@ struct TodayView: View {
             )
 
             HStack(spacing: 8) {
-                MindSenseIconBadge(systemName: "dial.low.fill", tint: checkInTint, style: .filled, size: 28)
+                MindSenseIconBadge(systemName: "dial.low.fill", tint: checkInTint, style: .filled, size: MindSenseControlSize.iconBadge)
                 Text("Load now: \(Int(loadSlider.rounded())) / 10 (\(checkInLabel))")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
@@ -1267,7 +1267,7 @@ struct TodayView: View {
                 Button("Save check-in") {
                     saveCheckIn()
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: MindSenseControlSize.minimumTapTarget))
             }
 
             if isLowCoverageRecommendationMode {
@@ -1319,7 +1319,7 @@ struct TodayView: View {
                         } label: {
                             PillChip(label: option, state: selectedCheckInDriver == option ? .selected : .unselected)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .frame(minHeight: 44)
+                                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint(selectedCheckInDriver == option ? "Double tap to clear." : "Double tap to select.")
@@ -1347,12 +1347,12 @@ struct TodayView: View {
                         Button("Reduce check-ins") {
                             applyCheckInPromptMode(.reduced)
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: MindSenseControlSize.minimumTapTarget))
 
                         Button("Only ask on low-confidence days") {
                             applyCheckInPromptMode(.lowConfidenceOnly)
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: MindSenseControlSize.minimumTapTarget))
                     }
                 }
             }
@@ -1373,7 +1373,7 @@ struct TodayView: View {
                 triggerNextBestAction(source: "today_sticky_cta")
             }
             .accessibilityIdentifier("today_primary_cta")
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 44))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.minimumTapTarget))
         }
         .padding(.bottom, stickyDockBottomOffset)
     }
@@ -1539,7 +1539,7 @@ struct TodayView: View {
                                 .font(MindSenseTypography.micro)
                                 .foregroundStyle(selectedTag == nil ? MindSensePalette.signalCoolStrong : .secondary)
                                 .padding(.horizontal, 10)
-                                .frame(minHeight: 44)
+                                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                                 .background(
                                     Capsule(style: .continuous)
                                         .fill(selectedTag == nil ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
@@ -1563,7 +1563,7 @@ struct TodayView: View {
                         .font(MindSenseTypography.micro)
                         .foregroundStyle(selectedTag == tag ? MindSensePalette.signalCoolStrong : .secondary)
                         .padding(.horizontal, 10)
-                        .frame(minHeight: 44)
+                        .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         .background(
                             Capsule(style: .continuous)
                                 .fill(selectedTag == tag ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
@@ -3338,7 +3338,7 @@ private struct TimelineStateLegendPill: View {
                 .foregroundStyle(.secondary)
                 .monospacedDigit()
         }
-        .frame(minHeight: 44)
+        .frame(minHeight: MindSenseControlSize.minimumTapTarget)
         .padding(.horizontal, 10)
         .padding(.vertical, 4)
         .background(
@@ -3536,7 +3536,7 @@ struct TodayEpisodeDetailSheet: View {
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.secondary)
                             }
-                                    .frame(minHeight: 44)
+                                    .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(showEvidenceDetails ? "Hide why we flagged this" : "Why we flagged this")
@@ -3593,7 +3593,7 @@ struct TodayEpisodeDetailSheet: View {
                                             label: item.label,
                                             state: tags.contains(item.storedTag) ? .selected : .unselected
                                         )
-                                        .frame(minHeight: 44)
+                                        .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityLabel(item.label)
@@ -3627,7 +3627,7 @@ struct TodayEpisodeDetailSheet: View {
                                     .font(MindSenseTypography.caption)
                             }
                             .foregroundStyle(.secondary)
-                            .frame(minHeight: 44, alignment: .leading)
+                            .frame(minHeight: MindSenseControlSize.minimumTapTarget, alignment: .leading)
                         }
                         .buttonStyle(.plain)
 
@@ -3673,7 +3673,7 @@ struct TodayEpisodeDetailSheet: View {
                         Button("Start \(episode.recommendedPreset.title)") {
                             onStartRecommended(episode)
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.primaryButton))
                         .accessibilityHint("Starts the recommended protocol for this episode.")
                     }
 
@@ -3699,7 +3699,7 @@ struct TodayEpisodeDetailSheet: View {
                                     .font(MindSenseTypography.micro)
                             }
                             .foregroundStyle(.secondary)
-                            .frame(minHeight: 44, alignment: .leading)
+                            .frame(minHeight: MindSenseControlSize.minimumTapTarget, alignment: .leading)
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint("Copies this prompt to the clipboard.")
@@ -3865,7 +3865,7 @@ struct TodayEpisodeDetailSheet: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 44)
+            .frame(minHeight: MindSenseControlSize.minimumTapTarget)
             .background(
                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                     .fill(selected ? MindSensePalette.accent : MindSenseSurfaceLevel.base.fill)

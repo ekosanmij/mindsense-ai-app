@@ -82,7 +82,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Screenshot QA on compact and large phones; verify no occlusion.
 
 ### C-04 Target size and contrast baseline gaps
-- Status: `[~]`
+- Status: `[x]`
 - Source feedback: Small controls and subtle non-text contrast risk accessibility issues.
 - Actionable TODO:
   1. Enforce minimum 44x44 pt touch targets for interactive controls.
@@ -786,7 +786,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Reduce Motion behavior validated.
 
 ### R15 Tokenize components and states
-- Status: `[ ]`
+- Status: `[~]`
 - Deliverables:
   1. Shared source of truth for spacing/type/radius/state.
   2. Eliminate duplicated style literals in shell screens.

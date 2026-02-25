@@ -284,6 +284,26 @@ struct MindSenseSpacing {
     static let xxxl: CGFloat = 48
 }
 
+enum MindSenseControlSize {
+    static let minimumTapTarget: CGFloat = 44
+    static let compactPill: CGFloat = 24
+    static let chip: CGFloat = 30
+    static let iconBadge: CGFloat = 28
+    static let timelineSegmentHeight: CGFloat = 24
+    static let primaryButton: CGFloat = 52
+    static let thinProgressTrack: CGFloat = 5
+}
+
+enum MindSenseDividerEmphasis {
+    static let subtle: CGFloat = 0.08
+    static let regular: CGFloat = 0.12
+    static let section: CGFloat = 0.14
+}
+
+enum MindSenseProgress {
+    static let minimumFillRatio: Double = 0.08
+}
+
 enum MindSenseLayout {
     static let pageHorizontal: CGFloat = MindSenseSpacing.md
     static let pageTop: CGFloat = MindSenseSpacing.md

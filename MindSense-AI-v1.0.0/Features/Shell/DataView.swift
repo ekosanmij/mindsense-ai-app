@@ -800,7 +800,7 @@ struct DataView: View {
                             experimentCTA.action()
                         }
                         .accessibilityIdentifier(experimentCTA.id)
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.primaryButton))
                         .disabled(experimentCTA.disabled)
                     }
                     .accessibilityIdentifier("data_sticky_experiment_dock")
@@ -1045,7 +1045,7 @@ struct DataView: View {
                         store.triggerHaptic(intent: .selection)
                     } label: {
                         PillChip(label: focus.metric.title, state: selectedSignal == focus ? .selected : .unselected)
-                            .frame(minHeight: 44)
+                            .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                     }
                     .buttonStyle(.plain)
                 }
@@ -1131,12 +1131,12 @@ struct DataView: View {
                     value: whatIsWorkingSummary.topProtocol,
                     supportingText: whatIsWorkingSummary.topProtocolEvidence
                 )
-                MindSenseSectionDivider(emphasis: 0.12)
+                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
                 whatIsWorkingRow(
                     label: "Most common trigger",
                     value: whatIsWorkingSummary.topTrigger
                 )
-                MindSenseSectionDivider(emphasis: 0.12)
+                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
                 whatIsWorkingRow(
                     label: "Best recovery window",
                     value: whatIsWorkingSummary.bestRecoveryWindow,
@@ -1144,7 +1144,7 @@ struct DataView: View {
                 )
 
                 if let recoveryWindowSchedule {
-                    MindSenseSectionDivider(emphasis: 0.12)
+                    MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
                     recoveryWindowActionRow(schedule: recoveryWindowSchedule)
                 }
             }
@@ -1191,13 +1191,13 @@ struct DataView: View {
                     source: "data_whats_working_recovery_window"
                 )
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
             .accessibilityIdentifier("data_protect_recovery_window_cta")
 
             Button("Remind me when this window starts") {
                 scheduleRecoveryWindowReminder(for: schedule)
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, minHeight: 44))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, minHeight: MindSenseControlSize.minimumTapTarget))
             .accessibilityIdentifier("data_recovery_window_reminder_cta")
         }
     }
@@ -1302,7 +1302,7 @@ struct DataView: View {
                         } label: {
                             Label("Export", systemImage: "square.and.arrow.up")
                                 .font(MindSenseTypography.caption)
-                                .frame(minHeight: 44)
+                                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         }
                         .buttonStyle(.plain)
                     }
@@ -1330,7 +1330,7 @@ struct DataView: View {
                         store.track(event: .primaryCTATapped, surface: .data, action: "open_coverage_diagnostics")
                         store.triggerHaptic(intent: .selection)
                     }
-                    .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 44))
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.minimumTapTarget))
                 }
             }
 
@@ -1453,7 +1453,7 @@ struct DataView: View {
                 systemName: "waveform.path.ecg",
                 tint: MindSensePalette.warning,
                 style: .filled,
-                size: 28
+                size: MindSenseControlSize.iconBadge
             )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -1482,7 +1482,7 @@ struct DataView: View {
                     action: "history_edit_later_opened"
                 )
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: MindSenseControlSize.minimumTapTarget))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
@@ -1532,14 +1532,14 @@ struct DataView: View {
                                     historyEventRow(event)
 
                                     if index < section.events.count - 1 {
-                                        MindSenseSectionDivider(emphasis: 0.08)
+                                        MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.subtle)
                                     }
                                 }
                             }
                         }
 
                         if sectionIndex < historySections.count - 1 {
-                            MindSenseSectionDivider(emphasis: 0.14)
+                            MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.section)
                         }
                     }
                 }
@@ -1563,7 +1563,7 @@ struct DataView: View {
                         systemName: recommendedPresetIcon(for: store.primaryRecommendation.preset),
                         tint: MindSensePalette.signalCool,
                         style: .filled,
-                        size: 28
+                        size: MindSenseControlSize.iconBadge
                     )
 
                     VStack(alignment: .leading, spacing: 4) {
@@ -1592,7 +1592,7 @@ struct DataView: View {
                 Button("Start suggested action") {
                     launchRecommendedAction(source: "data_experiments_suggested_action")
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: MindSenseControlSize.minimumTapTarget))
             }
 
             signalFocusChipBar
@@ -1700,10 +1700,10 @@ struct DataView: View {
                         .fill(MindSenseSurfaceLevel.base.fill)
                     Capsule(style: .continuous)
                         .fill(AnyShapeStyle(MindSensePalette.accent))
-                        .frame(width: proxy.size.width * CGFloat(max(0.08, ratio)))
+                        .frame(width: proxy.size.width * CGFloat(max(MindSenseProgress.minimumFillRatio, ratio)))
                 }
             }
-            .frame(height: 5)
+            .frame(height: MindSenseControlSize.thinProgressTrack)
         }
     }
 
@@ -1738,7 +1738,7 @@ struct DataView: View {
                 systemName: eventIcon(for: event.kind),
                 tint: eventTint(for: event.kind),
                 style: .filled,
-                size: 28
+                size: MindSenseControlSize.iconBadge
             )
 
             VStack(alignment: .leading, spacing: 3) {
@@ -1860,7 +1860,7 @@ struct DataView: View {
                     .buttonStyle(
                         MindSenseButtonStyle(
                             hierarchy: suggestedMet == false ? .secondary : .primary,
-                            minHeight: 44
+                            minHeight: MindSenseControlSize.minimumTapTarget
                         )
                     )
 
@@ -1871,7 +1871,7 @@ struct DataView: View {
                     .buttonStyle(
                         MindSenseButtonStyle(
                             hierarchy: suggestedMet == false ? .primary : .secondary,
-                            minHeight: 44
+                            minHeight: MindSenseControlSize.minimumTapTarget
                         )
                     )
                 }
@@ -1890,7 +1890,7 @@ struct DataView: View {
                                 label: reason.title,
                                 state: selectedWakeAnchorMissReason == reason ? .selected : .unselected
                             )
-                            .frame(minHeight: 44)
+                            .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("data_wake_anchor_reason_\(reason.rawValue)")
@@ -1963,7 +1963,7 @@ struct DataView: View {
                     experimentCTA.action()
                 }
                 .accessibilityIdentifier("\(experimentCTA.id)_inline")
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 44))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.minimumTapTarget))
                 .disabled(experimentCTA.disabled)
 
                 Text("Inline action is shown here because available vertical space is limited.")
@@ -2067,7 +2067,7 @@ struct DataView: View {
                     Button(recoveryAnchorPlanActive ? "Update anchor plan" : "Save anchor plan") {
                         saveRecoveryAnchorPlan(source: "data_trend_insight_anchor")
                     }
-                    .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 44))
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.minimumTapTarget))
 
                     if let schedule = recoveryAnchorNoMeetingSchedule {
                         Button("Add block") {
@@ -2076,7 +2076,7 @@ struct DataView: View {
                                 source: "data_recovery_anchor_add_block"
                             )
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
                     }
                 }
 
@@ -2091,7 +2091,7 @@ struct DataView: View {
                     Button(recoveryAnchorTrackedToday ? "Adherence tracked today" : "Track adherence") {
                         trackRecoveryAnchorAdherence()
                     }
-                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 44))
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: MindSenseControlSize.minimumTapTarget))
                     .disabled(!recoveryAnchorPlanActive || recoveryAnchorTrackedToday)
                 }
             }
@@ -2772,7 +2772,7 @@ private struct TrendFilterSheet: View {
                             ShareLink(item: sharePayload) {
                                 Label("Export chart data", systemImage: "square.and.arrow.up")
                                     .font(MindSenseTypography.caption)
-                                    .frame(minHeight: 44)
+                                    .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .buttonStyle(.plain)
