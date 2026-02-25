@@ -16,6 +16,40 @@ enum MindSenseToneGuide {
 }
 
 struct MindSensePalette {
+    // Redesign parity tokens (DS-03).
+    static let primary = dynamic(
+        light: UIColor(red: 27 / 255, green: 111 / 255, blue: 87 / 255, alpha: 1),
+        dark: UIColor(red: 134 / 255, green: 210 / 255, blue: 186 / 255, alpha: 1)
+    )
+    static let primaryTint = dynamic(
+        light: UIColor(red: 237 / 255, green: 243 / 255, blue: 242 / 255, alpha: 1),
+        dark: UIColor(red: 30 / 255, green: 42 / 255, blue: 38 / 255, alpha: 1)
+    )
+    static let accentLoad = dynamic(
+        light: UIColor(red: 149 / 255, green: 85 / 255, blue: 31 / 255, alpha: 1),
+        dark: UIColor(red: 236 / 255, green: 184 / 255, blue: 96 / 255, alpha: 1)
+    )
+    static let bg = dynamic(
+        light: UIColor(red: 247 / 255, green: 248 / 255, blue: 250 / 255, alpha: 1),
+        dark: UIColor(red: 16 / 255, green: 17 / 255, blue: 19 / 255, alpha: 1)
+    )
+    static let card = dynamic(
+        light: UIColor(red: 243 / 255, green: 244 / 255, blue: 246 / 255, alpha: 1),
+        dark: UIColor(red: 36 / 255, green: 38 / 255, blue: 41 / 255, alpha: 1)
+    )
+    static let textPrimary = dynamic(
+        light: UIColor(red: 17 / 255, green: 17 / 255, blue: 17 / 255, alpha: 1),
+        dark: UIColor(red: 235 / 255, green: 239 / 255, blue: 244 / 255, alpha: 1)
+    )
+    static let textSecondary = dynamic(
+        light: UIColor(red: 75 / 255, green: 85 / 255, blue: 99 / 255, alpha: 1),
+        dark: UIColor(red: 189 / 255, green: 198 / 255, blue: 210 / 255, alpha: 1)
+    )
+    static let border = dynamic(
+        light: UIColor(red: 209 / 255, green: 213 / 255, blue: 219 / 255, alpha: 1),
+        dark: UIColor(red: 84 / 255, green: 90 / 255, blue: 100 / 255, alpha: 1)
+    )
+
     static let signalCool = dynamic(
         light: UIColor(red: 17 / 255, green: 122 / 255, blue: 105 / 255, alpha: 1),
         dark: UIColor(red: 134 / 255, green: 210 / 255, blue: 186 / 255, alpha: 1)
@@ -143,6 +177,13 @@ struct MindSensePalette {
             traits.userInterfaceStyle == .dark ? dark : light
         })
     }
+}
+
+enum MindSenseContrastUsage {
+    // Keep secondary text close to full opacity on bg/card surfaces.
+    static let minimumSecondaryTextOpacity: Double = 0.88
+    // UI graphics should keep at least this visual alpha for non-text contrast targets.
+    static let minimumNonTextAlpha: Double = 0.7
 }
 
 enum MindSenseGradients {
@@ -291,64 +332,15 @@ struct MindSenseRadius {
     static let card = large
 }
 
-enum MindSenseTypeRole {
-    case display
-    case title
-    case body
-    case bodySmall
-    case caption
-
-    var font: Font {
-        switch self {
-        case .display:
-            return Font.system(.largeTitle, design: .rounded).weight(.bold)
-        case .title:
-            return Font.system(.title3, design: .rounded).weight(.semibold)
-        case .body:
-            return Font.system(.body, design: .rounded)
-        case .bodySmall:
-            return Font.system(.callout, design: .rounded)
-        case .caption:
-            return Font.system(.caption, design: .rounded).weight(.medium)
-        }
-    }
-
-    var standardLineLimit: Int {
-        switch self {
-        case .display:
-            return 2
-        case .title:
-            return 2
-        case .body, .bodySmall:
-            return 3
-        case .caption:
-            return 2
-        }
-    }
-
-    var reflowLineLimit: Int {
-        switch self {
-        case .display:
-            return 4
-        case .title:
-            return 4
-        case .body, .bodySmall:
-            return 5
-        case .caption:
-            return 4
-        }
-    }
-}
-
 enum MindSenseTypography {
-    static let display = MindSenseTypeRole.display.font
-    static let hero = MindSenseTypeRole.display.font
-    static let title = MindSenseTypeRole.title.font
-    static let titleCompact = MindSenseTypeRole.body.font.weight(.semibold)
-    static let bodyStrong = MindSenseTypeRole.body.font.weight(.semibold)
-    static let body = MindSenseTypeRole.body.font
-    static let caption = MindSenseTypeRole.caption.font
-    static let micro = Font.system(.caption2, design: .rounded).weight(.semibold)
+    static let display = Font.system(size: 27, weight: .bold, design: .rounded)
+    static let hero = Font.system(size: 26, weight: .bold, design: .rounded)
+    static let title = Font.system(size: 23, weight: .semibold, design: .rounded)
+    static let titleCompact = Font.system(size: 19, weight: .semibold, design: .rounded)
+    static let bodyStrong = Font.system(size: 16, weight: .semibold, design: .rounded)
+    static let body = Font.system(size: 15, weight: .regular, design: .rounded)
+    static let caption = Font.system(size: 12, weight: .medium, design: .rounded)
+    static let micro = Font.system(size: 11, weight: .semibold, design: .rounded)
 
     static let metric = Font.system(size: 30, weight: .semibold, design: .monospaced)
     static let metricDisplay = Font.system(size: 40, weight: .bold, design: .monospaced)

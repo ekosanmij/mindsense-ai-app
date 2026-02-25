@@ -340,7 +340,6 @@ struct MindSenseTabHero<Content: View>: View {
 
     let label: String
     let title: String
-    var titleRole: MindSenseTypeRole = .title
     let detail: String
     var metric: String? = nil
     var metricAction: (() -> Void)? = nil
@@ -354,7 +353,6 @@ struct MindSenseTabHero<Content: View>: View {
     init(
         label: String,
         title: String,
-        titleRole: MindSenseTypeRole = .title,
         detail: String,
         metric: String? = nil,
         metricAction: (() -> Void)? = nil,
@@ -367,7 +365,6 @@ struct MindSenseTabHero<Content: View>: View {
     ) {
         self.label = label
         self.title = title
-        self.titleRole = titleRole
         self.detail = detail
         self.metric = metric
         self.metricAction = metricAction
@@ -387,17 +384,17 @@ struct MindSenseTabHero<Content: View>: View {
                 MindSenseSectionDivider(emphasis: 0.43)
 
                 Text(title.mindSenseHeadlineSafe)
-                    .font(titleRole.font)
+                    .font(MindSenseTypography.title)
                     .lineSpacing(1.5)
-                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? titleRole.reflowLineLimit : titleRole.standardLineLimit)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
                     .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.92)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(detail)
-                    .font(MindSenseTypeRole.bodySmall.font)
+                    .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? MindSenseTypeRole.bodySmall.reflowLineLimit : MindSenseTypeRole.bodySmall.standardLineLimit)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
                     .fixedSize(horizontal: false, vertical: true)
 
                 content
@@ -656,15 +653,15 @@ struct MindSenseSectionHeader: View {
 
             VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 Text(model.title.mindSenseHeadlineSafe)
-                    .font(MindSenseTypeRole.title.font)
+                    .font(MindSenseTypography.bodyStrong)
                     .tracking(0.15)
-                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? MindSenseTypeRole.title.reflowLineLimit : MindSenseTypeRole.title.standardLineLimit)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
                     .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.9)
                 if let subtitle = model.subtitle {
                     Text(subtitle)
-                        .font(MindSenseTypeRole.bodySmall.font)
+                        .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? MindSenseTypeRole.bodySmall.reflowLineLimit : MindSenseTypeRole.bodySmall.standardLineLimit)
+                        .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -782,7 +779,9 @@ struct MindSenseCollapsibleSection<Content: View>: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isExpanded ? "Collapse section" : "Expand section")
+        .accessibilityLabel(isExpanded ? "Hide \(model.title)" : "Show \(model.title)")
+        .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
+        .accessibilityHint(isExpanded ? "Collapses section content." : "Expands section content.")
     }
 }
 
@@ -839,6 +838,7 @@ struct MindSenseSummaryDisclosureText: View {
                 }
                 .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 44))
                 .accessibilityLabel(expanded ? expandedLabel : collapsedLabel)
+                .accessibilityValue(expanded ? "Expanded" : "Collapsed")
                 .accessibilityHint(expanded ? "Collapses details" : "Expands details")
             }
         }
@@ -980,6 +980,7 @@ struct PillChip: View {
             .opacity(state == .disabled ? 0.45 : 1)
             .animation(reduceMotion ? nil : MindSenseMotion.selection, value: state)
             .accessibilityLabel(label)
+            .accessibilityValue(accessibilityStateValue)
     }
 
     private var foreground: Color {
@@ -996,6 +997,17 @@ struct PillChip: View {
 
     private var border: Color {
         state == .selected ? MindSensePalette.strokeEdge : MindSensePalette.strokeSubtle
+    }
+
+    private var accessibilityStateValue: String {
+        switch state {
+        case .selected:
+            return "Selected"
+        case .unselected:
+            return "Not selected"
+        case .disabled:
+            return "Unavailable"
+        }
     }
 }
 
@@ -1194,6 +1206,11 @@ struct MindSenseSegmentedControl<Option: Hashable>: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(title(option))
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint(isSelected ? "Current selection." : "Selects this option.")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private var containerBackground: some View {

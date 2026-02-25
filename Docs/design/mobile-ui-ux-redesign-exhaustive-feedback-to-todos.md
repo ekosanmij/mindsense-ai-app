@@ -587,7 +587,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## C1) Typography Scale
 
 ### DS-01 Add explicit type token definitions (Display/Title/Body/BodySmall/Caption)
-- Status: `[x]`
+- Status: `[ ]`
 - Source detail: Type.Display 34, Type.Title 22-28, Body 17, BodySmall 15, Caption 13.
 - Actionable TODO:
   1. Add/verify token constants for each type role in design system.
@@ -601,7 +601,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - No hardcoded ad hoc font sizes in updated modules.
 
 ### DS-02 Apply type hierarchy to primary screens
-- Status: `[x]`
+- Status: `[ ]`
 - Actionable TODO:
   1. Today headline uses Display role.
   2. Section titles use Title role.
@@ -616,7 +616,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## C2) Color Palette
 
 ### DS-03 Add/verify palette tokens and usage constraints
-- Status: `[ ]`
+- Status: `[x]`
 - Source detail:
   - Primary `#1B6F57`
   - PrimaryTint `#EDF3F2`
@@ -780,7 +780,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Clear intent copy ("Add to calendar").
 
 ### R14 Accessibility baseline checks
-- Status: `[ ]`
+- Status: `[~]`
 - Deliverables:
   1. Contrast, non-text contrast, Dynamic Type, VoiceOver checks completed.
   2. Reduce Motion behavior validated.
@@ -803,5 +803,5 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 - [ ] Sticky CTA/tab bar overlap audit across device sizes
 - [ ] Contrast/non-text contrast pass
 - [ ] Dynamic Type clipping pass
-- [ ] VoiceOver labels/hints pass
-- [ ] Reduce Motion behavior pass
+- [x] VoiceOver labels/hints pass
+- [x] Reduce Motion behavior pass

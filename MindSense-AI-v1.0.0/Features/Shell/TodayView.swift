@@ -476,7 +476,6 @@ struct TodayView: View {
         MindSenseTabHero(
             label: AppIA.today,
             title: heroInterpretation,
-            titleRole: .display,
             detail: heroReferenceLabel,
             icon: "sun.max.fill",
             tone: .accent,
@@ -3312,7 +3311,7 @@ private struct TimelineStateSegmentCell: View {
         case .stable:
             return .primary
         case .activated:
-            return Color.black.opacity(0.82)
+            return MindSensePalette.textPrimary.opacity(0.82)
         case .recovery:
             return MindSensePalette.onAccent
         }
@@ -3456,6 +3455,8 @@ private struct TodayEpisodeIntensitySheet: View {
 
 struct TodayEpisodeDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @AppStorage("appReduceMotion") private var appReduceMotion = false
 
     let episode: StressEpisodeRecord
     let cognitivePrompt: String
@@ -3467,6 +3468,10 @@ struct TodayEpisodeDetailSheet: View {
     @State private var tags: Set<String>
     @State private var feedback: StressEpisodeAttributionFeedback?
     @State private var showEvidenceDetails = false
+
+    private var reduceMotion: Bool {
+        appReduceMotion || accessibilityReduceMotion
+    }
 
     private struct ConfounderQuickTag: Identifiable {
         let label: String
@@ -3517,8 +3522,12 @@ struct TodayEpisodeDetailSheet: View {
                         }
 
                         Button {
-                            withAnimation(MindSenseMotion.selection) {
+                            if reduceMotion {
                                 showEvidenceDetails.toggle()
+                            } else {
+                                withAnimation(MindSenseMotion.selection) {
+                                    showEvidenceDetails.toggle()
+                                }
                             }
                         } label: {
                             HStack(spacing: MindSenseSpacing.xs) {
@@ -3530,9 +3539,10 @@ struct TodayEpisodeDetailSheet: View {
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.secondary)
                             }
-                            .frame(minHeight: 44)
+                                    .frame(minHeight: 44)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityLabel(showEvidenceDetails ? "Hide why we flagged this" : "Why we flagged this")
                         .accessibilityHint(showEvidenceDetails ? "Collapses evidence details" : "Expands evidence details")
 
                         if showEvidenceDetails {
@@ -3589,6 +3599,8 @@ struct TodayEpisodeDetailSheet: View {
                                         .frame(minHeight: 44)
                                     }
                                     .buttonStyle(.plain)
+                                    .accessibilityLabel(item.label)
+                                    .accessibilityValue(tags.contains(item.storedTag) ? "Selected" : "Not selected")
                                     .accessibilityHint("Marks this episode as influenced by \(item.storedTag.lowercased()) and saves context.")
                                 }
                             }
@@ -3665,6 +3677,7 @@ struct TodayEpisodeDetailSheet: View {
                             onStartRecommended(episode)
                         }
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+                        .accessibilityHint("Starts the recommended protocol for this episode.")
                     }
 
                     InsetSurface {
@@ -3692,6 +3705,7 @@ struct TodayEpisodeDetailSheet: View {
                             .frame(minHeight: 44, alignment: .leading)
                         }
                         .buttonStyle(.plain)
+                        .accessibilityHint("Copies this prompt to the clipboard.")
                     }
 
                 }
