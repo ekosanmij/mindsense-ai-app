@@ -19,6 +19,7 @@ struct RegulateView: View {
     @State private var showRecordImpactDetails = false
     @State private var showPredictedFitExplanation = false
     @State private var showFlowStateExplanation = false
+    @State private var selectedPresetDetails: DemoRegulatePreset?
     @State private var showPostSessionTransition = false
     @State private var postSessionTransitionSessionID: UUID?
     @State private var lastGuidedPhaseID: Int?
@@ -267,10 +268,16 @@ struct RegulateView: View {
                             commandDeck
                                 .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
-                        sessionStatusBlock
-                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                        if currentStep != .selectProtocol {
+                            sessionStatusBlock
+                                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                        }
                         activeStepBlock
-                            .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(
+                                currentStep == .selectProtocol ? 1 : 2,
+                                isPresented: didAppear,
+                                reduceMotion: reduceMotion
+                            )
                         // Keep a short scroll runway so tab-bar minimize can trigger on shorter layouts.
                         Color.clear
                             .frame(height: tabBarCollapseScrollRunway)
@@ -302,7 +309,7 @@ struct RegulateView: View {
                 }
             }
             .safeAreaInset(edge: .top) {
-                if case .ready = resolvedState {
+                if case .ready = resolvedState, currentStep != .selectProtocol {
                     stickyStepStrip
                 }
             }
@@ -334,6 +341,9 @@ struct RegulateView: View {
                         store.dismissPostActivationPaywall(accepted: true)
                     }
                 )
+            }
+            .sheet(item: $selectedPresetDetails) { preset in
+                RegulatePresetDetailSheet(preset: preset)
             }
             .alert("Predicted fit", isPresented: $showPredictedFitExplanation) {
                 Button("OK", role: .cancel) { }
@@ -567,97 +577,109 @@ struct RegulateView: View {
                 )
             )
 
+            if runningSessionPreset == nil {
+                Label("No active session. Choose one protocol to start.", systemImage: "circle.dotted")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+
             ForEach(presets) { preset in
                 let selected = preset.id == activePreset?.id
-                Button {
-                    selectedPresetID = preset.id
-                    store.triggerHaptic(intent: .selection)
-                    store.track(event: .secondaryActionTapped, surface: .regulate, action: "preset_selected_\(preset.id.rawValue)")
-                } label: {
-                    HStack(spacing: 12) {
-                        MindSenseIconBadge(
-                            systemName: preset.icon,
-                            tint: MindSensePalette.signalCool,
-                            style: selected ? .filled : .muted,
-                            size: 40
-                        )
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(preset.title)
-                                .font(MindSenseTypography.bodyStrong)
-                                .foregroundStyle(.primary)
-                            Text(preset.subtitle)
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                            Text(preset.expectedEffect)
-                                .font(MindSenseTypography.caption)
-                                .lineLimit(1)
-                                .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 6) {
+                    Button {
+                        selectedPresetID = preset.id
+                        store.triggerHaptic(intent: .selection)
+                        store.track(event: .secondaryActionTapped, surface: .regulate, action: "preset_selected_\(preset.id.rawValue)")
+                    } label: {
+                        HStack(spacing: 12) {
+                            MindSenseIconBadge(
+                                systemName: preset.icon,
+                                tint: MindSensePalette.signalCool,
+                                style: selected ? .filled : .muted,
+                                size: 40
+                            )
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(preset.title)
+                                    .font(MindSenseTypography.bodyStrong)
+                                    .foregroundStyle(.primary)
+                                Text(preset.subtitle)
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(2)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Text(preset.expectedEffect)
+                                    .font(MindSenseTypography.caption)
+                                    .lineLimit(2)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
 
-                            HStack(spacing: 8) {
-                                selectionMetaPill(
-                                    icon: "waveform.path.ecg",
-                                    text: "Predicted fit \(store.expectedEffectConfidence(for: preset.id))%",
-                                    onTap: {
-                                        showPredictedFitExplanation = true
-                                        store.triggerHaptic(intent: .selection)
-                                    }
-                                )
-                                selectionMetaPill(
-                                    icon: "clock.fill",
-                                    text: preset.durationLabel
-                                )
+                                HStack(spacing: 8) {
+                                    selectionMetaPill(
+                                        icon: "waveform.path.ecg",
+                                        text: "Predicted fit \(store.expectedEffectConfidence(for: preset.id))%",
+                                        onTap: {
+                                            showPredictedFitExplanation = true
+                                            store.triggerHaptic(intent: .selection)
+                                        }
+                                    )
+                                    selectionMetaPill(
+                                        icon: "clock.fill",
+                                        text: preset.durationLabel
+                                    )
+                                }
+                            }
+                            Spacer()
+                            if selected {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundStyle(MindSensePalette.accent)
                             }
                         }
-                        Spacer()
-                        if selected {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(MindSensePalette.accent)
-                        }
+                        .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
+                        .padding(.vertical, MindSenseLayout.tileVerticalInset)
+                        .background(
+                            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                                .fill(
+                                    selected
+                                        ? AnyShapeStyle(MindSensePalette.accentMuted.opacity(0.88))
+                                        : AnyShapeStyle(MindSenseSurfaceLevel.base.fill)
+                                )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                                .stroke(
+                                    selected ? MindSensePalette.strokeEdge.opacity(0.82) : MindSensePalette.strokeSubtle,
+                                    lineWidth: 1
+                                )
+                        )
                     }
-                    .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
-                    .padding(.vertical, MindSenseLayout.tileVerticalInset)
-                    .background(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
-                            .fill(
-                                selected
-                                    ? AnyShapeStyle(MindSensePalette.accentMuted.opacity(0.88))
-                                    : AnyShapeStyle(MindSenseSurfaceLevel.base.fill)
+                    .buttonStyle(.plain)
+                    .disabled(store.activeRegulateSession?.isInProgress == true)
+
+                    if selected {
+                        Button {
+                            selectedPresetDetails = preset
+                            store.track(
+                                event: .secondaryActionTapped,
+                                surface: .regulate,
+                                action: "preset_details_opened",
+                                metadata: ["preset": preset.id.rawValue]
                             )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
-                            .stroke(
-                                selected ? MindSensePalette.strokeEdge.opacity(0.82) : MindSensePalette.strokeSubtle,
-                                lineWidth: 1
-                            )
-                    )
+                            store.triggerHaptic(intent: .selection)
+                        } label: {
+                            Label("Details", systemImage: "chevron.right")
+                                .font(MindSenseTypography.caption)
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                        .accessibilityIdentifier("regulate_preset_details_\(preset.id.rawValue)")
+                    }
                 }
-                .buttonStyle(.plain)
-                .disabled(store.activeRegulateSession?.isInProgress == true)
             }
 
             Text("Tap predicted fit to see what it means.")
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-
-            if let activePreset {
-                DisclosureGroup("Protocol details") {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(activePreset.protocolSteps, id: \.self) { step in
-                            Text("• \(step)")
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Text(activePreset.expectedEffect)
-                            .font(MindSenseTypography.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.top, 6)
-                }
-                .font(MindSenseTypography.bodyStrong)
-            }
 
             if let activePreset {
                 Button("Start \(activePreset.title) (\(activePreset.durationLabel))") {
@@ -1404,6 +1426,83 @@ struct RegulateView: View {
             return "+\(value) ms"
         }
         return "-\(abs(value)) ms"
+    }
+}
+
+private struct RegulatePresetDetailSheet: View {
+    let preset: DemoRegulatePreset
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 14) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: preset.title,
+                                subtitle: preset.subtitle,
+                                icon: preset.icon
+                            )
+                        )
+                        detailRow(label: "Duration", value: preset.durationLabel)
+                        detailRow(label: "Expected effect", value: preset.expectedEffect)
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Protocol steps",
+                                subtitle: "Use this sequence as your guidance during the run."
+                            )
+                        )
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(Array(preset.protocolSteps.enumerated()), id: \.offset) { index, step in
+                                Text("\(index + 1). \(step)")
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Why now",
+                                subtitle: "How this protocol matches your current intent."
+                            )
+                        )
+                        Text(preset.whyNow)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("Protocol details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "Protocol details")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+    }
+
+    private func detailRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.7)
+            Text(value)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 

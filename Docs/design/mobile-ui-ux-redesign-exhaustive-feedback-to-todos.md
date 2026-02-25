@@ -330,7 +330,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B6) Regulate Select
 
 ### F-24 Stepper visual weight competes with content
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Reduce stepper height/contrast and demote to support element.
   2. Keep primary focus on protocol list.
@@ -338,7 +338,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
 
 ### F-25 Generic "More" on select card duplicates list details
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Remove generic "More" button on select card.
   2. Route to explicit `Details` only from protocol items.
@@ -346,7 +346,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
 
 ### F-26 No-active-session status card too prominent
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Convert "No active session" into compact inline status line.
   2. Reserve large cards for actionable content only.
@@ -354,7 +354,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
 
 ### F-27 Protocol text truncation harms trust
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Enforce minimum 2-line description with consistent line limits.
   2. Add details drill-in for overflow.
