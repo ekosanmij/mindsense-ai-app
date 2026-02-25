@@ -587,7 +587,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## C1) Typography Scale
 
 ### DS-01 Add explicit type token definitions (Display/Title/Body/BodySmall/Caption)
-- Status: `[ ]`
+- Status: `[x]`
 - Source detail: Type.Display 34, Type.Title 22-28, Body 17, BodySmall 15, Caption 13.
 - Actionable TODO:
   1. Add/verify token constants for each type role in design system.
@@ -601,7 +601,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - No hardcoded ad hoc font sizes in updated modules.
 
 ### DS-02 Apply type hierarchy to primary screens
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Today headline uses Display role.
   2. Section titles use Title role.

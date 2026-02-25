@@ -340,6 +340,7 @@ struct MindSenseTabHero<Content: View>: View {
 
     let label: String
     let title: String
+    var titleRole: MindSenseTypeRole = .title
     let detail: String
     var metric: String? = nil
     var metricAction: (() -> Void)? = nil
@@ -353,6 +354,7 @@ struct MindSenseTabHero<Content: View>: View {
     init(
         label: String,
         title: String,
+        titleRole: MindSenseTypeRole = .title,
         detail: String,
         metric: String? = nil,
         metricAction: (() -> Void)? = nil,
@@ -365,6 +367,7 @@ struct MindSenseTabHero<Content: View>: View {
     ) {
         self.label = label
         self.title = title
+        self.titleRole = titleRole
         self.detail = detail
         self.metric = metric
         self.metricAction = metricAction
@@ -384,17 +387,17 @@ struct MindSenseTabHero<Content: View>: View {
                 MindSenseSectionDivider(emphasis: 0.43)
 
                 Text(title.mindSenseHeadlineSafe)
-                    .font(MindSenseTypography.title)
+                    .font(titleRole.font)
                     .lineSpacing(1.5)
-                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? titleRole.reflowLineLimit : titleRole.standardLineLimit)
                     .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.92)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(detail)
-                    .font(MindSenseTypography.caption)
+                    .font(MindSenseTypeRole.bodySmall.font)
                     .foregroundStyle(.secondary)
-                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? MindSenseTypeRole.bodySmall.reflowLineLimit : MindSenseTypeRole.bodySmall.standardLineLimit)
                     .fixedSize(horizontal: false, vertical: true)
 
                 content
@@ -653,15 +656,15 @@ struct MindSenseSectionHeader: View {
 
             VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 Text(model.title.mindSenseHeadlineSafe)
-                    .font(MindSenseTypography.bodyStrong)
+                    .font(MindSenseTypeRole.title.font)
                     .tracking(0.15)
-                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? MindSenseTypeRole.title.reflowLineLimit : MindSenseTypeRole.title.standardLineLimit)
                     .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.9)
                 if let subtitle = model.subtitle {
                     Text(subtitle)
-                        .font(MindSenseTypography.caption)
+                        .font(MindSenseTypeRole.bodySmall.font)
                         .foregroundStyle(.secondary)
-                        .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
+                        .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? MindSenseTypeRole.bodySmall.reflowLineLimit : MindSenseTypeRole.bodySmall.standardLineLimit)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 

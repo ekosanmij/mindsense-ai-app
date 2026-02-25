@@ -291,15 +291,64 @@ struct MindSenseRadius {
     static let card = large
 }
 
+enum MindSenseTypeRole {
+    case display
+    case title
+    case body
+    case bodySmall
+    case caption
+
+    var font: Font {
+        switch self {
+        case .display:
+            return Font.system(.largeTitle, design: .rounded).weight(.bold)
+        case .title:
+            return Font.system(.title3, design: .rounded).weight(.semibold)
+        case .body:
+            return Font.system(.body, design: .rounded)
+        case .bodySmall:
+            return Font.system(.callout, design: .rounded)
+        case .caption:
+            return Font.system(.caption, design: .rounded).weight(.medium)
+        }
+    }
+
+    var standardLineLimit: Int {
+        switch self {
+        case .display:
+            return 2
+        case .title:
+            return 2
+        case .body, .bodySmall:
+            return 3
+        case .caption:
+            return 2
+        }
+    }
+
+    var reflowLineLimit: Int {
+        switch self {
+        case .display:
+            return 4
+        case .title:
+            return 4
+        case .body, .bodySmall:
+            return 5
+        case .caption:
+            return 4
+        }
+    }
+}
+
 enum MindSenseTypography {
-    static let display = Font.system(size: 27, weight: .bold, design: .rounded)
-    static let hero = Font.system(size: 26, weight: .bold, design: .rounded)
-    static let title = Font.system(size: 23, weight: .semibold, design: .rounded)
-    static let titleCompact = Font.system(size: 19, weight: .semibold, design: .rounded)
-    static let bodyStrong = Font.system(size: 16, weight: .semibold, design: .rounded)
-    static let body = Font.system(size: 15, weight: .regular, design: .rounded)
-    static let caption = Font.system(size: 12, weight: .medium, design: .rounded)
-    static let micro = Font.system(size: 11, weight: .semibold, design: .rounded)
+    static let display = MindSenseTypeRole.display.font
+    static let hero = MindSenseTypeRole.display.font
+    static let title = MindSenseTypeRole.title.font
+    static let titleCompact = MindSenseTypeRole.body.font.weight(.semibold)
+    static let bodyStrong = MindSenseTypeRole.body.font.weight(.semibold)
+    static let body = MindSenseTypeRole.body.font
+    static let caption = MindSenseTypeRole.caption.font
+    static let micro = Font.system(.caption2, design: .rounded).weight(.semibold)
 
     static let metric = Font.system(size: 30, weight: .semibold, design: .monospaced)
     static let metricDisplay = Font.system(size: 40, weight: .bold, design: .monospaced)

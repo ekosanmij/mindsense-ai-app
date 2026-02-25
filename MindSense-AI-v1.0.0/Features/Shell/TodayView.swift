@@ -476,6 +476,7 @@ struct TodayView: View {
         MindSenseTabHero(
             label: AppIA.today,
             title: heroInterpretation,
+            titleRole: .display,
             detail: heroReferenceLabel,
             icon: "sun.max.fill",
             tone: .accent,
