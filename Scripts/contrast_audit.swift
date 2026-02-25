@@ -4,7 +4,15 @@ struct ContrastPair {
     let name: String
     let foreground: RGB
     let background: RGB
+    let kind: ContrastKind
     let minimumRatio: Double
+}
+
+enum ContrastKind: String {
+    case textAA = "Text AA"
+    case textAAA = "Text AAA"
+    case nonTextInteractive = "Non-text interactive"
+    case nonTextDecorative = "Non-text decorative"
 }
 
 struct RGB {
@@ -39,31 +47,58 @@ func contrastRatio(_ foreground: RGB, _ background: RGB) -> Double {
     return (lighter + 0.05) / (darker + 0.05)
 }
 
+let textAA = 4.5
+let textAAA = 7.0
+let nonTextInteractive = 3.0
+let nonTextDecorative = 1.3
+
 let white = RGB(255, 255, 255)
-let nearBlack = RGB(18, 22, 27)
-let onAccentDark = RGB(18, 30, 39)
+let nearBlack = RGB(17, 17, 17)
+
+// DS-03 parity tokens from MindSensePalette.
+let primaryLight = RGB(27, 111, 87)
+let primaryDark = RGB(134, 210, 186)
+let primaryTintLight = RGB(237, 243, 242)
+let primaryTintDark = RGB(30, 42, 38)
+let accentLoadLight = RGB(149, 85, 31)
+let accentLoadDark = RGB(236, 184, 96)
+let bgLight = RGB(247, 248, 250)
+let bgDark = RGB(16, 17, 19)
+let cardLight = RGB(243, 244, 246)
+let cardDark = RGB(36, 38, 41)
+let textPrimaryLight = RGB(17, 17, 17)
+let textPrimaryDark = RGB(235, 239, 244)
+let textSecondaryLight = RGB(75, 85, 99)
+let textSecondaryDark = RGB(189, 198, 210)
+let borderLight = RGB(209, 213, 219)
+let borderDark = RGB(84, 90, 100)
 
 let pairs: [ContrastPair] = [
-    // CTA/selected states.
-    ContrastPair(name: "White on signalCoolStrong (light)", foreground: white, background: RGB(9, 87, 132), minimumRatio: 4.5),
-    ContrastPair(name: "onAccent on signalCoolStrong (dark)", foreground: onAccentDark, background: RGB(90, 191, 228), minimumRatio: 4.5),
-    ContrastPair(name: "White on signalCool (light)", foreground: white, background: RGB(12, 116, 170), minimumRatio: 4.5),
-    ContrastPair(name: "onAccent on signalCool (dark)", foreground: onAccentDark, background: RGB(120, 213, 247), minimumRatio: 4.5),
+    // Text on core backgrounds.
+    ContrastPair(name: "textPrimary on bg (light)", foreground: textPrimaryLight, background: bgLight, kind: .textAAA, minimumRatio: textAAA),
+    ContrastPair(name: "textPrimary on bg (dark)", foreground: textPrimaryDark, background: bgDark, kind: .textAAA, minimumRatio: textAAA),
+    ContrastPair(name: "textPrimary on card (light)", foreground: textPrimaryLight, background: cardLight, kind: .textAAA, minimumRatio: textAAA),
+    ContrastPair(name: "textPrimary on card (dark)", foreground: textPrimaryDark, background: cardDark, kind: .textAAA, minimumRatio: textAAA),
+    ContrastPair(name: "textSecondary on bg (light)", foreground: textSecondaryLight, background: bgLight, kind: .textAA, minimumRatio: textAA),
+    ContrastPair(name: "textSecondary on bg (dark)", foreground: textSecondaryDark, background: bgDark, kind: .textAA, minimumRatio: textAA),
+    ContrastPair(name: "textSecondary on card (light)", foreground: textSecondaryLight, background: cardLight, kind: .textAA, minimumRatio: textAA),
+    ContrastPair(name: "textSecondary on card (dark)", foreground: textSecondaryDark, background: cardDark, kind: .textAA, minimumRatio: textAA),
 
-    // Explicit metric/status colors against base surfaces.
-    ContrastPair(name: "signalCoolStrong on surfaceRaised (light)", foreground: RGB(9, 87, 132), background: RGB(249, 251, 253), minimumRatio: 4.5),
-    ContrastPair(name: "warning on surfaceRaised (light)", foreground: RGB(171, 98, 24), background: RGB(249, 251, 253), minimumRatio: 4.5),
-    ContrastPair(name: "success on surfaceRaised (light)", foreground: RGB(25, 124, 84), background: RGB(249, 251, 253), minimumRatio: 4.5),
-    ContrastPair(name: "signalCool on surfaceRaised (dark)", foreground: RGB(120, 213, 247), background: RGB(28, 39, 49), minimumRatio: 4.5),
-    ContrastPair(name: "warning on surfaceRaised (dark)", foreground: RGB(236, 184, 96), background: RGB(28, 39, 49), minimumRatio: 4.5),
-    ContrastPair(name: "success on surfaceRaised (dark)", foreground: RGB(112, 224, 178), background: RGB(28, 39, 49), minimumRatio: 4.5),
+    // Accent text and CTA readability.
+    ContrastPair(name: "onAccent(white) on primary (light)", foreground: white, background: primaryLight, kind: .textAA, minimumRatio: textAA),
+    ContrastPair(name: "nearBlack on primary (dark)", foreground: nearBlack, background: primaryDark, kind: .textAA, minimumRatio: textAA),
+    ContrastPair(name: "accentLoad on card (light)", foreground: accentLoadLight, background: cardLight, kind: .textAA, minimumRatio: textAA),
+    ContrastPair(name: "accentLoad on card (dark)", foreground: accentLoadDark, background: cardDark, kind: .textAA, minimumRatio: textAA),
 
-    // Default text anchors for primary readability.
-    ContrastPair(name: "nearBlack on canvasTop (light)", foreground: nearBlack, background: RGB(247, 244, 239), minimumRatio: 7.0),
-    ContrastPair(name: "white on canvasBottom (dark)", foreground: white, background: RGB(15, 23, 31), minimumRatio: 7.0)
+    // Non-text graphics.
+    ContrastPair(name: "primary on bg (light)", foreground: primaryLight, background: bgLight, kind: .nonTextInteractive, minimumRatio: nonTextInteractive),
+    ContrastPair(name: "primary on bg (dark)", foreground: primaryDark, background: bgDark, kind: .nonTextInteractive, minimumRatio: nonTextInteractive),
+    ContrastPair(name: "border on card (light)", foreground: borderLight, background: cardLight, kind: .nonTextDecorative, minimumRatio: nonTextDecorative),
+    ContrastPair(name: "border on card (dark)", foreground: borderDark, background: cardDark, kind: .nonTextDecorative, minimumRatio: nonTextDecorative)
 ]
 
 var failures: [String] = []
+var kindResults: [ContrastKind: (pass: Int, fail: Int)] = [:]
 print("MindSense contrast audit")
 print("========================")
 
@@ -71,10 +106,23 @@ for pair in pairs {
     let ratio = contrastRatio(pair.foreground, pair.background)
     let pass = ratio >= pair.minimumRatio
     let status = pass ? "PASS" : "FAIL"
-    print("\(status) \(pair.name): \(String(format: "%.2f", ratio)) (min \(String(format: "%.2f", pair.minimumRatio)))")
+    print("\(status) [\(pair.kind.rawValue)] \(pair.name): \(String(format: "%.2f", ratio)) (min \(String(format: "%.2f", pair.minimumRatio)))")
+    var bucket = kindResults[pair.kind] ?? (pass: 0, fail: 0)
+    if pass {
+        bucket.pass += 1
+    } else {
+        bucket.fail += 1
+    }
+    kindResults[pair.kind] = bucket
     if !pass {
         failures.append(pair.name)
     }
+}
+
+print("------------------------")
+for kind in [ContrastKind.textAAA, .textAA, .nonTextInteractive, .nonTextDecorative] {
+    let bucket = kindResults[kind] ?? (pass: 0, fail: 0)
+    print("\(kind.rawValue): \(bucket.pass) pass, \(bucket.fail) fail")
 }
 
 if failures.isEmpty {

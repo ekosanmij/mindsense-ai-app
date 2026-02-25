@@ -180,10 +180,12 @@ struct MindSensePalette {
 }
 
 enum MindSenseContrastUsage {
-    // Keep secondary text close to full opacity on bg/card surfaces.
-    static let minimumSecondaryTextOpacity: Double = 0.88
-    // UI graphics should keep at least this visual alpha for non-text contrast targets.
-    static let minimumNonTextAlpha: Double = 0.7
+    // WCAG anchors used by Scripts/contrast_audit.swift.
+    static let minimumPrimaryTextRatio: Double = 7.0
+    static let minimumBodyTextRatio: Double = 4.5
+    static let minimumInteractiveGraphicRatio: Double = 3.0
+    // Decorative dividers are non-interactive and intentionally softer.
+    static let minimumDecorativeDividerRatio: Double = 1.3
 }
 
 enum MindSenseGradients {

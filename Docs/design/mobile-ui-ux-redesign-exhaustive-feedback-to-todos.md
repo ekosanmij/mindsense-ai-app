@@ -637,7 +637,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Updated screens use tokenized colors only.
 
 ### DS-04 Contrast validation for text and non-text token pairs
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Run contrast audit for text on BG/Card, and border/UI graphics.
   2. Adjust token shades or usage thresholds where failing.
@@ -801,7 +801,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 - [ ] Regulate focus mode interaction audit
 - [ ] Data tab label fit audit (no truncation at default type)
 - [ ] Sticky CTA/tab bar overlap audit across device sizes
-- [ ] Contrast/non-text contrast pass
+- [x] Contrast/non-text contrast pass
 - [ ] Dynamic Type clipping pass
 - [x] VoiceOver labels/hints pass
 - [x] Reduce Motion behavior pass
