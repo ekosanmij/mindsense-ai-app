@@ -5,6 +5,7 @@ import AVFoundation
 struct RegulateView: View {
     @EnvironmentObject private var store: MindSenseStore
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.colorSchemeContrast) private var colorSchemeContrast
     @Environment(\.mindSenseTabBarOverlayClearance) private var tabBarOverlayClearance
     @AppStorage("appReduceMotion") private var appReduceMotion = false
 
@@ -748,15 +749,17 @@ struct RegulateView: View {
                 )
             )
 
+            runStatusChip
+
             ZStack {
                 Circle()
-                    .stroke(MindSenseSurfaceLevel.base.fill, lineWidth: 14)
+                    .stroke(timerRingTrackColor, lineWidth: timerRingLineWidth)
 
                 Circle()
                     .trim(from: 0, to: max(0.03, sessionProgress))
                     .stroke(
-                        MindSensePalette.signalCoolStrong,
-                        style: StrokeStyle(lineWidth: 14, lineCap: .round)
+                        timerRingProgressColor,
+                        style: StrokeStyle(lineWidth: timerRingLineWidth, lineCap: .round)
                     )
                     .rotationEffect(.degrees(-90))
 
@@ -779,15 +782,19 @@ struct RegulateView: View {
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
                 if let activePhase {
-                    Text("\(activePhase.minuteRangeLabel): \(activePhase.title)")
-                        .font(MindSenseTypography.bodyStrong)
+                    runStepSummaryRow(
+                        title: "Current",
+                        detail: "\(activePhase.minuteRangeLabel): \(activePhase.title)",
+                        emphasized: true
+                    )
                         .accessibilityIdentifier("regulate_protocol_step_current")
 
                     if let nextPhase = protocolPhases.first(where: { $0.id == activePhase.id + 1 }) {
-                        Text("Up next \(nextPhase.minuteRangeLabel): \(nextPhase.title)")
-                            .font(MindSenseTypography.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        runStepSummaryRow(
+                            title: "Up next",
+                            detail: "\(nextPhase.minuteRangeLabel): \(nextPhase.title)",
+                            emphasized: false
+                        )
                     }
                 }
             }
@@ -838,7 +845,7 @@ struct RegulateView: View {
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 8) {
                         ForEach(protocolPhases) { phase in
                             let phaseStatus = protocolPhaseStatus(
                                 phase,
@@ -855,17 +862,29 @@ struct RegulateView: View {
                                     .foregroundStyle(phaseStatus.tint)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
+                            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                            .padding(.horizontal, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                                    .fill(MindSenseSurfaceLevel.base.fill)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+                            )
                         }
                     }
 
                     Toggle("Haptic step cues", isOn: $hapticPacingEnabled)
                         .font(MindSenseTypography.caption)
                         .tint(MindSensePalette.accent)
+                        .frame(minHeight: 44)
                         .accessibilityIdentifier("regulate_haptic_pacing_toggle")
 
                     Toggle("Audio guidance", isOn: $audioGuidanceEnabled)
                         .font(MindSenseTypography.caption)
                         .tint(MindSensePalette.accent)
+                        .frame(minHeight: 44)
                         .accessibilityIdentifier("regulate_audio_guidance_toggle")
 
                     Text("Cues trigger when the protocol moves to the next step.")
@@ -1142,6 +1161,54 @@ struct RegulateView: View {
 
     private var runMetaLine: String {
         "Load \(store.demoMetrics.load) • Readiness \(store.demoMetrics.readiness) • \(flowLabel)"
+    }
+
+    private var timerRingLineWidth: CGFloat {
+        colorSchemeContrast == .increased ? 18 : 14
+    }
+
+    private var timerRingTrackColor: Color {
+        colorSchemeContrast == .increased
+            ? MindSensePalette.strokeStrong
+            : MindSenseSurfaceLevel.base.fill
+    }
+
+    private var timerRingProgressColor: Color {
+        colorSchemeContrast == .increased
+            ? MindSensePalette.accentStrong
+            : MindSensePalette.signalCoolStrong
+    }
+
+    private var runStatusChip: some View {
+        Label("Flow running", systemImage: "waveform.path.ecg")
+            .font(MindSenseTypography.micro)
+            .foregroundStyle(MindSensePalette.accentStrong)
+            .padding(.horizontal, 10)
+            .frame(minHeight: 34)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(MindSensePalette.accentMuted)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(MindSensePalette.strokeEdge, lineWidth: 1)
+            )
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .accessibilityIdentifier("regulate_run_status_chip")
+    }
+
+    private func runStepSummaryRow(title: String, detail: String, emphasized: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.7)
+            Text(detail)
+                .font(emphasized ? MindSenseTypography.bodyStrong : MindSenseTypography.caption)
+                .foregroundStyle(emphasized ? .primary : .secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
     }
 
     private func protocolTimeline(for preset: DemoRegulatePreset) -> [TimerProtocolPhase] {

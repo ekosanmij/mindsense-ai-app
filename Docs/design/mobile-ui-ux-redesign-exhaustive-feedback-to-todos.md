@@ -373,7 +373,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B7) Regulate Run
 
 ### F-29 Tall SYSTEM feedback banner distracts from timer
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Replace tall run-time banners with compact inline status chip.
   2. Allow detailed logs in secondary disclosure only.
@@ -390,7 +390,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
 
 ### F-31 Timer ring non-text contrast risk
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Validate ring/track contrast against background at 3:1 minimum for UI graphics.
   2. Add fallback high-contrast style for low-contrast themes.
@@ -399,7 +399,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem.swift`
 
 ### F-32 Step schedule radios are too small
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Increase interactive area for step schedule controls to 44x44.
   2. Add spacing between adjacent controls.
