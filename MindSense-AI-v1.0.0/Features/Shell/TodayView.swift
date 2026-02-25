@@ -482,6 +482,11 @@ struct TodayView: View {
             watermarkTint: MindSensePalette.accent,
             watermarkHeight: 128
         ) {
+            let commandActionHierarchy: MindSenseButtonHierarchy = hasUnfinishedRegulateStep ? .secondary : .primary
+            let commandActionMinHeight: CGFloat = hasUnfinishedRegulateStep
+                ? MindSenseControlSize.minimumTapTarget
+                : MindSenseControlSize.primaryButton
+
             Button(inlineActionLabel) {
                 if isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep {
                     saveCheckIn()
@@ -492,8 +497,8 @@ struct TodayView: View {
             .accessibilityIdentifier("today_action_card_cta")
             .buttonStyle(
                 MindSenseButtonStyle(
-                    hierarchy: .primary,
-                    minHeight: MindSenseControlSize.primaryButton
+                    hierarchy: commandActionHierarchy,
+                    minHeight: commandActionMinHeight
                 )
             )
 
@@ -501,6 +506,13 @@ struct TodayView: View {
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            if hasUnfinishedRegulateStep {
+                Text("Primary action is pinned in the bottom dock.")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(spacing: MindSenseSpacing.xs) {

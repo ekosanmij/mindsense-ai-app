@@ -895,7 +895,12 @@ struct RegulateView: View {
             Button("Start your focus block") {
                 startFocusBlockFromPostSession()
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 48))
+            .buttonStyle(
+                MindSenseButtonStyle(
+                    hierarchy: .secondary,
+                    minHeight: MindSenseControlSize.minimumTapTarget
+                )
+            )
             .accessibilityIdentifier("regulate_post_session_focus_block_cta")
 
             Button("Log impact") {
@@ -910,6 +915,13 @@ struct RegulateView: View {
                 }
                 .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
                 .accessibilityIdentifier("regulate_post_session_add_context_cta")
+            }
+
+            if store.activeRegulateSession?.isAwaitingCheckIn == true {
+                Text("Save check-in in the bottom dock remains the primary next action.")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }

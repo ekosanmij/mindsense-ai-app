@@ -720,7 +720,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. No navigation-action control layering ambiguity.
 
 ### R4 Enforce CTA hierarchy rules
-- Status: `[~]`
+- Status: `[x]`
 - Deliverables:
   1. Max one primary CTA per screen section.
   2. Episode lists avoid multiple primary-grade actions.
