@@ -295,20 +295,20 @@ struct TodayView: View {
                     VStack(spacing: MindSenseRhythm.section) {
                         commandDeck
                             .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
-                        timelineBlock
-                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                         if episodeAwaitingContext != nil {
                             contextCaptureBlock
-                                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                         driversBlock
-                            .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
                         statusSnapshotBlock
-                            .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
                         if shouldShowCheckInPrompt {
                             checkInBlock
-                                .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
+                                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
+                        timelineBlock
+                            .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
                     }
                     .mindSensePageInsets(bottom: bottomContentPadding)
                 }

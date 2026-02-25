@@ -799,6 +799,7 @@ struct MindSenseCollapsibleSection<Content: View>: View {
 
 struct MindSenseSummaryDisclosureText: View {
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("appReduceMotion") private var appReduceMotion = false
 
     let summary: String
@@ -822,7 +823,7 @@ struct MindSenseSummaryDisclosureText: View {
             Text(summary)
                 .font(textStyle)
                 .foregroundStyle(textColor)
-                .lineLimit(1)
+                .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 2 : 1)
                 .fixedSize(horizontal: false, vertical: true)
 
             if expanded, hasExpandableDetail {
@@ -934,7 +935,8 @@ struct MindSenseDoItNowDock<Content: View>: View {
                     Text(subtitle)
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 content

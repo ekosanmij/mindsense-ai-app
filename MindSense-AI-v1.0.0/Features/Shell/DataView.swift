@@ -1003,47 +1003,59 @@ struct DataView: View {
             tone: .accent,
             watermarkTint: MindSensePalette.accent
         ) {
-            MindSenseSegmentedControl(
-                options: DataSubmode.allCases,
-                selection: $submode,
-                title: { $0.rawValue },
-                enablesHorizontalScrollFallback: true,
-                onSelectionChanged: { mode in
-                    store.triggerHaptic(intent: .selection)
-                    store.track(
-                        event: .secondaryActionTapped,
-                        surface: .data,
-                        action: "workspace_selected",
-                        metadata: ["workspace": mode.rawValue.lowercased()]
-                    )
-                }
-            )
-
-            HStack(spacing: MindSenseSpacing.xs) {
-                PillChip(label: store.intentMode.shortTitle, state: .selected)
-                switch submode {
-                case .patterns, .experiments:
-                    PillChip(label: selectedSignal.metric.title, state: .unselected)
-                case .history:
-                    PillChip(label: "Recent activity", state: .unselected)
-                }
-                if submode == .patterns {
-                    PillChip(label: "Window \(window.rawValue)", state: .unselected)
-                }
-            }
-
-            if submode == .patterns {
-                Button("Start suggested plan") {
-                    launchRecommendedAction(source: "data_hero_primary_cta")
-                }
-                .accessibilityIdentifier("data_hero_primary_cta")
-                .buttonStyle(
-                    MindSenseButtonStyle(
-                        hierarchy: .primary,
-                        minHeight: MindSenseControlSize.primaryButton
-                    )
+            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+                MindSenseSegmentedControl(
+                    options: DataSubmode.allCases,
+                    selection: $submode,
+                    title: { $0.rawValue },
+                    enablesHorizontalScrollFallback: true,
+                    onSelectionChanged: { mode in
+                        store.triggerHaptic(intent: .selection)
+                        store.track(
+                            event: .secondaryActionTapped,
+                            surface: .data,
+                            action: "workspace_selected",
+                            metadata: ["workspace": mode.rawValue.lowercased()]
+                        )
+                    }
                 )
+
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: MindSenseSpacing.xs) {
+                        commandDeckMetaChips
+                    }
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                        commandDeckMetaChips
+                    }
+                }
+
+                if submode == .patterns {
+                    Button("Start suggested plan") {
+                        launchRecommendedAction(source: "data_hero_primary_cta")
+                    }
+                    .accessibilityIdentifier("data_hero_primary_cta")
+                    .buttonStyle(
+                        MindSenseButtonStyle(
+                            hierarchy: .primary,
+                            minHeight: MindSenseControlSize.primaryButton
+                        )
+                    )
+                }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var commandDeckMetaChips: some View {
+        PillChip(label: store.intentMode.shortTitle, state: .selected)
+        switch submode {
+        case .patterns, .experiments:
+            PillChip(label: selectedSignal.metric.title, state: .unselected)
+        case .history:
+            PillChip(label: "Recent activity", state: .unselected)
+        }
+        if submode == .patterns {
+            PillChip(label: "Window \(window.rawValue)", state: .unselected)
         }
     }
 
@@ -1219,18 +1231,24 @@ struct DataView: View {
     private var activeModeContent: some View {
         switch submode {
         case .patterns:
-            trendBlock
-            whatsWorkingBlock
-            if loadValue >= 88 {
-                EscalationGuidanceView(context: .sustainedHighLoad)
+            VStack(alignment: .leading, spacing: MindSenseRhythm.section) {
+                trendBlock
+                whatsWorkingBlock
+                if loadValue >= 88 {
+                    EscalationGuidanceView(context: .sustainedHighLoad)
+                }
             }
         case .experiments:
-            experimentsBlock
+            VStack(alignment: .leading, spacing: MindSenseRhythm.section) {
+                experimentsBlock
+            }
         case .history:
-            weeklySummaryBlock
-            historyAttributionBlock
-            whatsWorkingBlock
-            historyTimelineBlock
+            VStack(alignment: .leading, spacing: MindSenseRhythm.section) {
+                weeklySummaryBlock
+                historyAttributionBlock
+                whatsWorkingBlock
+                historyTimelineBlock
+            }
         }
     }
 
@@ -1301,23 +1319,10 @@ struct DataView: View {
                         expandedLabel: "Hide filter details"
                     )
 
-                    HStack {
-                        Text("Share the filtered chart as CSV and summary.")
-                            .font(MindSenseTypography.caption)
-                            .foregroundStyle(.secondary)
-
-                        Spacer(minLength: 8)
-
-                        Button {
-                            showTrendFilterSheet = true
-                            store.triggerHaptic(intent: .selection)
-                        } label: {
-                            Label("Export", systemImage: "square.and.arrow.up")
-                                .font(MindSenseTypography.caption)
-                                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
-                        }
-                        .buttonStyle(.plain)
-                    }
+                    Text("Use Filters for export and advanced controls.")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 

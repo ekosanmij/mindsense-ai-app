@@ -6,6 +6,7 @@ struct RegulateView: View {
     @EnvironmentObject private var store: MindSenseStore
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Environment(\.colorSchemeContrast) private var colorSchemeContrast
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.mindSenseTabBarOverlayClearance) private var tabBarOverlayClearance
     @AppStorage("appReduceMotion") private var appReduceMotion = false
 
@@ -715,7 +716,7 @@ struct RegulateView: View {
                         .foregroundStyle(.secondary)
                 }
             }
-            .frame(width: 180, height: 180)
+            .frame(width: runTimerDiameter, height: runTimerDiameter)
             .frame(maxWidth: .infinity, alignment: .center)
 
             VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
@@ -1130,6 +1131,16 @@ struct RegulateView: View {
 
     private var timerRingLineWidth: CGFloat {
         colorSchemeContrast == .increased ? 18 : 14
+    }
+
+    private var runTimerDiameter: CGFloat {
+        if dynamicTypeSize.isAccessibilitySize {
+            return 152
+        }
+        if dynamicTypeSize >= .xxxLarge {
+            return 168
+        }
+        return 180
     }
 
     private var timerRingTrackColor: Color {
