@@ -142,7 +142,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B2) Onboarding (First Check-in)
 
 ### F-04 QA-style milestone banner reads non-user-facing
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Remove instrumentation-style banner copy from onboarding.
   2. Replace with small inline confirmation under relevant step.
@@ -163,7 +163,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Onboarding shows one clear progress indicator only.
 
 ### F-06 Slider + selected pill redundancy
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Remove redundant selected-value chip or demote to tiny helper text.
   2. Keep slider as primary input affordance.
@@ -173,7 +173,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Current value is clear without duplicate heavy indicator.
 
 ### F-07 "Baseline started" tile competes with completion
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Convert "Baseline started" to inline one-line confirmation.
   2. Keep confirmation adjacent to action the user just took.
@@ -183,7 +183,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - No standalone confirmation tile competes with CTA.
 
 ### F-08 CTA competition from extra copy/status blocks
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Reduce pre-CTA copy block count.
   2. Keep CTA pinned as most visually dominant element in step card.
@@ -205,7 +205,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Normal returning-user Today has no setup-success banner.
 
 ### F-10 Source/update/diagnostics line truncation and priority conflict
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Move source/update metadata to secondary row or Details sheet.
   2. Prevent truncation of critical metadata labels.
@@ -295,7 +295,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B5) Episode Detail Sheet
 
 ### F-19 "Why we think this" affordance ambiguity
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Style as explicit row disclosure with chevron and state.
   2. Avoid link-like blue text if behavior is in-card expansion.
@@ -303,7 +303,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/TodayView.swift`
 
 ### F-21 "Edit later" undersized and separated
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Move into same action group as attribution controls.
   2. Increase touch target to 44x44 minimum.
@@ -320,7 +320,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
 
 ### F-23 "Copy prompt" hierarchy too strong
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Demote to tertiary text action and de-emphasize placement.
   2. Keep as optional utility after primary behavior.
@@ -512,7 +512,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/SettingsView.swift`
 
 ### F-45 Meeting/call signals needs clearer permission context
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Add explanatory copy on data used/excluded and permission state.
   2. Add inline current authorization state indicator.
@@ -521,7 +521,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/TodayView.swift`
 
 ### F-47 Dense toggle styling reduces scannability
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Increase row spacing and visual grouping for toggle clusters.
   2. Separate critical trust/data settings from general preference toggles.
@@ -529,7 +529,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/SettingsView.swift`
 
 ### F-48 Appearance + reduce motion grouping needs stronger semantics
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Group appearance and motion settings in one clearly labeled section.
   2. Confirm app-level motion setting behavior harmonizes with system Reduce Motion.

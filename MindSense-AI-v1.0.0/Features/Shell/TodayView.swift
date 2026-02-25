@@ -584,12 +584,16 @@ struct TodayView: View {
                 store.triggerHaptic(intent: .selection)
             } label: {
                 HStack(spacing: 8) {
-                    Text(store.healthSourceStatusLine)
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Signal source and update status")
+                            .font(MindSenseTypography.micro)
+                            .foregroundStyle(.secondary)
+                        Text(store.healthSourceStatusLine)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     Spacer(minLength: 8)
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
@@ -3474,17 +3478,33 @@ struct TodayEpisodeDetailSheet: View {
                             infoRow(label: "Body signals", value: bodySignalSummary)
                         }
 
-                        DisclosureGroup(isExpanded: $showEvidenceDetails) {
+                        Button {
+                            withAnimation(MindSenseMotion.selection) {
+                                showEvidenceDetails.toggle()
+                            }
+                        } label: {
+                            HStack(spacing: MindSenseSpacing.xs) {
+                                Text(showEvidenceDetails ? "Hide why we flagged this" : "Why we flagged this")
+                                    .font(MindSenseTypography.bodyStrong)
+                                    .foregroundStyle(.primary)
+                                Spacer(minLength: MindSenseSpacing.xs)
+                                Image(systemName: showEvidenceDetails ? "chevron.up" : "chevron.down")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .frame(minHeight: 44)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint(showEvidenceDetails ? "Collapses evidence details" : "Expands evidence details")
+
+                        if showEvidenceDetails {
                             VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                                 evidenceRow(label: "Heart-rate evidence", value: heartRateEvidenceLine)
                                 evidenceRow(label: "HRV pattern", value: hrvEvidenceLine)
                                 evidenceRow(label: "Time-of-day typicality", value: timeOfDayEvidenceLine)
                                 evidenceRow(label: "Movement level", value: movementEvidenceLine)
                             }
-                            .padding(.top, 6)
-                        } label: {
-                            Text("Why we think this")
-                                .font(MindSenseTypography.bodyStrong)
+                            .padding(.top, 2)
                         }
                     }
 
@@ -3544,16 +3564,19 @@ struct TodayEpisodeDetailSheet: View {
                             .padding(.top, MindSenseSpacing.xs)
                         }
 
-                        HStack {
-                            Text("Need more time?")
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                            Spacer(minLength: 8)
-                            Button("Edit later") {
-                                dismiss()
+                        Button {
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.caption.weight(.semibold))
+                                Text("Edit later")
+                                    .font(MindSenseTypography.caption)
                             }
-                            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 38))
+                            .foregroundStyle(.secondary)
+                            .frame(minHeight: 44, alignment: .leading)
                         }
+                        .buttonStyle(.plain)
 
                         Text("You can revisit attribution from Data > History.")
                             .font(MindSenseTypography.micro)
@@ -3615,10 +3638,16 @@ struct TodayEpisodeDetailSheet: View {
                         Button {
                             UIPasteboard.general.string = cognitivePrompt
                         } label: {
-                            Label("Copy prompt", systemImage: "doc.on.doc")
-                                .font(MindSenseTypography.caption)
+                            HStack(spacing: 6) {
+                                Image(systemName: "doc.on.doc")
+                                    .font(.caption.weight(.semibold))
+                                Text("Copy prompt")
+                                    .font(MindSenseTypography.micro)
+                            }
+                            .foregroundStyle(.secondary)
+                            .frame(minHeight: 44, alignment: .leading)
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                        .buttonStyle(.plain)
                     }
 
                 }

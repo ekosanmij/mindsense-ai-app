@@ -43,8 +43,7 @@ struct OnboardingView: View {
                     VStack(alignment: .leading, spacing: MindSenseRhythm.regular) {
                         MindSenseSectionHeader(
                             model: .init(
-                                title: "Activation",
-                                subtitle: "Two required steps, then optional setup in Settings."
+                                title: "Activation"
                             )
                         )
 
@@ -75,26 +74,28 @@ struct OnboardingView: View {
                                     .font(MindSenseTypography.caption)
                                     .foregroundStyle(.secondary)
 
-                                    PillChip(label: "Selected \(Int(checkInValue.rounded())) / 10", state: .unselected)
+                                    Text("Selected load: \(Int(checkInValue.rounded())) / 10")
+                                        .font(MindSenseTypography.micro)
+                                        .foregroundStyle(.secondary)
                                 }
                             }
                         }
 
-                        Text("Health and notification permissions can be enabled later in Settings.")
+                        Text("Additional permissions can be enabled later in Settings.")
                             .font(MindSenseTypography.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
-
-                        if !inlineMessage.isEmpty {
-                            InlineStatusView(text: inlineMessage, severity: inlineSeverity)
-                                .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
-                        }
 
                         Button(activeStep.cta) {
                             completeActiveStep()
                         }
                         .accessibilityIdentifier("onboarding_primary_cta")
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
+
+                        if !inlineMessage.isEmpty {
+                            onboardingInlineStatusLine
+                                .transition(MindSenseMotion.cardTransition(reduceMotion: reduceMotion))
+                        }
                     }
                 }
                 .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
@@ -112,6 +113,31 @@ struct OnboardingView: View {
             didAppear = true
         }
         .accessibilityIdentifier("onboarding_screen_root")
+    }
+
+    private var onboardingInlineStatusLine: some View {
+        HStack(spacing: 6) {
+            Image(systemName: statusSymbol)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(inlineSeverity.color)
+            Text(inlineMessage)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var statusSymbol: String {
+        switch inlineSeverity {
+        case .success:
+            return "checkmark.circle.fill"
+        case .info:
+            return "info.circle.fill"
+        case .warning:
+            return "exclamationmark.triangle.fill"
+        case .error:
+            return "xmark.octagon.fill"
+        }
     }
 
     private var onboardingHeader: some View {

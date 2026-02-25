@@ -22,7 +22,7 @@ struct SettingsView: View {
     @State private var didAppear = false
 
     private let settingsRowMinHeight: CGFloat = 50
-    private let settingsToggleRowMinHeight: CGFloat = 56
+    private let settingsToggleRowMinHeight: CGFloat = 64
     private let settingsIconSize: CGFloat = 16
     private let privacyPolicyURLString = "https://mindsense-ai-app.vercel.app/privacy"
 
@@ -57,6 +57,20 @@ struct SettingsView: View {
             get: { store.useMeetingCallSignals },
             set: { store.setUseMeetingCallSignals($0, source: "settings_health_data") }
         )
+    }
+
+    private var meetingCallSignalsStateTitle: String {
+        store.useMeetingCallSignals
+            ? "Current state: Included in Top drivers"
+            : "Current state: Excluded from Top drivers"
+    }
+
+    private var meetingCallSignalsStateIcon: String {
+        store.useMeetingCallSignals ? "checkmark.circle.fill" : "minus.circle.fill"
+    }
+
+    private var meetingCallSignalsStateTint: Color {
+        store.useMeetingCallSignals ? MindSensePalette.success : MindSensePalette.warning
     }
 
     var body: some View {
@@ -265,6 +279,10 @@ struct SettingsView: View {
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
 
+            meetingCallSignalsContextRow
+                .listRowInsets(settingsRowInsets)
+                .listRowBackground(Color.clear)
+
             settingsRow(title: "Data export and delete", icon: "tray.and.arrow.down") {
                 store.showBanner(title: "Data controls", detail: "Export and delete workflows can be connected here.", severity: .info)
             }
@@ -290,8 +308,47 @@ struct SettingsView: View {
         }
     }
 
+    private var meetingCallSignalsContextRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: meetingCallSignalsStateIcon)
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(meetingCallSignalsStateTint)
+                Text(meetingCallSignalsStateTitle)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Uses: Calendar busy windows and call-volume metadata only for Top drivers ranking.")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Does not use: event titles, participant names, contact names, or message content.")
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(meetingCallSignalsStateTitle). Uses calendar busy windows and call-volume metadata for Top drivers ranking. Does not use event titles, participant names, contact names, or message content.")
+    }
+
     private var notificationSection: some View {
         Section {
+            settingsSubgroupLabel("Guidance nudges")
+                .listRowInsets(settingsRowInsets)
+                .listRowBackground(Color.clear)
+
             settingsToggleRow(title: "Gentle nudges", subtitle: "Low-friction nudges before likely high-load windows.", isOn: $gentlePrompts)
                 .listRowInsets(settingsRowInsets)
                 .listRowBackground(Color.clear)
@@ -304,6 +361,11 @@ struct SettingsView: View {
             settingsToggleRow(title: "Recovery window", subtitle: "Notify when physiology stabilizes for a deep-work window.", isOn: $recoveryWindow)
                 .listRowInsets(settingsRowInsets)
                 .listRowBackground(Color.clear)
+
+            settingsSubgroupLabel("System behavior")
+                .listRowInsets(settingsRowInsets)
+                .listRowBackground(Color.clear)
+
             settingsToggleRow(
                 title: "Battery friendly mode",
                 subtitle: batteryFriendlyModeSubtitle,
@@ -329,6 +391,10 @@ struct SettingsView: View {
             .padding(.vertical, 6)
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
+
+            settingsSubgroupLabel("Quiet hours")
+                .listRowInsets(settingsRowInsets)
+                .listRowBackground(Color.clear)
 
             settingsToggleRow(
                 title: "Quiet hours",
@@ -365,6 +431,10 @@ struct SettingsView: View {
 
     private var appearanceSection: some View {
         Section {
+            appearanceMotionSemanticsRow
+                .listRowInsets(settingsRowInsets)
+                .listRowBackground(Color.clear)
+
             MindSenseSegmentedControl(
                 options: AppearanceMode.allCases,
                 selection: appearanceBinding,
@@ -382,6 +452,36 @@ struct SettingsView: View {
         } header: {
             settingsSectionHeader("Appearance and motion", icon: "paintbrush")
         }
+    }
+
+    private var appearanceMotionSemanticsRow: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Theme controls visual appearance. Motion controls animation intensity and follows iOS Reduce Motion.")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 8) {
+                Image(systemName: appReduceMotion || accessibilityReduceMotion ? "figure.walk.circle" : "figure.walk")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(MindSensePalette.signalCoolStrong)
+                Text("Motion state: App \(appReduceMotion ? "Reduced" : "Standard") • iOS \(accessibilityReduceMotion ? "Reduced" : "Standard")")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
     }
 
     private var safetySection: some View {
@@ -413,7 +513,7 @@ struct SettingsView: View {
     }
 
     private var settingsRowInsets: EdgeInsets {
-        EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16)
+        EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16)
     }
 
     private func settingsSectionHeader(_ title: String, icon: String) -> some View {
@@ -430,6 +530,15 @@ struct SettingsView: View {
                 .tracking(0.85)
         }
         .padding(.bottom, 2)
+    }
+
+    private func settingsSubgroupLabel(_ title: String) -> some View {
+        Text(title.uppercased())
+            .font(MindSenseTypography.micro)
+            .foregroundStyle(.secondary)
+            .tracking(0.75)
+            .padding(.horizontal, 10)
+            .padding(.top, 2)
     }
 
     private func autosaveSetting(_ notice: String) {
@@ -490,7 +599,7 @@ struct SettingsView: View {
                 Text(subtitle)
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .lineLimit(3)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 12)
