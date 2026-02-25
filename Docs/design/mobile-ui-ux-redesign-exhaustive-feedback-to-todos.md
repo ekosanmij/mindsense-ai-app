@@ -539,7 +539,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B11) Definitions / Terms Sheets
 
 ### F-49 "Less" lacks collapse context
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Replace `Less` with contextual labels (`Hide confidence details`, etc.).
   2. Ensure label describes exact section scope.
@@ -548,7 +548,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem/SurfaceComponents.swift`
 
 ### F-50 Stacked expanders create reading maze
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Replace stacked inline disclosures with ToC and dedicated detail views.
   2. Keep one level of expansion maximum.
@@ -556,7 +556,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem.swift`
 
 ### F-51 Repeated expanders increase cognitive load
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Convert repeated sections into linked detail pages.
   2. Add "return to glossary" breadcrumb/heading consistency.
@@ -564,7 +564,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem.swift`
 
 ### F-52 Dense sheet layout impairs scanability
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Increase section spacing and heading clarity.
   2. Cap paragraph length/line width for readability.
@@ -572,7 +572,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem.swift`
 
 ### F-53 Ambiguous disclosure semantics across terms
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Standardize one disclosure pattern and vocabulary for all term sheets.
   2. Enforce shared disclosure component usage.

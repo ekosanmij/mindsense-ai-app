@@ -538,8 +538,6 @@ extension String {
 }
 
 struct MindSenseGlossarySheet: View {
-    @Environment(\.dismiss) private var dismiss
-
     private let confidenceEntries: [MindSenseGlossaryEntry] = [
         .init(
             term: "Recommendation confidence",
@@ -589,40 +587,46 @@ struct MindSenseGlossarySheet: View {
         )
     ]
 
+    private var sections: [MindSenseGlossarySection] {
+        [
+            .init(
+                title: "Confidence terms",
+                subtitle: "Different confidence labels mean different things.",
+                icon: "checkmark.shield",
+                entries: confidenceEntries
+            ),
+            .init(
+                title: "Scores",
+                subtitle: "Load and episode intensity describe different scopes.",
+                icon: "gauge.with.dots.needle.50percent",
+                entries: scoreEntries
+            ),
+            .init(
+                title: "State labels",
+                subtitle: "App state labels that are easy to confuse with score labels.",
+                icon: "tag",
+                entries: stateEntries
+            )
+        ]
+    }
+
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: MindSenseSpacing.md) {
+                VStack(spacing: MindSenseSpacing.lg) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
                                 title: "How terms are used",
-                                subtitle: "Short definitions for labels used across Today, Regulate, and Data.",
+                                subtitle: "Choose a term to open a dedicated definition page used across Today, Regulate, and Data.",
                                 icon: "text.book.closed"
                             )
                         )
                     }
 
-                    glossarySection(
-                        title: "Confidence terms",
-                        subtitle: "Different confidence labels mean different things.",
-                        icon: "checkmark.shield",
-                        entries: confidenceEntries
-                    )
-
-                    glossarySection(
-                        title: "Scores",
-                        subtitle: "Load and episode intensity describe different scopes.",
-                        icon: "gauge.with.dots.needle.50percent",
-                        entries: scoreEntries
-                    )
-
-                    glossarySection(
-                        title: "State labels",
-                        subtitle: "App state labels that are easy to confuse with score labels.",
-                        icon: "tag",
-                        entries: stateEntries
-                    )
+                    ForEach(sections) { section in
+                        glossarySection(section)
+                    }
                 }
                 .mindSenseSheetInsets()
             }
@@ -638,45 +642,112 @@ struct MindSenseGlossarySheet: View {
         .mindSenseSheetPresentationChrome()
     }
 
-    private func glossarySection(
-        title: String,
-        subtitle: String,
-        icon: String,
-        entries: [MindSenseGlossaryEntry]
-    ) -> some View {
+    private func glossarySection(_ section: MindSenseGlossarySection) -> some View {
         InsetSurface {
             MindSenseSectionHeader(
                 model: .init(
-                    title: title,
-                    subtitle: subtitle,
-                    icon: icon
+                    title: section.title,
+                    subtitle: section.subtitle,
+                    icon: section.icon
                 )
             )
 
             VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
-                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(entry.term)
-                            .font(MindSenseTypography.caption.weight(.semibold))
-                            .foregroundStyle(.primary)
-                        MindSenseSummaryDisclosureText(
-                            summary: entry.summary,
-                            detail: entry.detail,
-                            collapsedLabel: "Full definition",
-                            expandedLabel: "Hide definition",
-                            textStyle: MindSenseTypography.caption,
-                            textColor: .secondary
+                ForEach(Array(section.entries.enumerated()), id: \.element.id) { index, entry in
+                    NavigationLink {
+                        MindSenseGlossaryEntryDetailView(
+                            sectionTitle: section.title,
+                            entry: entry
                         )
+                    } label: {
+                        HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(entry.term)
+                                    .font(MindSenseTypography.bodyStrong)
+                                    .foregroundStyle(.primary)
+                                Text(entry.summary)
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .lineLimit(3)
+                            }
+                            Spacer(minLength: 8)
+                            Image(systemName: "chevron.right")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                        }
+                        .contentShape(Rectangle())
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(minHeight: 44, alignment: .leading)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .buttonStyle(.plain)
+                    .accessibilityHint("Opens full glossary definition")
 
-                    if index < entries.count - 1 {
+                    if index < section.entries.count - 1 {
                         MindSenseSectionDivider(emphasis: 0.18)
                     }
                 }
             }
         }
     }
+}
+
+private struct MindSenseGlossaryEntryDetailView: View {
+    let sectionTitle: String
+    let entry: MindSenseGlossaryEntry
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.lg) {
+                Text("Glossary • \(sectionTitle)")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .tracking(0.6)
+
+                Text(entry.term)
+                    .font(MindSenseTypography.title)
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                InsetSurface {
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+                        Text("Quick summary")
+                            .font(MindSenseTypography.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Text(entry.summary)
+                            .font(MindSenseTypography.body)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                InsetSurface {
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+                        Text("Full definition")
+                            .font(MindSenseTypography.caption.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        Text(entry.detail)
+                            .font(MindSenseTypography.body)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .frame(maxWidth: 560, alignment: .leading)
+            .mindSenseSheetInsets()
+        }
+        .mindSensePageBackground()
+        .navigationTitle(entry.term)
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct MindSenseGlossarySection: Identifiable {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let entries: [MindSenseGlossaryEntry]
+
+    var id: String { title }
 }
 
 private struct MindSenseGlossaryEntry: Identifiable {
