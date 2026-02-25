@@ -648,7 +648,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## C3) Spacing System
 
 ### DS-05 Enforce 4pt spacing scale and layout constants
-- Status: `[~]`
+- Status: `[x]`
 - Source detail: 4/8/12/16/20/24/32/40/48, horizontal margins 16/20, card padding 16, inter-section 24-32.
 - Actionable TODO:
   1. Add explicit spacing scale constants where missing.

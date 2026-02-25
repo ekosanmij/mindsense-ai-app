@@ -1152,13 +1152,13 @@ struct DataView: View {
     }
 
     private func whatIsWorkingRow(label: String, value: String, supportingText: String? = nil) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
             Text(label)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
                 .tracking(0.7)
             Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: MindSenseSpacing.xxxs) {
                 Text(value)
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(.primary)
@@ -1179,7 +1179,7 @@ struct DataView: View {
     }
 
     private func recoveryWindowActionRow(schedule: RecoveryWindowSchedule) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text("Make this window actionable")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
@@ -1277,7 +1277,7 @@ struct DataView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         dataMetaPill("Window \(window.rawValue)")
                         dataMetaPill("Rec. confidence \(store.confidencePercent)%")
                     }
@@ -1392,7 +1392,7 @@ struct DataView: View {
                 storageKey: "ui.collapse.data.history_summary",
                 collapsedSummary: "\(weeklySummary.wins.count) wins • \(weeklySummary.risks.count) risks"
             ) {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                     Text("Wins")
                         .font(MindSenseTypography.bodyStrong)
                         .foregroundStyle(MindSensePalette.success)
@@ -1404,7 +1404,7 @@ struct DataView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                     Text("Risks")
                         .font(MindSenseTypography.bodyStrong)
                         .foregroundStyle(MindSensePalette.warning)
@@ -1437,7 +1437,7 @@ struct DataView: View {
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                 } else {
-                    VStack(spacing: 8) {
+                    VStack(spacing: MindSenseSpacing.xs) {
                         ForEach(attributionEditEpisodes) { episode in
                             attributionEditRow(episode)
                         }
@@ -1448,7 +1448,7 @@ struct DataView: View {
     }
 
     private func attributionEditRow(_ episode: StressEpisodeRecord) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
             MindSenseIconBadge(
                 systemName: "waveform.path.ecg",
                 tint: MindSensePalette.warning,
@@ -1456,7 +1456,7 @@ struct DataView: View {
                 size: MindSenseControlSize.iconBadge
             )
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text("\(episode.start.formattedDateLabel()) \(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
@@ -1522,7 +1522,7 @@ struct DataView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(Array(historySections.enumerated()), id: \.offset) { sectionIndex, section in
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             Text(section.title)
                                 .font(MindSenseTypography.bodyStrong)
                                 .foregroundStyle(.secondary)
@@ -1623,8 +1623,8 @@ struct DataView: View {
             store.triggerHaptic(intent: .selection)
             store.track(event: .secondaryActionTapped, surface: .data, action: "experiment_selected")
         } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                HStack(alignment: .firstTextBaseline, spacing: MindSenseSpacing.sm) {
                     Text(experiment.title)
                         .font(MindSenseTypography.bodyStrong)
                         .foregroundStyle(.primary)
@@ -1638,7 +1638,7 @@ struct DataView: View {
                     .lineLimit(1)
                     .fixedSize(horizontal: false, vertical: true)
 
-                HStack(spacing: 8) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     let chips = experimentMetaChips(for: experiment)
                     ForEach(Array(chips.enumerated()), id: \.offset) { _, chip in
                         dataMetaPill(chip)
@@ -1681,7 +1681,7 @@ struct DataView: View {
     private func experimentSelectionProgressBlock(_ experiment: Experiment) -> some View {
         if experiment.status == .active {
             let nextDay = min(experiment.checkInDaysCompleted + 1, experiment.durationDays)
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 Text("Day \(nextDay) of \(experiment.durationDays)")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(MindSensePalette.accent)
@@ -1734,7 +1734,7 @@ struct DataView: View {
     }
 
     private func historyEventRow(_ event: DemoEventRecord) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
             MindSenseIconBadge(
                 systemName: eventIcon(for: event.kind),
                 tint: eventTint(for: event.kind),
@@ -1742,7 +1742,7 @@ struct DataView: View {
                 size: MindSenseControlSize.iconBadge
             )
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text(event.title)
                     .font(MindSenseTypography.bodyStrong)
                     .lineLimit(1)
@@ -1761,7 +1761,7 @@ struct DataView: View {
                 .monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 10)
+        .padding(.vertical, MindSenseSpacing.sm)
     }
 
     private func experimentStatusChipState(_ status: ExperimentStatus) -> MindSenseChipState {
@@ -1776,12 +1776,12 @@ struct DataView: View {
     }
 
     private var selectedReadout: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text((selectedPoint?.time ?? trendPoints.last?.time ?? Date()).formattedDateLabel())
                 .font(MindSenseTypography.metricCaption)
                 .foregroundStyle(.secondary)
 
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 readoutPill(title: "Readiness", value: readinessValue, tint: MindSensePalette.success)
                 readoutPill(title: "Load", value: loadValue, tint: MindSensePalette.warning)
                 readoutPill(title: "Consistency", value: consistencyValue, tint: MindSensePalette.signalCool)
@@ -1792,7 +1792,7 @@ struct DataView: View {
     }
 
     private func readoutPill(title: String, value: Int, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(title)
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
@@ -1819,7 +1819,7 @@ struct DataView: View {
             .font(MindSenseTypography.micro)
             .foregroundStyle(.secondary)
             .padding(.horizontal, MindSenseLayout.tileHorizontalInset - 2)
-            .frame(minHeight: 24)
+            .frame(minHeight: MindSenseControlSize.compactPill)
             .background(
                 Capsule(style: .continuous)
                     .fill(MindSenseSurfaceLevel.base.fill)
@@ -1833,7 +1833,7 @@ struct DataView: View {
     private func wakeAnchorPing(for experiment: Experiment) -> some View {
         let suggestedMet = selectedWakeAnchorAutoFill?.suggestedMet
         return InsetSurface {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                 Text("Wake anchor met?")
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(.primary)
@@ -1853,7 +1853,7 @@ struct DataView: View {
                     .foregroundStyle(.secondary)
                 }
 
-                HStack(spacing: 8) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     Button("Yes") {
                         submitWakeAnchorCheckIn(met: true, experiment: experiment)
                     }
@@ -1881,7 +1881,7 @@ struct DataView: View {
                     .font(MindSenseTypography.micro)
                     .foregroundStyle(.secondary)
 
-                HStack(spacing: 8) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     ForEach(ExperimentMissReason.allCases) { reason in
                         Button {
                             selectedWakeAnchorMissReason = selectedWakeAnchorMissReason == reason ? nil : reason
@@ -2028,8 +2028,8 @@ struct DataView: View {
                 )
             )
 
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     Text("1. Choose anchor type")
                         .font(MindSenseTypography.bodyStrong)
                     Picker("Anchor type", selection: recoveryAnchorTypeBinding) {
@@ -2040,7 +2040,7 @@ struct DataView: View {
                     }
                     .pickerStyle(.menu)
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         Image(systemName: recoveryAnchorType.icon)
                             .foregroundStyle(MindSensePalette.signalCool)
                         Text(recoveryAnchorType.title)
@@ -2049,7 +2049,7 @@ struct DataView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     Text("2. Set schedule + reminder")
                         .font(MindSenseTypography.bodyStrong)
                     DatePicker(
@@ -2064,7 +2064,7 @@ struct DataView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                HStack(spacing: 8) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     Button(recoveryAnchorPlanActive ? "Update anchor plan" : "Save anchor plan") {
                         saveRecoveryAnchorPlan(source: "data_trend_insight_anchor")
                     }
@@ -2081,7 +2081,7 @@ struct DataView: View {
                     }
                 }
 
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     Text("3. Track adherence")
                         .font(MindSenseTypography.bodyStrong)
                     Text(recoveryAnchorAdherenceLine)
@@ -2667,7 +2667,7 @@ private struct TrendFilterSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -2685,7 +2685,7 @@ private struct TrendFilterSheet: View {
                     }
 
                     InsetSurface {
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                             MindSenseSectionHeader(
                                 model: .init(
                                     title: "Compare",
@@ -2702,7 +2702,7 @@ private struct TrendFilterSheet: View {
                     }
 
                     InsetSurface {
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                             MindSenseSectionHeader(
                                 model: .init(
                                     title: "Smoothing",
@@ -2720,7 +2720,7 @@ private struct TrendFilterSheet: View {
                     }
 
                     InsetSurface {
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                             MindSenseSectionHeader(
                                 model: .init(
                                     title: "Day filter",
@@ -2738,7 +2738,7 @@ private struct TrendFilterSheet: View {
                     }
 
                     InsetSurface {
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                             MindSenseSectionHeader(
                                 model: .init(
                                     title: "Events overlay",
@@ -2749,7 +2749,7 @@ private struct TrendFilterSheet: View {
 
                             ForEach(TrendEventOverlayType.allCases) { overlayType in
                                 Toggle(isOn: binding(for: overlayType)) {
-                                    HStack(spacing: 8) {
+                                    HStack(spacing: MindSenseSpacing.xs) {
                                         Image(systemName: overlayType.icon)
                                             .foregroundStyle(overlayType.tint)
                                         Text(overlayType.title)
@@ -2761,7 +2761,7 @@ private struct TrendFilterSheet: View {
                     }
 
                     InsetSurface {
-                        VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                             MindSenseSectionHeader(
                                 model: .init(
                                     title: "Export / share",
@@ -2866,7 +2866,7 @@ private struct DataTrendChart: View {
             }
         }
         .chartLegend(position: .top) {
-            HStack(spacing: 12) {
+            HStack(spacing: MindSenseSpacing.sm) {
                 legendItem(title: selectedSignal.metric.title, color: signalColor)
                 if comparisonPoints != nil {
                     legendItem(title: "Prior window", color: signalColor.opacity(0.42))
@@ -2956,15 +2956,15 @@ private struct DataTrendChart: View {
     }
 
     private func legendItem(title: String, color: Color) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: MindSenseSpacing.xs) {
             RoundedRectangle(cornerRadius: MindSenseRadius.pill, style: .continuous)
                 .fill(color)
                 .frame(width: 16, height: 4)
             Text(title).font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 4)
+        .padding(.horizontal, MindSenseSpacing.xs)
+        .padding(.vertical, MindSenseSpacing.xxxs)
         .background(
             Capsule(style: .continuous)
                 .fill(MindSenseSurfaceLevel.glass.fill)
@@ -3065,7 +3065,7 @@ private struct ExperimentCompletionSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: MindSenseSpacing.md) {
                     MindSenseCommandDeck(
                         label: "Experiment",
                         title: "Complete your 7-day run",
@@ -3082,7 +3082,7 @@ private struct ExperimentCompletionSheet: View {
                             time: "About 1 min"
                         )
 
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             Text("Did it help?")
                                 .font(MindSenseTypography.bodyStrong)
                             Picker("Did it help?", selection: $helped) {
@@ -3092,7 +3092,7 @@ private struct ExperimentCompletionSheet: View {
                             .pickerStyle(.segmented)
                         }
 
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             Text("Before/after deltas")
                                 .font(MindSenseTypography.bodyStrong)
 
@@ -3122,7 +3122,7 @@ private struct ExperimentCompletionSheet: View {
                             .monospacedDigit()
                         }
 
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             Text("Decide next")
                                 .font(MindSenseTypography.bodyStrong)
                             Picker("Decide next", selection: $decision) {
@@ -3133,7 +3133,7 @@ private struct ExperimentCompletionSheet: View {
                             .pickerStyle(.segmented)
                         }
 
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             Text("Perceived change")
                                 .font(MindSenseTypography.bodyStrong)
                             Slider(value: $perceivedShift, in: -5...5, step: 1)
@@ -3143,7 +3143,7 @@ private struct ExperimentCompletionSheet: View {
                                 .monospacedDigit()
                         }
 
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             Text("Result summary")
                                 .font(MindSenseTypography.bodyStrong)
                             TextField("What changed over the 7-day run?", text: $summary, axis: .vertical)
@@ -3192,7 +3192,7 @@ private struct ExperimentCompletionSheet: View {
     private func deltaLine(label: String, before: Int, after: Int) -> some View {
         let delta = after - before
         let deltaText = delta == 0 ? "0" : (delta > 0 ? "+\(delta)" : "\(delta)")
-        return HStack(spacing: 8) {
+        return HStack(spacing: MindSenseSpacing.xs) {
             Text(label)
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)

@@ -15,7 +15,7 @@ struct PostActivationPaywallSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: MindSenseSpacing.md) {
                     MindSenseCommandDeck(
                         label: "MindSense Plus",
                         title: "Continue your momentum with premium intelligence",
@@ -79,9 +79,9 @@ struct PostActivationPaywallSheet: View {
     }
 
     private func benefitRow(title: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
             MindSenseIconBadge(systemName: "sparkles", tint: MindSensePalette.signalCool, style: .filled, size: 28)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text(title)
                     .font(MindSenseTypography.bodyStrong)
                 Text(detail)

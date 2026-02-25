@@ -665,7 +665,7 @@ struct RegulateView: View {
         }
         .foregroundStyle(MindSensePalette.accent)
         .padding(.horizontal, MindSenseSpacing.xs)
-        .frame(minHeight: 22)
+        .frame(minHeight: MindSenseControlSize.compactPill)
         .background(
             Capsule(style: .continuous)
                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -741,7 +741,7 @@ struct RegulateView: View {
             }
 
             DisclosureGroup(isExpanded: $showRunFocusDetails) {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                     Text(runMetaLine)
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
@@ -765,7 +765,7 @@ struct RegulateView: View {
                         maxValueLines: 2
                     )
 
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                         Text("Why this works")
                             .font(MindSenseTypography.bodyStrong)
                         Text(runningPreset.whyNow)
@@ -786,7 +786,7 @@ struct RegulateView: View {
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
 
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                         ForEach(protocolPhases) { phase in
                             let phaseStatus = protocolPhaseStatus(
                                 phase,
@@ -794,7 +794,7 @@ struct RegulateView: View {
                                 elapsedSeconds: elapsedSeconds
                             )
 
-                            HStack(spacing: 8) {
+                            HStack(spacing: MindSenseSpacing.xs) {
                                 Image(systemName: phaseStatus.symbol)
                                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                                     .foregroundStyle(phaseStatus.tint)
@@ -804,7 +804,7 @@ struct RegulateView: View {
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                             .frame(maxWidth: .infinity, minHeight: MindSenseControlSize.minimumTapTarget, alignment: .leading)
-                            .padding(.horizontal, 10)
+                            .padding(.horizontal, MindSenseSpacing.sm)
                             .background(
                                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                                     .fill(MindSenseSurfaceLevel.base.fill)
@@ -833,7 +833,7 @@ struct RegulateView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         MindSenseIconBadge(systemName: "heart.text.square", tint: MindSensePalette.signalCool, style: .filled, size: 28)
                         Text("Calming trend: \(calmingTrendLabel)")
                             .font(MindSenseTypography.caption)
@@ -930,8 +930,8 @@ struct RegulateView: View {
 
     @ViewBuilder
     private func recordImpactForm(_ runningPreset: DemoRegulatePreset) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 MindSenseIconBadge(systemName: "waveform.path.ecg", tint: impactTint, style: .filled, size: 28)
                 Text("Current impact selection: \(impactStateLine)")
                     .font(MindSenseTypography.caption)
@@ -941,7 +941,7 @@ struct RegulateView: View {
             Text("Helped?")
                 .font(MindSenseTypography.bodyStrong)
 
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 outcomeRatingButton(
                     .helped,
                     title: "Yes",
@@ -957,13 +957,13 @@ struct RegulateView: View {
             }
         }
 
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text("Optional tag")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
 
-            let columns = [GridItem(.adaptive(minimum: 118), spacing: 8)]
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+            let columns = [GridItem(.adaptive(minimum: 118), spacing: MindSenseSpacing.xs)]
+            LazyVGrid(columns: columns, alignment: .leading, spacing: MindSenseSpacing.xs) {
                 ForEach(outcomeTagOptions, id: \.self) { tag in
                     outcomeTagButton(tag)
                 }
@@ -972,7 +972,7 @@ struct RegulateView: View {
             TextField("Optional note (what changed?)", text: $outcomeNote, axis: .vertical)
                 .textInputAutocapitalization(.sentences)
                 .disableAutocorrection(false)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, MindSenseSpacing.sm)
                 .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                 .background(
                     RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
@@ -1018,7 +1018,7 @@ struct RegulateView: View {
         }
 
         DisclosureGroup(isExpanded: $showRecordImpactDetails) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 recordImpactDetailRow(label: "What", value: "Capture immediate outcome")
                 recordImpactDetailRow(label: "Why", value: runningPreset.whyNow)
                 recordImpactDetailRow(label: "Expected effect", value: "Used to tune protocol ranking and confidence.")
@@ -1042,7 +1042,7 @@ struct RegulateView: View {
     }
 
     private func recordImpactDetailRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(label)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -1138,8 +1138,8 @@ struct RegulateView: View {
         Label("Flow running", systemImage: "waveform.path.ecg")
             .font(MindSenseTypography.micro)
             .foregroundStyle(MindSensePalette.accentStrong)
-            .padding(.horizontal, 10)
-            .frame(minHeight: 34)
+            .padding(.horizontal, MindSenseSpacing.sm)
+            .frame(minHeight: MindSenseSpacing.xl)
             .background(
                 Capsule(style: .continuous)
                     .fill(MindSensePalette.accentMuted)
@@ -1153,7 +1153,7 @@ struct RegulateView: View {
     }
 
     private func runStepSummaryRow(title: String, detail: String, emphasized: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(title)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -1503,7 +1503,7 @@ private struct RegulatePresetDetailSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -1523,7 +1523,7 @@ private struct RegulatePresetDetailSheet: View {
                                 subtitle: "Use this sequence as your guidance during the run."
                             )
                         )
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             ForEach(Array(preset.protocolSteps.enumerated()), id: \.offset) { index, step in
                                 Text("\(index + 1). \(step)")
                                     .font(MindSenseTypography.caption)
@@ -1561,7 +1561,7 @@ private struct RegulatePresetDetailSheet: View {
     }
 
     private func detailRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(label)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)

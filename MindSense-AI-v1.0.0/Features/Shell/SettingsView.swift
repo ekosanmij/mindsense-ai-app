@@ -191,7 +191,7 @@ struct SettingsView: View {
     private var profileSection: some View {
         Section {
             VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
-                HStack(spacing: 8) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     Image(systemName: "person.crop.circle.fill")
                         .font(.system(size: 20, weight: .semibold, design: .rounded))
                         .foregroundStyle(MindSensePalette.signalCoolStrong)
@@ -218,7 +218,7 @@ struct SettingsView: View {
                     )
                     store.triggerHaptic(intent: .selection)
                 } label: {
-                    HStack(spacing: 10) {
+                    HStack(spacing: MindSenseSpacing.sm) {
                         Image(systemName: "bell.badge.fill")
                             .font(.system(size: 15, weight: .semibold, design: .rounded))
                             .foregroundStyle(MindSensePalette.signalCoolStrong)
@@ -231,11 +231,11 @@ struct SettingsView: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
-                    .frame(minHeight: 44)
+                    .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.vertical, 6)
+            .padding(.vertical, MindSenseSpacing.xs)
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
             .listRowSeparator(.hidden)
@@ -309,8 +309,8 @@ struct SettingsView: View {
     }
 
     private var meetingCallSignalsContextRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 Image(systemName: meetingCallSignalsStateIcon)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(meetingCallSignalsStateTint)
@@ -329,8 +329,8 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.xs)
         .background(
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -374,7 +374,7 @@ struct SettingsView: View {
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
 
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 Text(store.batteryFriendlyModeStatusLine)
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
@@ -387,8 +387,8 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, MindSenseSpacing.sm)
+            .padding(.vertical, MindSenseSpacing.xs)
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
 
@@ -415,18 +415,18 @@ struct SettingsView: View {
     }
 
     private var quietHoursRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text("Active \(quietHoursLabel)")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 10) {
+            HStack(spacing: MindSenseSpacing.sm) {
                 quietTimePicker(title: "Start", selection: quietStartBinding)
                 quietTimePicker(title: "End", selection: quietEndBinding)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, MindSenseSpacing.xxxs)
     }
 
     private var appearanceSection: some View {
@@ -455,13 +455,13 @@ struct SettingsView: View {
     }
 
     private var appearanceMotionSemanticsRow: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text("Theme controls visual appearance. Motion controls animation intensity and follows iOS Reduce Motion.")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 Image(systemName: appReduceMotion || accessibilityReduceMotion ? "figure.walk.circle" : "figure.walk")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(MindSensePalette.signalCoolStrong)
@@ -471,8 +471,8 @@ struct SettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.xs)
         .background(
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -517,7 +517,7 @@ struct SettingsView: View {
     }
 
     private func settingsSectionHeader(_ title: String, icon: String) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: MindSenseSpacing.xs) {
             MindSenseIconBadge(
                 systemName: icon,
                 tint: MindSensePalette.signalCoolStrong,
@@ -537,7 +537,7 @@ struct SettingsView: View {
             .font(MindSenseTypography.micro)
             .foregroundStyle(.secondary)
             .tracking(0.75)
-            .padding(.horizontal, 10)
+            .padding(.horizontal, MindSenseSpacing.sm)
             .padding(.top, 2)
     }
 
@@ -572,7 +572,7 @@ struct SettingsView: View {
         icon: String,
         tint: Color = MindSensePalette.accent
     ) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: MindSenseSpacing.sm) {
             Image(systemName: icon)
                 .font(.system(size: settingsIconSize, weight: .semibold, design: .rounded))
                 .foregroundStyle(tint)
@@ -587,13 +587,13 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(minHeight: settingsRowMinHeight)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.xs)
     }
 
     private func settingsToggleRow(title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text(title)
                     .font(MindSenseTypography.bodyStrong)
                 Text(subtitle)
@@ -610,8 +610,8 @@ struct SettingsView: View {
                 .padding(.top, 1)
         }
         .frame(minHeight: settingsToggleRowMinHeight, alignment: .leading)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.xs)
     }
 
     private var batteryFriendlyModeSubtitle: String {
@@ -622,7 +622,7 @@ struct SettingsView: View {
     }
 
     private func quietTimePicker(title: String, selection: Binding<Date>) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(title)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -680,7 +680,7 @@ struct AppleHealthPermissionsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: MindSenseSpacing.md) {
                 MindSenseCommandDeck(
                     label: "Apple Health",
                     title: "Permissions and sync diagnostics",
@@ -696,14 +696,14 @@ struct AppleHealthPermissionsView: View {
                         )
                     )
 
-                    HStack(spacing: 10) {
+                    HStack(spacing: MindSenseSpacing.sm) {
                         MindSenseIconBadge(
                             systemName: "waveform.path.ecg",
                             tint: qualityTint(score: store.healthDataQualityScore),
                             style: .filled,
                             size: 34
                         )
-                        VStack(alignment: .leading, spacing: 3) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                             Text("Data confidence \(store.healthDataQualityScore)")
                                 .font(MindSenseTypography.bodyStrong)
                             Text(store.demoHealthProfile.quality.actionHint)
@@ -740,7 +740,7 @@ struct AppleHealthPermissionsView: View {
                         )
                     )
                     ForEach(store.healthQualityDiagnostics, id: \.0) { diagnostic in
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                             HStack {
                                 Text(diagnostic.0)
                                     .font(MindSenseTypography.caption)
@@ -841,11 +841,11 @@ struct AppleHealthPermissionsView: View {
     }
 
     private func permissionRowContent(_ permission: DemoHealthPermissionStatus, showsDisclosure: Bool) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: MindSenseSpacing.sm) {
             Image(systemName: permission.state.statusIcon)
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
                 .foregroundStyle(permissionTint(for: permission.state))
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text(permission.signal.title)
                     .font(MindSenseTypography.bodyStrong)
                 Text(permission.state.title)
@@ -865,7 +865,7 @@ struct AppleHealthPermissionsView: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, MindSenseSpacing.xxxs)
     }
 
     private func permissionTint(for state: DemoHealthPermissionState) -> Color {
@@ -898,7 +898,7 @@ private struct SettingsPermissionRemediationSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -920,7 +920,7 @@ private struct SettingsPermissionRemediationSheet: View {
                             )
                         )
                         ForEach(Array(guide.checklist.enumerated()), id: \.offset) { index, item in
-                            HStack(alignment: .top, spacing: 8) {
+                            HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
                                 Text("\(index + 1).")
                                     .font(MindSenseTypography.bodyStrong)
                                     .foregroundStyle(.secondary)

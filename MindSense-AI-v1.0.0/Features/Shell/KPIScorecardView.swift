@@ -38,8 +38,8 @@ struct KPIScorecardView: View {
                 .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
 
                 InsetSurface {
-                    HStack(alignment: .center, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 3) {
+                    HStack(alignment: .center, spacing: MindSenseSpacing.sm) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                             Text("Portfolio health")
                                 .font(MindSenseTypography.caption)
                                 .foregroundStyle(.secondary)
@@ -115,7 +115,7 @@ struct KPIScorecardView: View {
     }
 
     private func metricTile(title: String, value: Double, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             HStack {
                 Text(title)
                     .font(MindSenseTypography.bodyStrong)

@@ -168,8 +168,8 @@ struct CommunityView: View {
             )
 
             InsetSurface {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         PillChip(label: "Safety banners active", selected: true)
                         PillChip(label: "Read-only mode", selected: true)
                     }
@@ -198,9 +198,9 @@ struct CommunityView: View {
                     store.triggerHaptic(intent: .selection)
                     store.track(event: .secondaryActionTapped, surface: .community, action: "open_drill_down_card", metadata: ["id": card.id])
                 } label: {
-                    HStack(alignment: .top, spacing: 10) {
+                    HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
                         MindSenseIconBadge(systemName: "rectangle.stack.person.crop.fill", tint: MindSensePalette.signalCool, style: .filled, size: 32)
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                             Text(card.title)
                                 .font(MindSenseTypography.bodyStrong)
                                 .foregroundStyle(.primary)
@@ -250,7 +250,7 @@ struct CommunityView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(insights) { insight in
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                         HStack {
                             Text(insight.title)
                                 .font(MindSenseTypography.bodyStrong)
@@ -304,7 +304,7 @@ struct CommunityView: View {
     @ViewBuilder
     private func communityCardDetail(card: CommunityDrillCard) -> some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: MindSenseSpacing.md) {
                 MindSenseCommandDeck(
                     label: AppIA.community,
                     title: card.title,

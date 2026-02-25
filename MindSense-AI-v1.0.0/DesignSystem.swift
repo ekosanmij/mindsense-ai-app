@@ -298,6 +298,7 @@ enum MindSenseDividerEmphasis {
     static let subtle: CGFloat = 0.08
     static let regular: CGFloat = 0.12
     static let section: CGFloat = 0.14
+    static let strong: CGFloat = 0.28
 }
 
 enum MindSenseProgress {

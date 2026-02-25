@@ -783,7 +783,7 @@ struct TodayView: View {
                 storageKey: "ui.collapse.today.top_drivers",
                 collapsedSummary: driverCollapsedSummary
             ) {
-                VStack(spacing: 10) {
+                VStack(spacing: MindSenseSpacing.sm) {
                     ForEach(visibleDrivers) { driver in
                         DriverImpactRowView(
                             driver: driver,
@@ -814,9 +814,9 @@ struct TodayView: View {
                 }
 
                 if !store.todaySecondaryDrivers.isEmpty {
-                    MindSenseSectionDivider(emphasis: 0.28)
+                    MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.strong)
                     DisclosureGroup(isExpanded: $showSecondarySignals) {
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                             ForEach(store.todaySecondaryDrivers.prefix(2)) { secondary in
                                 Text("• \(secondary.name) also appears in your context.")
                                     .font(MindSenseTypography.caption)
@@ -847,15 +847,15 @@ struct TodayView: View {
             )
 
             if isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep {
-                HStack(alignment: .top, spacing: 10) {
-                    HStack(spacing: 8) {
+                HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         MindSenseIconBadge(
                             systemName: "exclamationmark.triangle.fill",
                             tint: MindSensePalette.warning,
                             style: .filled,
                             size: MindSenseControlSize.iconBadge
                         )
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                             Text("Low confidence mode")
                                 .font(MindSenseTypography.bodyStrong)
                             Text("Precise recommendation hidden until coverage improves.")
@@ -865,14 +865,14 @@ struct TodayView: View {
                         }
                     }
                     Spacer(minLength: 8)
-                    VStack(alignment: .trailing, spacing: 6) {
+                    VStack(alignment: .trailing, spacing: MindSenseSpacing.xs) {
                         PillChip(label: "Coverage \(store.demoDataCoveragePercent)%", state: .unselected)
                         PillChip(label: "Rec. confidence \(store.confidencePercent)%", state: .unselected)
                     }
                 }
             } else {
-                HStack(alignment: .top, spacing: 10) {
-                    HStack(spacing: 8) {
+                HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         MindSenseIconBadge(
                             systemName: presetIcon(for: recommendation.preset),
                             tint: MindSensePalette.accent,
@@ -956,7 +956,7 @@ struct TodayView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .frame(minHeight: MindSenseControlSize.minimumTapTarget)
-                    .padding(.horizontal, 12)
+                    .padding(.horizontal, MindSenseSpacing.sm)
                     .background(
                         RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                             .fill(MindSenseSurfaceLevel.base.fill)
@@ -977,7 +977,7 @@ struct TodayView: View {
             .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
 
             if showActionDetails && !(isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep) {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     actionDetailRow(label: "Why now", value: recommendation.why)
                     actionDetailRow(label: "Expected effect", value: recommendation.expectedEffect)
                 }
@@ -1220,7 +1220,7 @@ struct TodayView: View {
                     inlineContextWeightingBlock
                 }
 
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     Text("Custom context")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
@@ -1228,7 +1228,7 @@ struct TodayView: View {
                     TextField("Type a context label…", text: $contextNote)
                         .textInputAutocapitalization(.sentences)
                         .disableAutocorrection(false)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, MindSenseSpacing.sm)
                         .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         .background(
                             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
@@ -1270,7 +1270,7 @@ struct TodayView: View {
                 )
             )
 
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 MindSenseIconBadge(systemName: "dial.low.fill", tint: checkInTint, style: .filled, size: MindSenseControlSize.iconBadge)
                 Text("Load now: \(Int(loadSlider.rounded())) / 10 (\(checkInLabel))")
                     .font(MindSenseTypography.caption)
@@ -1301,7 +1301,7 @@ struct TodayView: View {
                     checkInJustSaved = false
                 }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text("1-3 Light / effortless")
                 Text("4-6 Moderate / sustainable")
                 Text("7-10 Heavy / draining")
@@ -1313,12 +1313,12 @@ struct TodayView: View {
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 Text("Main driver today: meetings / workout / poor sleep / travel")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
 
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: 8)], alignment: .leading, spacing: 8) {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: MindSenseSpacing.xs)], alignment: .leading, spacing: MindSenseSpacing.xs) {
                     ForEach(checkInDriverOptions, id: \.self) { option in
                         Button {
                             if selectedCheckInDriver == option {
@@ -1350,12 +1350,12 @@ struct TodayView: View {
             }
 
             if shouldShowCheckInFatigueOffer {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     Text("Want fewer check-ins?")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         Button("Reduce check-ins") {
                             applyCheckInPromptMode(.reduced)
                         }
@@ -1466,7 +1466,7 @@ struct TodayView: View {
     }
 
     private func actionDetailRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(label)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -1504,7 +1504,7 @@ struct TodayView: View {
 
     @ViewBuilder
     private var inlineContextWeightingBlock: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text("Optional weighting")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
@@ -1535,14 +1535,14 @@ struct TodayView: View {
         allowNone: Bool,
         onSelect: @escaping (String?) -> Void
     ) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text(title)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
                 .tracking(0.7)
 
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     if allowNone {
                         Button {
                             onSelect(nil)
@@ -1550,7 +1550,7 @@ struct TodayView: View {
                             Text("None")
                                 .font(MindSenseTypography.micro)
                                 .foregroundStyle(selectedTag == nil ? MindSensePalette.signalCoolStrong : .secondary)
-                                .padding(.horizontal, 10)
+                                .padding(.horizontal, MindSenseSpacing.sm)
                                 .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                                 .background(
                                     Capsule(style: .continuous)
@@ -1574,7 +1574,7 @@ struct TodayView: View {
                         .buttonStyle(.plain)
                         .font(MindSenseTypography.micro)
                         .foregroundStyle(selectedTag == tag ? MindSensePalette.signalCoolStrong : .secondary)
-                        .padding(.horizontal, 10)
+                        .padding(.horizontal, MindSenseSpacing.sm)
                         .frame(minHeight: MindSenseControlSize.minimumTapTarget)
                         .background(
                             Capsule(style: .continuous)
@@ -2050,7 +2050,7 @@ struct TodayView: View {
         let bounded = max(0, min(100, card.value))
         let deltaTone = card.delta.map { deltaTint(metric: card.metric, value: $0) } ?? Color.secondary
 
-        return VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text(card.title)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -2058,7 +2058,7 @@ struct TodayView: View {
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
 
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: MindSenseSpacing.xs) {
                 Text("\(bounded)")
                     .font(.system(size: 22, weight: .semibold, design: .rounded))
                     .foregroundStyle(card.tint)
@@ -2073,8 +2073,8 @@ struct TodayView: View {
                     .monospacedDigit()
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.sm)
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 70 : 64, alignment: .topLeading)
         .background(
@@ -2106,7 +2106,7 @@ struct TodayView: View {
     ) -> some View {
         let bounded = max(0, min(100, value))
         let deltaTone = delta.map { deltaTint(metric: metric, value: $0) } ?? Color.secondary
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text(title)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -2127,7 +2127,7 @@ struct TodayView: View {
             Rectangle()
                 .fill(MindSensePalette.strokeSubtle.opacity(0.9))
                 .frame(height: 1)
-            HStack(spacing: 5) {
+            HStack(spacing: MindSenseSpacing.xxxs) {
                 Image(systemName: deltaSymbol(for: delta))
                     .font(.system(size: 10, weight: .semibold))
                 Text(deltaLabel(for: delta))
@@ -2241,7 +2241,7 @@ struct TodayView: View {
     }
 
     private func metricThresholdBandRows(metric: CoreMetric, value: Int, tint: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text("Threshold bands")
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -2255,7 +2255,7 @@ struct TodayView: View {
 
     private func thresholdBandRow(band: MetricThresholdBand, value: Int, tint: Color) -> some View {
         let isActive = band.range.contains(value)
-        return HStack(spacing: 6) {
+        return HStack(spacing: MindSenseSpacing.xs) {
             Text(band.rangeLabel)
                 .font(.system(size: 9, weight: .semibold, design: .rounded))
                 .foregroundStyle(.secondary)
@@ -2267,8 +2267,8 @@ struct TodayView: View {
                 .foregroundStyle(isActive ? .primary : .secondary)
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
+        .padding(.horizontal, MindSenseSpacing.xs)
+        .padding(.vertical, MindSenseSpacing.xxxs)
         .background(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .fill(isActive ? tint.opacity(0.15) : MindSenseSurfaceLevel.base.fill)
@@ -2341,7 +2341,7 @@ private struct TodayConfidenceSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -2449,7 +2449,7 @@ private struct TodayMetricDefinitionSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -2539,7 +2539,7 @@ private struct TodayMetricDefinitionSheet: View {
     }
 
     private func detailRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(label)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -2550,7 +2550,7 @@ private struct TodayMetricDefinitionSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 2)
+        .padding(.vertical, MindSenseSpacing.xxxs)
     }
 }
 
@@ -2595,7 +2595,7 @@ private struct TodayModelDetailsSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -2603,7 +2603,7 @@ private struct TodayModelDetailsSheet: View {
                                 subtitle: "Diagnostics stay available without taking over the main dashboard."
                             )
                         )
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                             detailRow(label: "Recommendation confidence", value: "\(confidencePercent)%")
                             detailRow(label: "Coverage", value: "\(coveragePercent)%")
                             detailRow(label: "Data confidence", value: "\(dataConfidencePercent)")
@@ -2761,7 +2761,7 @@ private struct TodayModelDetailsSheet: View {
     }
 
     private func noteRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(label)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -2772,7 +2772,7 @@ private struct TodayModelDetailsSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 2)
+        .padding(.vertical, MindSenseSpacing.xxxs)
     }
 }
 
@@ -2792,7 +2792,7 @@ private struct TodaySignalSourceSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -2886,11 +2886,11 @@ private struct TodaySignalSourceSheet: View {
     }
 
     private func permissionRowContent(_ permission: DemoHealthPermissionStatus, showsDisclosure: Bool) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: MindSenseSpacing.sm) {
             Image(systemName: permission.state.statusIcon)
                 .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(permissionTint(for: permission.state))
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text(permission.signal.title)
                     .font(MindSenseTypography.bodyStrong)
                 Text(permission.state.title)
@@ -2910,7 +2910,7 @@ private struct TodaySignalSourceSheet: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, MindSenseSpacing.xxxs)
     }
 
     private func permissionTint(for state: DemoHealthPermissionState) -> Color {
@@ -2945,7 +2945,7 @@ private struct TodayPermissionRemediationSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -2967,7 +2967,7 @@ private struct TodayPermissionRemediationSheet: View {
                             )
                         )
                         ForEach(Array(guide.checklist.enumerated()), id: \.offset) { index, item in
-                            HStack(alignment: .top, spacing: 8) {
+                            HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
                                 Text("\(index + 1).")
                                     .font(MindSenseTypography.bodyStrong)
                                     .foregroundStyle(.secondary)
@@ -3012,15 +3012,15 @@ private struct EpisodeIntensityBadge: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 4) {
+            HStack(spacing: MindSenseSpacing.xxxs) {
                 Text("Episode intensity \(intensity)")
                     .font(MindSenseTypography.micro)
                 Image(systemName: "info.circle.fill")
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
             }
             .foregroundStyle(MindSensePalette.warning)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
+            .padding(.horizontal, MindSenseSpacing.xs)
+            .padding(.vertical, MindSenseSpacing.xxxs)
             .background(
                 Capsule(style: .continuous)
                     .fill(MindSenseSurfaceLevel.base.fill)
@@ -3107,7 +3107,7 @@ private struct TodayTimelineDetailSheet: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 14) {
+                VStack(spacing: MindSenseSpacing.md) {
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
@@ -3123,7 +3123,7 @@ private struct TodayTimelineDetailSheet: View {
                         )
 
                         if dayFilter == .today {
-                            HStack(spacing: 5) {
+                            HStack(spacing: MindSenseSpacing.xxxs) {
                                 ForEach(timelineSegments) { segment in
                                     TimelineStateSegmentCell(
                                         state: segment.state,
@@ -3133,7 +3133,7 @@ private struct TodayTimelineDetailSheet: View {
                                     )
                                 }
                             }
-                            HStack(spacing: 8) {
+                            HStack(spacing: MindSenseSpacing.xs) {
                                 TimelineStateLegendPill(title: "Stable", state: .stable, tint: timelineTint(for: .stable))
                                 TimelineStateLegendPill(title: "Activated", state: .activated, tint: timelineTint(for: .activated))
                                 TimelineStateLegendPill(title: "Recovery", state: .recovery, tint: timelineTint(for: .recovery))
@@ -3196,9 +3196,9 @@ private struct TodayTimelineDetailSheet: View {
     }
 
     private func timelineEpisodeRow(_ episode: StressEpisodeRecord) -> some View {
-        HStack(alignment: .top, spacing: 10) {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+        HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     Text("\(episode.start.formattedDateLabel()) \(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
@@ -3259,8 +3259,8 @@ private struct TimelineStateSegmentCell: View {
             )
             .overlay {
                 overlayLabel
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
+                    .padding(.horizontal, MindSenseSpacing.xs)
+                    .padding(.vertical, MindSenseSpacing.xxxs)
             }
             .frame(maxWidth: .infinity)
             .frame(height: height)
@@ -3296,7 +3296,7 @@ private struct TimelineStateSegmentCell: View {
     }
 
     private func labelRow(text: String) -> some View {
-        HStack(spacing: 3) {
+        HStack(spacing: MindSenseSpacing.xxxs) {
             Image(systemName: state.timelineSymbolName)
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
             Text(text)
@@ -3333,7 +3333,7 @@ private struct TimelineStateLegendPill: View {
     let tint: Color
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: MindSenseSpacing.xs) {
             Circle()
                 .fill(tint)
                 .frame(width: 12, height: 12)
@@ -3351,8 +3351,8 @@ private struct TimelineStateLegendPill: View {
                 .monospacedDigit()
         }
         .frame(minHeight: MindSenseControlSize.minimumTapTarget)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 4)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.xxxs)
         .background(
             Capsule(style: .continuous)
                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -3574,9 +3574,9 @@ struct TodayEpisodeDetailSheet: View {
                         )
 
                         LazyVGrid(
-                            columns: [GridItem(.adaptive(minimum: 132), spacing: 10)],
+                            columns: [GridItem(.adaptive(minimum: 132), spacing: MindSenseSpacing.sm)],
                             alignment: .leading,
-                            spacing: 10
+                            spacing: MindSenseSpacing.sm
                         ) {
                             accuracyButton(title: "Looks right", value: .accurate)
                             accuracyButton(title: "Unsure", value: .unsure)
@@ -3593,9 +3593,9 @@ struct TodayEpisodeDetailSheet: View {
                                 .fixedSize(horizontal: false, vertical: true)
 
                             LazyVGrid(
-                                columns: [GridItem(.adaptive(minimum: 120), spacing: 8)],
+                                columns: [GridItem(.adaptive(minimum: 120), spacing: MindSenseSpacing.xs)],
                                 alignment: .leading,
-                                spacing: 8
+                                spacing: MindSenseSpacing.xs
                             ) {
                                 ForEach(confounderQuickTags) { item in
                                     Button {
@@ -3632,7 +3632,7 @@ struct TodayEpisodeDetailSheet: View {
                         Button {
                             dismiss()
                         } label: {
-                            HStack(spacing: 6) {
+                            HStack(spacing: MindSenseSpacing.xs) {
                                 Image(systemName: "clock.arrow.circlepath")
                                     .font(.caption.weight(.semibold))
                                 Text("Edit later")
@@ -3664,8 +3664,8 @@ struct TodayEpisodeDetailSheet: View {
                             Text(recommendedDurationLabel)
                                 .font(MindSenseTypography.caption)
                                 .foregroundStyle(.secondary)
-                                .padding(.horizontal, 12)
-                                .frame(minHeight: 30)
+                                .padding(.horizontal, MindSenseSpacing.sm)
+                                .frame(minHeight: MindSenseControlSize.chip)
                                 .background(
                                     Capsule(style: .continuous)
                                         .fill(MindSenseSurfaceLevel.base.fill)
@@ -3704,7 +3704,7 @@ struct TodayEpisodeDetailSheet: View {
                         Button {
                             UIPasteboard.general.string = cognitivePrompt
                         } label: {
-                            HStack(spacing: 6) {
+                            HStack(spacing: MindSenseSpacing.xs) {
                                 Image(systemName: "doc.on.doc")
                                     .font(.caption.weight(.semibold))
                                 Text("Copy prompt")
@@ -3817,7 +3817,7 @@ struct TodayEpisodeDetailSheet: View {
     }
 
     private func evidenceRow(label: String, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(label)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
@@ -3864,7 +3864,7 @@ struct TodayEpisodeDetailSheet: View {
             feedback = value
             onSaveFeedback(episode.id, value)
         } label: {
-            HStack(spacing: 6) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 Text(title)
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(selected ? MindSensePalette.onAccent : .primary)
