@@ -31,7 +31,7 @@ struct ProfileAccessMenu: View {
             systemName: "person.crop.circle.fill",
             tint: MindSensePalette.signalCool,
             style: .filled,
-            size: 34
+            size: MindSenseControlSize.profileBadge
         )
         .frame(minWidth: 44, minHeight: 44)
     }

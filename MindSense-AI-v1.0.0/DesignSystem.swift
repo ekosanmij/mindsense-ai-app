@@ -289,6 +289,9 @@ enum MindSenseControlSize {
     static let compactPill: CGFloat = 24
     static let chip: CGFloat = 30
     static let iconBadge: CGFloat = 28
+    static let iconBadgeLarge: CGFloat = 32
+    static let iconBadgeXL: CGFloat = 40
+    static let profileBadge: CGFloat = 34
     static let timelineSegmentHeight: CGFloat = 24
     static let primaryButton: CGFloat = 52
     static let thinProgressTrack: CGFloat = 5
@@ -299,6 +302,7 @@ enum MindSenseDividerEmphasis {
     static let regular: CGFloat = 0.12
     static let section: CGFloat = 0.14
     static let strong: CGFloat = 0.28
+    static let hero: CGFloat = 0.43
 }
 
 enum MindSenseProgress {
@@ -319,6 +323,7 @@ enum MindSenseLayout {
     static let tileHorizontalInset: CGFloat = MindSenseSpacing.md
     static let tileVerticalInset: CGFloat = MindSenseSpacing.sm
     static let tileMinHeight: CGFloat = 60
+    static let cardContentPadding: CGFloat = 18
 
     static func tabBarClearance(
         measuredOverlay: CGFloat,
@@ -349,14 +354,28 @@ enum MindSenseTabBarClearanceTier {
 }
 
 struct MindSenseRadius {
+    static let micro: CGFloat = 6
     static let tight: CGFloat = 9
     static let medium: CGFloat = 12
     static let large: CGFloat = 12
+    static let controlPrimary: CGFloat = 20
+    static let controlText: CGFloat = 18
     static let pill: CGFloat = 999
 
     static let chip = medium
     static let tile = medium
     static let card = large
+}
+
+enum MindSenseComponentState {
+    static let pressedControlOpacity: Double = 0.92
+    static let pressedOverlayPrimary: Double = 0.09
+    static let pressedOverlaySecondary: Double = 0.08
+    static let disabledSaturation: Double = 0.2
+    static let disabledTextTintOpacity: Double = 0.45
+    static let disabledChipOpacity: Double = 0.45
+    static let secondaryShadowOpacity: Double = 0.16
+    static let textShadowOpacity: Double = 0.12
 }
 
 enum MindSenseTypography {

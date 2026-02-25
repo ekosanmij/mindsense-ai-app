@@ -701,7 +701,7 @@ struct AppleHealthPermissionsView: View {
                             systemName: "waveform.path.ecg",
                             tint: qualityTint(score: store.healthDataQualityScore),
                             style: .filled,
-                            size: 34
+                            size: MindSenseControlSize.profileBadge
                         )
                         VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                             Text("Data confidence \(store.healthDataQualityScore)")

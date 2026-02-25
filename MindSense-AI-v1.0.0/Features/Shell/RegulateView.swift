@@ -545,7 +545,7 @@ struct RegulateView: View {
                                 systemName: preset.icon,
                                 tint: MindSensePalette.signalCool,
                                 style: selected ? .filled : .muted,
-                                size: 40
+                                size: MindSenseControlSize.iconBadgeXL
                             )
                             VStack(alignment: .leading, spacing: MindSenseSpacing.xxs) {
                                 Text(preset.title)
@@ -834,7 +834,12 @@ struct RegulateView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     HStack(spacing: MindSenseSpacing.xs) {
-                        MindSenseIconBadge(systemName: "heart.text.square", tint: MindSensePalette.signalCool, style: .filled, size: 28)
+                        MindSenseIconBadge(
+                            systemName: "heart.text.square",
+                            tint: MindSensePalette.signalCool,
+                            style: .filled,
+                            size: MindSenseControlSize.iconBadge
+                        )
                         Text("Calming trend: \(calmingTrendLabel)")
                             .font(MindSenseTypography.caption)
                             .foregroundStyle(.secondary)
@@ -932,7 +937,12 @@ struct RegulateView: View {
     private func recordImpactForm(_ runningPreset: DemoRegulatePreset) -> some View {
         VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             HStack(spacing: MindSenseSpacing.xs) {
-                MindSenseIconBadge(systemName: "waveform.path.ecg", tint: impactTint, style: .filled, size: 28)
+                MindSenseIconBadge(
+                    systemName: "waveform.path.ecg",
+                    tint: impactTint,
+                    style: .filled,
+                    size: MindSenseControlSize.iconBadge
+                )
                 Text("Current impact selection: \(impactStateLine)")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)

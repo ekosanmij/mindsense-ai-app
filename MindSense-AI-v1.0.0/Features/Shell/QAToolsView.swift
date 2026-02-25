@@ -155,7 +155,12 @@ struct QAToolsView: View {
                 KPIScorecardView()
             } label: {
                 HStack {
-                    MindSenseIconBadge(systemName: "chart.bar.doc.horizontal", tint: MindSensePalette.accent, style: .filled, size: 32)
+                    MindSenseIconBadge(
+                        systemName: "chart.bar.doc.horizontal",
+                        tint: MindSensePalette.accent,
+                        style: .filled,
+                        size: MindSenseControlSize.iconBadgeLarge
+                    )
                     Text("Open KPI scorecard")
                         .font(MindSenseTypography.bodyStrong)
                         .foregroundStyle(.primary)

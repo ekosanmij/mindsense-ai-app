@@ -26,14 +26,14 @@ struct MindSenseButtonStyle: ButtonStyle {
     var tint: Color = MindSensePalette.accent
     var fullWidth: Bool = true
     var isLoading: Bool = false
-    var minHeight: CGFloat = 46
+    var minHeight: CGFloat = MindSenseControlSize.minimumTapTarget
 
     init(
         hierarchy: MindSenseButtonHierarchy,
         tint: Color = MindSensePalette.accent,
         fullWidth: Bool = true,
         isLoading: Bool = false,
-        minHeight: CGFloat = 46
+        minHeight: CGFloat = MindSenseControlSize.minimumTapTarget
     ) {
         self.hierarchy = hierarchy
         self.tint = tint
@@ -67,8 +67,8 @@ struct MindSenseButtonStyle: ButtonStyle {
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(isEnabled ? MindSensePalette.onAccent : MindSensePalette.strokeStrong)
                     .frame(maxWidth: fullWidth ? .infinity : nil)
-                    .frame(minHeight: max(52, minHeight))
-                    .padding(.horizontal, 16)
+                    .frame(minHeight: max(MindSenseControlSize.primaryButton, minHeight))
+                    .padding(.horizontal, MindSenseSpacing.md)
                     .background(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(primaryFill)
@@ -79,7 +79,11 @@ struct MindSenseButtonStyle: ButtonStyle {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(Color.black.opacity(isEnabled && isPressed ? 0.09 : 0))
+                            .fill(
+                                Color.black.opacity(
+                                    isEnabled && isPressed ? MindSenseComponentState.pressedOverlayPrimary : 0
+                                )
+                            )
                     )
                     .overlay {
                         if isLoading {
@@ -95,8 +99,8 @@ struct MindSenseButtonStyle: ButtonStyle {
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(isEnabled ? tint : MindSensePalette.strokeStrong)
                     .frame(maxWidth: fullWidth ? .infinity : nil)
-                    .frame(minHeight: max(44, minHeight))
-                    .padding(.horizontal, 16)
+                    .frame(minHeight: max(MindSenseControlSize.minimumTapTarget, minHeight))
+                    .padding(.horizontal, MindSenseSpacing.md)
                     .background(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(secondaryFill)
@@ -107,7 +111,11 @@ struct MindSenseButtonStyle: ButtonStyle {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(tint.opacity(isEnabled && isPressed ? 0.08 : 0))
+                            .fill(
+                                tint.opacity(
+                                    isEnabled && isPressed ? MindSenseComponentState.pressedOverlaySecondary : 0
+                                )
+                            )
                     )
                     .shadow(
                         color: secondaryShadowColor,
@@ -129,8 +137,8 @@ struct MindSenseButtonStyle: ButtonStyle {
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(textForeground(isPressed: isPressed))
                     .frame(maxWidth: fullWidth ? .infinity : nil)
-                    .frame(minHeight: max(44, minHeight - 2))
-                    .padding(.horizontal, fullWidth ? 14 : 12)
+                    .frame(minHeight: max(MindSenseControlSize.minimumTapTarget, minHeight - 2))
+                    .padding(.horizontal, fullWidth ? 14 : MindSenseSpacing.sm)
                     .background(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(textFill)
@@ -141,7 +149,11 @@ struct MindSenseButtonStyle: ButtonStyle {
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(tint.opacity(isEnabled && isPressed ? 0.08 : 0))
+                            .fill(
+                                tint.opacity(
+                                    isEnabled && isPressed ? MindSenseComponentState.pressedOverlaySecondary : 0
+                                )
+                            )
                     )
                     .shadow(
                         color: textShadowColor,
@@ -158,8 +170,8 @@ struct MindSenseButtonStyle: ButtonStyle {
                     }
             }
         }
-        .opacity(isPressed && isEnabled ? 0.92 : 1)
-        .saturation(isEnabled ? 1 : 0.2)
+        .opacity(isPressed && isEnabled ? MindSenseComponentState.pressedControlOpacity : 1)
+        .saturation(isEnabled ? 1 : MindSenseComponentState.disabledSaturation)
         .contentShape(Rectangle())
         .hoverEffect(hierarchy == .text ? .highlight : .lift)
     }
@@ -167,9 +179,9 @@ struct MindSenseButtonStyle: ButtonStyle {
     private var controlCornerRadius: CGFloat {
         switch hierarchy {
         case .primary, .secondary:
-            return 20
+            return MindSenseRadius.controlPrimary
         case .text:
-            return 18
+            return MindSenseRadius.controlText
         }
     }
 
@@ -199,7 +211,7 @@ struct MindSenseButtonStyle: ButtonStyle {
     }
 
     private var secondaryShadowColor: Color {
-        isEnabled ? MindSensePalette.shadowDirectional.opacity(0.16) : .clear
+        isEnabled ? MindSensePalette.shadowDirectional.opacity(MindSenseComponentState.secondaryShadowOpacity) : .clear
     }
 
     private var textFill: Color {
@@ -217,11 +229,11 @@ struct MindSenseButtonStyle: ButtonStyle {
     }
 
     private var textShadowColor: Color {
-        isEnabled ? MindSensePalette.shadowDirectional.opacity(0.12) : .clear
+        isEnabled ? MindSensePalette.shadowDirectional.opacity(MindSenseComponentState.textShadowOpacity) : .clear
     }
 
     private func textForeground(isPressed: Bool) -> Color {
-        guard isEnabled else { return tint.opacity(0.45) }
+        guard isEnabled else { return tint.opacity(MindSenseComponentState.disabledTextTintOpacity) }
         return tint.opacity(isPressed ? 0.68 : 1)
     }
 }
@@ -273,7 +285,7 @@ private struct CardContainer<Content: View>: View {
         VStack(alignment: .leading, spacing: MindSenseSpacing.md) {
             content
         }
-        .padding(18)
+        .padding(MindSenseLayout.cardContentPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: MindSenseRadius.card, style: .continuous)
@@ -381,7 +393,7 @@ struct MindSenseTabHero<Content: View>: View {
             VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                 headerRow
 
-                MindSenseSectionDivider(emphasis: 0.43)
+                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.hero)
 
                 Text(title.mindSenseHeadlineSafe)
                     .font(MindSenseTypography.title)
@@ -404,8 +416,8 @@ struct MindSenseTabHero<Content: View>: View {
         .overlay(alignment: .topTrailing) {
             if let watermarkTint {
                 MindSenseLogoWatermark(height: watermarkHeight, tint: watermarkTint)
-                    .padding(.top, 8)
-                    .padding(.trailing, 2)
+                    .padding(.top, MindSenseSpacing.xs)
+                    .padding(.trailing, MindSenseSpacing.xxxs)
             }
         }
     }
@@ -450,7 +462,7 @@ struct MindSenseTabHero<Content: View>: View {
 
     private var headerLabelRow: some View {
         HStack(alignment: .center, spacing: MindSenseSpacing.xs) {
-            MindSenseIconBadge(systemName: icon, tint: headerTint, style: .filled, size: 30)
+            MindSenseIconBadge(systemName: icon, tint: headerTint, style: .filled, size: MindSenseControlSize.chip)
             Text(label.uppercased())
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(headerTint.opacity(0.95))
@@ -481,8 +493,8 @@ struct MindSenseTabHero<Content: View>: View {
             .font(MindSenseTypography.metricCaption)
             .lineLimit(1)
             .minimumScaleFactor(0.85)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 44)
+            .padding(.horizontal, MindSenseSpacing.sm)
+            .frame(minHeight: MindSenseControlSize.minimumTapTarget)
             .foregroundStyle(.secondary)
             .background(
                 Capsule(style: .continuous)
@@ -533,7 +545,7 @@ struct MindSenseCommandDeck: View {
     @ViewBuilder
     private var recommendedStepLabel: some View {
         if dynamicTypeSize.mindSenseCardReflowPreferred {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Image(systemName: "brain.head.profile")
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
                     .foregroundStyle(headerTint)
@@ -645,7 +657,7 @@ struct MindSenseSectionHeader: View {
                     systemName: icon,
                     tint: model.iconTint,
                     style: model.iconStyle,
-                    size: 28
+                    size: MindSenseControlSize.iconBadge
                 )
                 .padding(.top, 1)
                 .accessibilityHidden(true)
@@ -671,7 +683,7 @@ struct MindSenseSectionHeader: View {
                 }
             }
             if !shouldStackAction {
-                Spacer(minLength: 8)
+                Spacer(minLength: MindSenseSpacing.xs)
             }
             if !shouldStackAction, let actionTitle = model.actionTitle, let action = model.action {
                 Button(actionTitle, action: action)
@@ -760,15 +772,15 @@ struct MindSenseCollapsibleSection<Content: View>: View {
                 }
             }
         } label: {
-            HStack(spacing: 4) {
+            HStack(spacing: MindSenseSpacing.xxxs) {
                 Text(isExpanded ? "Hide" : "Show")
                     .font(MindSenseTypography.micro)
                 Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
             }
             .foregroundStyle(.secondary)
-            .padding(.horizontal, 8)
-            .frame(minHeight: 28)
+            .padding(.horizontal, MindSenseSpacing.xs)
+            .frame(minHeight: MindSenseControlSize.chip)
             .background(
                 Capsule(style: .continuous)
                     .fill(MindSenseSurfaceLevel.base.fill)
@@ -806,7 +818,7 @@ struct MindSenseSummaryDisclosureText: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
             Text(summary)
                 .font(textStyle)
                 .foregroundStyle(textColor)
@@ -830,13 +842,19 @@ struct MindSenseSummaryDisclosureText: View {
                         }
                     }
                 } label: {
-                    HStack(spacing: 4) {
+                    HStack(spacing: MindSenseSpacing.xxxs) {
                         Text(expanded ? expandedLabel : collapsedLabel)
                         Image(systemName: expanded ? "chevron.up" : "chevron.down")
                             .font(.system(size: 10, weight: .semibold, design: .rounded))
                     }
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 44))
+                .buttonStyle(
+                    MindSenseButtonStyle(
+                        hierarchy: .text,
+                        fullWidth: false,
+                        minHeight: MindSenseControlSize.minimumTapTarget
+                    )
+                )
                 .accessibilityLabel(expanded ? expandedLabel : collapsedLabel)
                 .accessibilityValue(expanded ? "Expanded" : "Collapsed")
                 .accessibilityHint(expanded ? "Collapses details" : "Expands details")
@@ -865,7 +883,7 @@ enum MindSenseRhythm {
 
 struct MindSenseSectionDivider: View {
     var inset: CGFloat = 0
-    var emphasis: Double = 0.3
+    var emphasis: Double = MindSenseDividerEmphasis.regular
 
     var body: some View {
         Rectangle()
@@ -906,7 +924,7 @@ struct MindSenseDoItNowDock<Content: View>: View {
 
     var body: some View {
         MindSenseBottomActionDock {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 Text(title)
                     .font(MindSenseTypography.micro)
                     .foregroundStyle(.secondary)
@@ -962,8 +980,8 @@ struct PillChip: View {
         Text(label)
             .font(MindSenseTypography.caption)
             .lineLimit(1)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 30)
+            .padding(.horizontal, MindSenseSpacing.sm)
+            .frame(minHeight: MindSenseControlSize.chip)
             .foregroundStyle(foreground)
             .background(
                 Capsule(style: .continuous)
@@ -977,7 +995,7 @@ struct PillChip: View {
                 Capsule(style: .continuous)
                     .stroke(border, lineWidth: 1)
             )
-            .opacity(state == .disabled ? 0.45 : 1)
+            .opacity(state == .disabled ? MindSenseComponentState.disabledChipOpacity : 1)
             .animation(reduceMotion ? nil : MindSenseMotion.selection, value: state)
             .accessibilityLabel(label)
             .accessibilityValue(accessibilityStateValue)
@@ -1171,20 +1189,20 @@ struct MindSenseSegmentedControl<Option: Hashable>: View {
         Group {
             if enablesHorizontalScrollFallback {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         ForEach(options, id: \.self) { option in
                             segmentButton(for: option, fillAvailableWidth: false)
                         }
                     }
-                    .padding(4)
+                    .padding(MindSenseSpacing.xxxs)
                 }
             } else {
-                HStack(spacing: 6) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     ForEach(options, id: \.self) { option in
                         segmentButton(for: option, fillAvailableWidth: true)
                     }
                 }
-                .padding(4)
+                .padding(MindSenseSpacing.xxxs)
             }
         }
         .background(containerBackground)
@@ -1245,9 +1263,9 @@ private struct MindSenseSegmentOptionView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.82)
             .allowsTightening(true)
-            .padding(.horizontal, fillAvailableWidth ? 8 : 12)
+            .padding(.horizontal, fillAvailableWidth ? MindSenseSpacing.xs : MindSenseSpacing.sm)
             .frame(maxWidth: fillAvailableWidth ? .infinity : nil)
-            .frame(minHeight: 44)
+            .frame(minHeight: MindSenseControlSize.minimumTapTarget)
             .background(segmentBackground)
             .overlay(segmentStroke)
             .animation(reduceMotion ? nil : MindSenseMotion.selection, value: isSelected)

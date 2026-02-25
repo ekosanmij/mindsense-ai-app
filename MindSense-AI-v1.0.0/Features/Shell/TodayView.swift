@@ -2270,11 +2270,11 @@ struct TodayView: View {
         .padding(.horizontal, MindSenseSpacing.xs)
         .padding(.vertical, MindSenseSpacing.xxxs)
         .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: MindSenseRadius.micro, style: .continuous)
                 .fill(isActive ? tint.opacity(0.15) : MindSenseSurfaceLevel.base.fill)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: MindSenseRadius.micro, style: .continuous)
                 .stroke(isActive ? tint.opacity(0.48) : MindSensePalette.strokeSubtle, lineWidth: 1)
         )
     }

@@ -199,7 +199,12 @@ struct CommunityView: View {
                     store.track(event: .secondaryActionTapped, surface: .community, action: "open_drill_down_card", metadata: ["id": card.id])
                 } label: {
                     HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
-                        MindSenseIconBadge(systemName: "rectangle.stack.person.crop.fill", tint: MindSensePalette.signalCool, style: .filled, size: 32)
+                        MindSenseIconBadge(
+                            systemName: "rectangle.stack.person.crop.fill",
+                            tint: MindSensePalette.signalCool,
+                            style: .filled,
+                            size: MindSenseControlSize.iconBadgeLarge
+                        )
                         VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                             Text(card.title)
                                 .font(MindSenseTypography.bodyStrong)

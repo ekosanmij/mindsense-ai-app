@@ -28,7 +28,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## A) Cross-Cutting Feedback Translation
 
 ### C-01 Hierarchy overload across core screens
-- Status: `[~]`
+- Status: `[x]`
 - Source feedback: Equal visual weight across too many modules; scanning cost too high.
 - Actionable TODO:
   1. Enforce top-of-screen hierarchy pattern on `Today`, `Regulate`, and `Data`: `headline -> one primary CTA -> compact evidence -> details`.
@@ -786,7 +786,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Reduce Motion behavior validated.
 
 ### R15 Tokenize components and states
-- Status: `[~]`
+- Status: `[x]`
 - Deliverables:
   1. Shared source of truth for spacing/type/radius/state.
   2. Eliminate duplicated style literals in shell screens.

@@ -80,7 +80,12 @@ struct PostActivationPaywallSheet: View {
 
     private func benefitRow(title: String, detail: String) -> some View {
         HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
-            MindSenseIconBadge(systemName: "sparkles", tint: MindSensePalette.signalCool, style: .filled, size: 28)
+            MindSenseIconBadge(
+                systemName: "sparkles",
+                tint: MindSensePalette.signalCool,
+                style: .filled,
+                size: MindSenseControlSize.iconBadge
+            )
             VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text(title)
                     .font(MindSenseTypography.bodyStrong)

@@ -1031,6 +1031,19 @@ struct DataView: View {
                     PillChip(label: "Window \(window.rawValue)", state: .unselected)
                 }
             }
+
+            if submode == .patterns {
+                Button("Start suggested plan") {
+                    launchRecommendedAction(source: "data_hero_primary_cta")
+                }
+                .accessibilityIdentifier("data_hero_primary_cta")
+                .buttonStyle(
+                    MindSenseButtonStyle(
+                        hierarchy: .primary,
+                        minHeight: MindSenseControlSize.primaryButton
+                    )
+                )
+            }
         }
     }
 
@@ -1206,7 +1219,6 @@ struct DataView: View {
     private var activeModeContent: some View {
         switch submode {
         case .patterns:
-            signalsTrendStripBlock
             trendBlock
             whatsWorkingBlock
             if loadValue >= 88 {
@@ -1330,7 +1342,7 @@ struct DataView: View {
                         store.track(event: .primaryCTATapped, surface: .data, action: "open_coverage_diagnostics")
                         store.triggerHaptic(intent: .selection)
                     }
-                    .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: MindSenseControlSize.minimumTapTarget))
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
                 }
             }
 
