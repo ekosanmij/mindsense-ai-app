@@ -106,6 +106,38 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         XCTAssertEqual(percentLabels.count, 0, "Onboarding hero should use step-based progress copy without percent duplication.")
     }
 
+    func testDataWorkspaceLabelsFitAtDefaultType() {
+        let app = launchReadyApp(
+            appearance: .system,
+            reset: true,
+            enableHaptics: false,
+            reduceMotion: true
+        )
+
+        app.tabBars.buttons["Data"].tap()
+        XCTAssertTrue(app.buttons["data_primary_cta"].waitForExistence(timeout: 3))
+
+        let trends = app.buttons["Trends"]
+        let experiments = app.buttons["Experiments"]
+        let history = app.buttons["History"]
+
+        XCTAssertTrue(trends.waitForExistence(timeout: 2))
+        XCTAssertTrue(experiments.waitForExistence(timeout: 2))
+        XCTAssertTrue(history.waitForExistence(timeout: 2))
+
+        XCTAssertTrue(trends.isHittable, "Trends label should remain visible and tappable.")
+        XCTAssertTrue(experiments.isHittable, "Experiments label should remain visible and tappable.")
+        XCTAssertTrue(history.isHittable, "History label should remain visible and tappable.")
+
+        XCTAssertFalse(trends.label.contains("…"), "Trends label should not truncate.")
+        XCTAssertFalse(experiments.label.contains("…"), "Experiments label should not truncate.")
+        XCTAssertFalse(history.label.contains("…"), "History label should not truncate.")
+
+        trends.tap()
+        experiments.tap()
+        history.tap()
+    }
+
     func testDataExperimentLifecycle() {
         let app = launchReadyApp()
 

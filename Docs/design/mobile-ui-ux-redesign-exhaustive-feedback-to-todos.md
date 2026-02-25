@@ -648,7 +648,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## C3) Spacing System
 
 ### DS-05 Enforce 4pt spacing scale and layout constants
-- Status: `[ ]`
+- Status: `[~]`
 - Source detail: 4/8/12/16/20/24/32/40/48, horizontal margins 16/20, card padding 16, inter-section 24-32.
 - Actionable TODO:
   1. Add explicit spacing scale constants where missing.
@@ -799,7 +799,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 - [x] Today hero one-CTA hierarchy audit
 - [ ] Timeline single-action row interaction audit
 - [ ] Regulate focus mode interaction audit
-- [ ] Data tab label fit audit (no truncation at default type)
+- [x] Data tab label fit audit (no truncation at default type)
 - [ ] Sticky CTA/tab bar overlap audit across device sizes
 - [x] Contrast/non-text contrast pass
 - [ ] Dynamic Type clipping pass

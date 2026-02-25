@@ -1018,7 +1018,7 @@ struct DataView: View {
                 }
             )
 
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 PillChip(label: store.intentMode.shortTitle, state: .selected)
                 switch submode {
                 case .patterns, .experiments:
@@ -1035,7 +1035,7 @@ struct DataView: View {
 
     private var signalFocusChipBar: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 ForEach(store.orderedSignalFocuses) { focus in
                     Button {
                         guard selectedSignal != focus else { return }
@@ -1049,7 +1049,7 @@ struct DataView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(.vertical, 2)
+            .padding(.vertical, MindSenseSpacing.xxs)
         }
     }
 
@@ -1063,7 +1063,7 @@ struct DataView: View {
                 )
             )
 
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 ForEach(signalTrendTiles) { tile in
                     signalTrendTile(tile)
                 }
@@ -1076,7 +1076,7 @@ struct DataView: View {
         return Button {
             handleSignalTrendTileTap(tile)
         } label: {
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxs) {
                 Text(tile.title)
                     .font(MindSenseTypography.micro)
                     .foregroundStyle(.secondary)
@@ -1088,7 +1088,7 @@ struct DataView: View {
                     .foregroundStyle(tint)
                     .monospacedDigit()
 
-                HStack(spacing: 4) {
+                HStack(spacing: MindSenseSpacing.xxs) {
                     Image(systemName: trendArrowSymbol(for: tile.direction))
                         .font(.system(size: 10, weight: .semibold, design: .rounded))
                     Text(tile.deltaText)

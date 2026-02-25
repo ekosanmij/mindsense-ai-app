@@ -271,28 +271,32 @@ enum MindSenseSurfaceLevel {
 }
 
 struct MindSenseSpacing {
-    static let xxs: CGFloat = 6
+    // 4pt baseline scale.
+    static let xxxs: CGFloat = 4
+    static let xxs: CGFloat = xxxs
     static let xs: CGFloat = 8
     static let sm: CGFloat = 12
     static let md: CGFloat = 16
     static let ml: CGFloat = 20
     static let lg: CGFloat = 24
     static let xl: CGFloat = 32
+    static let xxl: CGFloat = 40
+    static let xxxl: CGFloat = 48
 }
 
 enum MindSenseLayout {
-    static let pageHorizontal: CGFloat = 16
-    static let pageTop: CGFloat = 14
-    static let pageBottom: CGFloat = 16
+    static let pageHorizontal: CGFloat = MindSenseSpacing.md
+    static let pageTop: CGFloat = MindSenseSpacing.md
+    static let pageBottom: CGFloat = MindSenseSpacing.md
     static let floatingTabBarCompactClearance: CGFloat = 72
     static let floatingTabBarStandardClearance: CGFloat = 88
     static let floatingTabBarExpandedClearance: CGFloat = 104
 
-    static let sheetHorizontal: CGFloat = 16
-    static let sheetVertical: CGFloat = 20
+    static let sheetHorizontal: CGFloat = MindSenseSpacing.md
+    static let sheetVertical: CGFloat = MindSenseSpacing.ml
 
-    static let tileHorizontalInset: CGFloat = 12
-    static let tileVerticalInset: CGFloat = 10
+    static let tileHorizontalInset: CGFloat = MindSenseSpacing.md
+    static let tileVerticalInset: CGFloat = MindSenseSpacing.sm
     static let tileMinHeight: CGFloat = 60
 
     static func tabBarClearance(

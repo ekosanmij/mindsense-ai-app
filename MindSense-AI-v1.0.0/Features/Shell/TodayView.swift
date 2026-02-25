@@ -537,7 +537,7 @@ struct TodayView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(minHeight: 44)
-                .padding(.horizontal, 12)
+                .padding(.horizontal, MindSenseSpacing.sm)
                 .background(
                     RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                         .fill(MindSenseSurfaceLevel.base.fill)
@@ -551,7 +551,7 @@ struct TodayView: View {
             .accessibilityIdentifier("today_action_card_why_now")
 
             if showHeroWhy {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                     heroDiagnosticsDetails
                     heroIntentModeDetails
                     heroActionContextDetails
@@ -565,16 +565,16 @@ struct TodayView: View {
     }
 
     private var heroDiagnosticsDetails: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Button {
                 showConfidenceDetails = true
                 store.triggerHaptic(intent: .selection)
             } label: {
-                HStack(spacing: 8) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     Label("Recommendation confidence \(store.confidencePercent)%", systemImage: "chart.bar.xaxis")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
-                    Spacer(minLength: 8)
+                    Spacer(minLength: MindSenseSpacing.xs)
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
@@ -588,8 +588,8 @@ struct TodayView: View {
                 showSignalSourceDetails = true
                 store.triggerHaptic(intent: .selection)
             } label: {
-                HStack(spacing: 8) {
-                    VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: MindSenseSpacing.xs) {
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xxs) {
                         Text("Signal source and update status")
                             .font(MindSenseTypography.micro)
                             .foregroundStyle(.secondary)
@@ -599,7 +599,7 @@ struct TodayView: View {
                             .lineLimit(2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Spacer(minLength: 8)
+                    Spacer(minLength: MindSenseSpacing.xs)
                     Image(systemName: "chevron.right")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
@@ -612,7 +612,7 @@ struct TodayView: View {
     }
 
     private var heroIntentModeDetails: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text("Session emphasis filter")
                 .font(MindSenseTypography.bodyStrong)
 
@@ -636,7 +636,7 @@ struct TodayView: View {
 
     @ViewBuilder
     private var heroActionContextDetails: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             if hasUnfinishedRegulateStep {
                 Text("An active session is already running. Continue the session or record impact to finish today's primary loop.")
                     .font(MindSenseTypography.caption)
@@ -666,7 +666,7 @@ struct TodayView: View {
 
     @ViewBuilder
     private func heroStateExplanationDetails(useBullets: Bool) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             Text("Why this state now")
                 .font(MindSenseTypography.bodyStrong)
 
@@ -709,7 +709,7 @@ struct TodayView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .frame(minHeight: 44)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, MindSenseSpacing.sm)
             .background(
                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                     .fill(MindSenseSurfaceLevel.base.fill)
@@ -734,7 +734,7 @@ struct TodayView: View {
                 storageKey: "ui.collapse.today.status_snapshot",
                 collapsedSummary: "Load \(store.demoMetrics.load) • Readiness \(store.demoMetrics.readiness) • Consistency \(store.demoMetrics.consistency)"
             ) {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     Text("Load \(store.demoMetrics.load) (\(loadStateLabel))  •  Readiness \(store.demoMetrics.readiness) (\(readinessStateLabel))")
                         .font(MindSenseTypography.body)
                         .fixedSize(horizontal: false, vertical: true)

@@ -410,7 +410,7 @@ struct RegulateView: View {
             tone: .accent,
             watermarkTint: MindSensePalette.accent
         ) {
-            HStack(spacing: 8) {
+            HStack(spacing: MindSenseSpacing.xs) {
                 PillChip(label: store.intentMode.shortTitle, state: .selected)
                 PillChip(label: flowLabel, state: .unselected)
             }
@@ -453,7 +453,7 @@ struct RegulateView: View {
                 storageKey: "ui.collapse.regulate.session_status",
                 collapsedSummary: sessionStatusCollapsedSummary
             ) {
-                HStack(alignment: .top, spacing: 8) {
+                HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
                     Text("Load \(store.demoMetrics.load)  •  Readiness \(store.demoMetrics.readiness)  •  \(flowLabel)")
                         .font(MindSenseTypography.body)
                         .fixedSize(horizontal: false, vertical: true)
@@ -534,20 +534,20 @@ struct RegulateView: View {
 
             ForEach(presets) { preset in
                 let selected = preset.id == activePreset?.id
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                     Button {
                         selectedPresetID = preset.id
                         store.triggerHaptic(intent: .selection)
                         store.track(event: .secondaryActionTapped, surface: .regulate, action: "preset_selected_\(preset.id.rawValue)")
                     } label: {
-                        HStack(spacing: 12) {
+                        HStack(spacing: MindSenseSpacing.sm) {
                             MindSenseIconBadge(
                                 systemName: preset.icon,
                                 tint: MindSensePalette.signalCool,
                                 style: selected ? .filled : .muted,
                                 size: 40
                             )
-                            VStack(alignment: .leading, spacing: 4) {
+                            VStack(alignment: .leading, spacing: MindSenseSpacing.xxs) {
                                 Text(preset.title)
                                     .font(MindSenseTypography.bodyStrong)
                                     .foregroundStyle(.primary)
@@ -562,7 +562,7 @@ struct RegulateView: View {
                                     .foregroundStyle(.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
 
-                                HStack(spacing: 8) {
+                                HStack(spacing: MindSenseSpacing.xs) {
                                     selectionMetaPill(
                                         icon: "waveform.path.ecg",
                                         text: "Predicted fit \(store.expectedEffectConfidence(for: preset.id))%",
@@ -656,7 +656,7 @@ struct RegulateView: View {
     }
 
     private func selectionMetaPillContent(icon: String, text: String) -> some View {
-        HStack(spacing: 5) {
+        HStack(spacing: MindSenseSpacing.xxs) {
             Image(systemName: icon)
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
             Text(text)
@@ -664,7 +664,7 @@ struct RegulateView: View {
                 .monospacedDigit()
         }
         .foregroundStyle(MindSensePalette.accent)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, MindSenseSpacing.xs)
         .frame(minHeight: 22)
         .background(
             Capsule(style: .continuous)
@@ -704,7 +704,7 @@ struct RegulateView: View {
                     )
                     .rotationEffect(.degrees(-90))
 
-                VStack(spacing: 2) {
+                VStack(spacing: MindSenseSpacing.xxs) {
                     Text(remainingLabel)
                         .font(MindSenseTypography.metricDisplay)
                         .minimumScaleFactor(0.75)
@@ -718,7 +718,7 @@ struct RegulateView: View {
             .frame(width: 180, height: 180)
             .frame(maxWidth: .infinity, alignment: .center)
 
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 Text("Step schedule")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
