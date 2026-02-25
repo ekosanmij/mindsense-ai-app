@@ -663,7 +663,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## C4) Component States
 
 ### DS-06 Primary button spec implementation
-- Status: `[ ]`
+- Status: `[x]`
 - Source detail: min height 52, radius 20-24, pressed darken ~8-10%, disabled palette, loading spinner.
 - Actionable TODO:
   1. Ensure `MindSenseButtonStyle(.primary)` enforces 52 min height and state visuals.
@@ -675,7 +675,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Primary button state matrix (enabled/pressed/disabled/loading) implemented and reused.
 
 ### DS-07 Secondary button outline/tinted spec
-- Status: `[ ]`
+- Status: `[x]`
 - Source detail: 1.5pt border primary, primary text, transparent/tinted fill.
 - Actionable TODO:
   1. Align secondary hierarchy visuals to outlined/tinted spec.

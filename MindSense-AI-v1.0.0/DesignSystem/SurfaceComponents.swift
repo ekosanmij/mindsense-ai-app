@@ -25,17 +25,20 @@ struct MindSenseButtonStyle: ButtonStyle {
     let hierarchy: MindSenseButtonHierarchy
     var tint: Color = MindSensePalette.accent
     var fullWidth: Bool = true
+    var isLoading: Bool = false
     var minHeight: CGFloat = 46
 
     init(
         hierarchy: MindSenseButtonHierarchy,
         tint: Color = MindSensePalette.accent,
         fullWidth: Bool = true,
+        isLoading: Bool = false,
         minHeight: CGFloat = 46
     ) {
         self.hierarchy = hierarchy
         self.tint = tint
         self.fullWidth = fullWidth
+        self.isLoading = isLoading
         self.minHeight = minHeight
     }
 
@@ -53,48 +56,58 @@ struct MindSenseButtonStyle: ButtonStyle {
     }
 
     func makeBody(configuration: Configuration) -> some View {
-        let isPressed = configuration.isPressed
+        let isPressed = configuration.isPressed && !isLoading
+        let cornerRadius = controlCornerRadius
 
         Group {
             switch hierarchy {
             case .primary:
                 configuration.label
+                    .opacity(isLoading ? 0 : 1)
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(isEnabled ? MindSensePalette.onAccent : MindSensePalette.strokeStrong)
                     .frame(maxWidth: fullWidth ? .infinity : nil)
-                    .frame(minHeight: minHeight)
+                    .frame(minHeight: max(52, minHeight))
                     .padding(.horizontal, 16)
                     .background(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(primaryFill)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .stroke(primaryStroke, lineWidth: 1)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
-                            .fill(MindSensePalette.shadowDirectional.opacity(isEnabled && isPressed ? 0.1 : 0))
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(Color.black.opacity(isEnabled && isPressed ? 0.09 : 0))
                     )
+                    .overlay {
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(MindSensePalette.onAccent)
+                        }
+                    }
 
             case .secondary:
                 configuration.label
+                    .opacity(isLoading ? 0 : 1)
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(isEnabled ? tint : MindSensePalette.strokeStrong)
                     .frame(maxWidth: fullWidth ? .infinity : nil)
-                    .frame(minHeight: minHeight)
+                    .frame(minHeight: max(44, minHeight))
                     .padding(.horizontal, 16)
                     .background(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(secondaryFill)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
-                            .stroke(secondaryStroke, lineWidth: 1)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .stroke(secondaryStroke, lineWidth: 1.5)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
-                            .fill(MindSensePalette.shadowDirectional.opacity(isEnabled && isPressed ? 0.06 : 0))
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(tint.opacity(isEnabled && isPressed ? 0.08 : 0))
                     )
                     .shadow(
                         color: secondaryShadowColor,
@@ -102,24 +115,32 @@ struct MindSenseButtonStyle: ButtonStyle {
                         x: 0,
                         y: isEnabled && !isPressed ? 1 : 0
                     )
+                    .overlay {
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(tint)
+                        }
+                    }
 
             case .text:
                 configuration.label
+                    .opacity(isLoading ? 0 : 1)
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(textForeground(isPressed: isPressed))
                     .frame(maxWidth: fullWidth ? .infinity : nil)
                     .frame(minHeight: max(44, minHeight - 2))
                     .padding(.horizontal, fullWidth ? 14 : 12)
                     .background(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(textFill)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .stroke(textStroke, lineWidth: 1)
                     )
                     .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                             .fill(tint.opacity(isEnabled && isPressed ? 0.08 : 0))
                     )
                     .shadow(
@@ -128,12 +149,28 @@ struct MindSenseButtonStyle: ButtonStyle {
                         x: 0,
                         y: isEnabled && !isPressed ? 1 : 0
                     )
+                    .overlay {
+                        if isLoading {
+                            ProgressView()
+                                .controlSize(.small)
+                                .tint(tint)
+                        }
+                    }
             }
         }
-        .opacity(isPressed && isEnabled ? 0.9 : 1)
+        .opacity(isPressed && isEnabled ? 0.92 : 1)
         .saturation(isEnabled ? 1 : 0.2)
         .contentShape(Rectangle())
         .hoverEffect(hierarchy == .text ? .highlight : .lift)
+    }
+
+    private var controlCornerRadius: CGFloat {
+        switch hierarchy {
+        case .primary, .secondary:
+            return 20
+        case .text:
+            return 18
+        }
     }
 
     private var primaryFill: AnyShapeStyle {
@@ -148,12 +185,15 @@ struct MindSenseButtonStyle: ButtonStyle {
     }
 
     private var secondaryFill: Color {
-        isEnabled ? MindSenseSurfaceLevel.raised.fill : MindSenseSurfaceLevel.base.fill
+        if isEnabled {
+            return tint.opacity(0.08)
+        }
+        return MindSenseSurfaceLevel.base.fill
     }
 
     private var secondaryStroke: Color {
         if isEnabled {
-            return tint.opacity(0.22)
+            return tint.opacity(0.62)
         }
         return MindSensePalette.strokeSubtle.opacity(0.7)
     }

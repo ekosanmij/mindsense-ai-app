@@ -3053,6 +3053,7 @@ private struct ExperimentCompletionSheet: View {
     let onCancel: () -> Void
     let onSubmit: () -> Void
     @State private var didAppear = false
+    @State private var isSubmitting = false
 
     private var reduceMotion: Bool {
         appReduceMotion || accessibilityReduceMotion
@@ -3149,13 +3150,15 @@ private struct ExperimentCompletionSheet: View {
                     }
                     .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
 
-                    Button("Save result", action: onSubmit)
+                    Button("Save result", action: handleSubmit)
                         .accessibilityIdentifier("data_complete_submit_cta")
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, isLoading: isSubmitting))
+                        .disabled(isSubmitting)
                         .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
 
                     Button("Cancel", action: onCancel)
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                        .disabled(isSubmitting)
                         .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
                 }
                 .mindSenseSheetInsets()
@@ -3171,6 +3174,15 @@ private struct ExperimentCompletionSheet: View {
             .onAppear {
                 didAppear = true
             }
+        }
+    }
+
+    private func handleSubmit() {
+        guard !isSubmitting else { return }
+        isSubmitting = true
+        onSubmit()
+        DispatchQueue.main.async {
+            isSubmitting = false
         }
     }
 
