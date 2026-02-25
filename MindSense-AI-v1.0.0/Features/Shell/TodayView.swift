@@ -957,11 +957,6 @@ struct TodayView: View {
                     }
                 }
 
-                Button("View timeline details") {
-                    showTimelineDetails = true
-                    store.triggerHaptic(intent: .selection)
-                }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
             }
         }
     }

@@ -9,11 +9,12 @@ struct IntroView: View {
     @State private var inlineMessage = ""
     @State private var inlineSeverity: BannerSeverity = .info
     @State private var isSubmitting = false
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     private let highlights: [(title: String, detail: String, icon: String)] = [
-        ("Status in 10 seconds", "Load, Readiness, and Consistency in one clear view.", "gauge.with.dots.needle.bottom.50percent"),
-        ("One next action", "Get one regulate step with duration and expected outcome.", "figure.mind.and.body"),
-        ("Rationale built in", "Recommendations include estimate language and why they matter.", "chart.line.uptrend.xyaxis")
+        ("Status in seconds", "Load, Readiness, and Consistency at a glance.", "gauge.with.dots.needle.bottom.50percent"),
+        ("One next action", "Get one clear regulate step with duration.", "figure.mind.and.body"),
+        ("Why it was chosen", "See recommendation rationale and confidence in context.", "chart.line.uptrend.xyaxis")
     ]
 
     private var reduceMotion: Bool {
@@ -22,13 +23,16 @@ struct IntroView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: MindSenseRhythm.section) {
+            VStack(spacing: MindSenseRhythm.regular) {
                 introHero
                     .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
 
+                signInCTA
+                    .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+
                 InsetSurface {
                     MindSenseSectionHeader(
-                        model: .init(title: "What you get", subtitle: "Clear status, clear action.")
+                        model: .init(title: "What you get", subtitle: "Clear status. Clear action.")
                     )
 
                     ForEach(Array(highlights.enumerated()), id: \.element.title) { index, item in
@@ -39,19 +43,6 @@ struct IntroView: View {
                         }
                     }
                 }
-                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
-
-                SignInWithAppleButton(.continue) { request in
-                    request.requestedScopes = [.fullName, .email]
-                } onCompletion: { result in
-                    handleAppleAuthorization(result)
-                }
-                .accessibilityIdentifier("intro_primary_cta")
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 52)
-                .clipShape(RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous))
-                .disabled(isSubmitting)
-                .opacity(isSubmitting ? 0.84 : 1)
                 .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
 
                 if !inlineMessage.isEmpty {
@@ -81,32 +72,53 @@ struct IntroView: View {
                     .foregroundStyle(MindSensePalette.signalCoolStrong)
                     .tracking(1)
                 Spacer()
-                PillChip(label: "Setup < 45 sec", state: .selected)
+                PillChip(label: "Setup < 45 sec", state: .unselected)
             }
 
             MindSenseSectionHeader(
                 model: .init(
                     title: "Daily nervous-system guidance, simplified",
-                    subtitle: "Continue with Apple to start your account."
+                    subtitle: "Sign in with Apple to start."
                 )
             )
         }
     }
 
+    private var signInCTA: some View {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+            SignInWithAppleButton(.continue) { request in
+                request.requestedScopes = [.fullName, .email]
+            } onCompletion: { result in
+                handleAppleAuthorization(result)
+            }
+            .accessibilityIdentifier("intro_primary_cta")
+            .signInWithAppleButtonStyle(.black)
+            .frame(height: 52)
+            .clipShape(RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous))
+            .disabled(isSubmitting)
+            .opacity(isSubmitting ? 0.84 : 1)
+
+            Text(verticalSizeClass == .compact ? "Continue with Apple to start." : "Continue with Apple. Setup takes under a minute.")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
     private func unlockRow(_ item: (title: String, detail: String, icon: String)) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            MindSenseIconBadge(systemName: item.icon, tint: MindSensePalette.signalCool, style: .filled, size: 32)
-            VStack(alignment: .leading, spacing: 3) {
+            MindSenseIconBadge(systemName: item.icon, tint: MindSensePalette.signalCool, style: .filled, size: 28)
+            VStack(alignment: .leading, spacing: 2) {
                 Text(item.title)
-                    .font(MindSenseTypography.bodyStrong)
+                    .font(MindSenseTypography.caption.weight(.semibold))
                 Text(item.detail)
-                    .font(MindSenseTypography.body)
+                    .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
         }
-        .frame(minHeight: 54, alignment: .leading)
+        .frame(minHeight: 48, alignment: .leading)
     }
 
     private func handleAppleAuthorization(_ result: Result<ASAuthorization, Error>) {
