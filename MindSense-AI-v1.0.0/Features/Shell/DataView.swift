@@ -316,6 +316,41 @@ struct DataView: View {
         }
     }
 
+    private var activeTrendFilterSummaryLine: String {
+        var segments = [
+            "Window \(window.rawValue)",
+            "Day filter \(trendDayFilter.rawValue)",
+            "Smoothing \(trendSmoothing.rawValue)"
+        ]
+        if trendComparePreviousWindow {
+            segments.append("Compare prior window")
+        }
+        return segments.joined(separator: " • ")
+    }
+
+    private var activeTrendFilterDetailLine: String {
+        let overlaySummary: String
+        if trendOverlayCounts.isEmpty {
+            overlaySummary = "Overlays: none."
+        } else {
+            let chips = trendOverlayCounts
+                .map { "\($0.type.title) \($0.count)" }
+                .joined(separator: ", ")
+            overlaySummary = "Overlays: \(chips)."
+        }
+
+        let comparisonSummary: String
+        if shouldShowTrendComparison, let comparison = trendComparisonSummary {
+            comparisonSummary = trendComparisonDetailText(for: comparison)
+        } else if trendComparePreviousWindow && !trendCompareSupported {
+            comparisonSummary = "Previous-window compare is currently available on 7D."
+        } else {
+            comparisonSummary = "Previous-window compare is off."
+        }
+
+        return "\(overlaySummary) \(comparisonSummary)"
+    }
+
     private var trendExportPayload: String {
         var lines: [String] = []
         lines.append("MindSense Trend Export")
@@ -1100,62 +1135,27 @@ struct DataView: View {
                     )
                         .frame(height: 220)
 
+                    Text("X-axis: Date • Y-axis: \(selectedSignal.metric.title) score (%)")
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
                     HStack(spacing: 8) {
                         dataMetaPill("Window \(window.rawValue)")
                         dataMetaPill("Rec. confidence \(store.confidencePercent)%")
-                        dataMetaPill("Coverage \(store.demoDataCoveragePercent)%")
                     }
 
-                    HStack(spacing: 8) {
-                        dataMetaPill("Smoothing \(trendSmoothing.rawValue)")
-                        if trendDayFilter != .allDays {
-                            dataMetaPill(trendDayFilter.rawValue)
-                        }
-                        if shouldShowTrendComparison, let comparison = trendComparisonSummary {
-                            dataMetaPill(trendComparisonPillText(for: comparison))
-                        }
-                    }
-
-                    if trendComparePreviousWindow && !trendCompareSupported {
-                        Text("Previous-window compare is currently available on 7D.")
-                            .font(MindSenseTypography.caption)
-                            .foregroundStyle(.secondary)
-                    }
-
-                    if !trendOverlayCounts.isEmpty {
-                        HStack(spacing: 8) {
-                            ForEach(trendOverlayCounts, id: \.type) { item in
-                                HStack(spacing: 6) {
-                                    Image(systemName: item.type.icon)
-                                        .font(.caption)
-                                        .foregroundStyle(item.type.tint)
-                                    Text("\(item.type.title) \(item.count)")
-                                        .font(MindSenseTypography.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 6)
-                                .background(
-                                    Capsule(style: .continuous)
-                                        .fill(MindSenseSurfaceLevel.glass.fill)
-                                )
-                            }
-                            Spacer(minLength: 0)
-                        }
-                    }
+                    MindSenseSummaryDisclosureText(
+                        summary: activeTrendFilterSummaryLine,
+                        detail: activeTrendFilterDetailLine,
+                        collapsedLabel: "Show active filters",
+                        expandedLabel: "Hide filter details"
+                    )
 
                     HStack {
-                        if shouldShowTrendComparison, let comparison = trendComparisonSummary {
-                            Text(trendComparisonDetailText(for: comparison))
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                                .monospacedDigit()
-                                .fixedSize(horizontal: false, vertical: true)
-                        } else {
-                            Text("Share the filtered chart as CSV and summary.")
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                        }
+                        Text("Share the filtered chart as CSV and summary.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
 
                         Spacer(minLength: 8)
 
@@ -1682,7 +1682,7 @@ struct DataView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Selected trend point readiness \(readinessValue), load \(loadValue), consistency \(consistencyValue)")
+        .accessibilityLabel("Selected trend point readiness \(readinessValue) percent, load \(loadValue) percent, consistency \(consistencyValue) percent")
     }
 
     private func readoutPill(title: String, value: Int, tint: Color) -> some View {
@@ -1690,7 +1690,7 @@ struct DataView: View {
             Text(title)
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
-            Text("\(value)")
+            Text("\(value)%")
                 .font(MindSenseTypography.metricBody)
                 .foregroundStyle(tint)
                 .monospacedDigit()
@@ -2403,17 +2403,17 @@ struct DataView: View {
         case .load:
             directionSymbol = summary.delta <= 0 ? "" : "+"
         }
-        return "Vs prior 7D \(directionSymbol)\(Int(summary.delta.rounded()))"
+        return "Vs prior 7D \(directionSymbol)\(Int(summary.delta.rounded()))%"
     }
 
     private func trendComparisonDetailText(for summary: TrendComparisonSummary) -> String {
         let current = summary.currentAverage.formatted(.number.precision(.fractionLength(1)))
         let prior = summary.previousAverage.formatted(.number.precision(.fractionLength(1)))
         let deltaPrefix = summary.delta >= 0 ? "+" : ""
-        let delta = "\(deltaPrefix)\(summary.delta.formatted(.number.precision(.fractionLength(1))))"
+        let delta = "\(deltaPrefix)\(summary.delta.formatted(.number.precision(.fractionLength(1))))%"
         let pctPrefix = summary.percentDelta >= 0 ? "+" : ""
         let pctValue = "\(pctPrefix)\(summary.percentDelta.formatted(.number.precision(.fractionLength(0))))%"
-        return "Current avg \(current) vs prior \(prior) (\(delta), \(pctValue))"
+        return "Current avg \(current)% vs prior \(prior)% (\(delta), \(pctValue))"
     }
 
     private func capturedDays(from qualityPercent: Int) -> Int {
@@ -2746,7 +2746,7 @@ private struct DataTrendChart: View {
                 AxisGridLine()
                 AxisValueLabel {
                     if let number = value.as(Double.self) {
-                        Text("\(Int(number.rounded()))")
+                        Text("\(Int(number.rounded()))%")
                     }
                 }
             }
@@ -2857,7 +2857,7 @@ private struct DataTrendChart: View {
         }
 
         var fragments: [String] = [
-            "\(selectedSignal.metric.title) \(directionPhrase) from \(startValue) to \(endValue) over \(dayCount) \(dayCount == 1 ? "day" : "days")."
+            "\(selectedSignal.metric.title) \(directionPhrase) from \(startValue) to \(endValue) percent over \(dayCount) \(dayCount == 1 ? "day" : "days")."
         ]
 
         if comparisonPoints != nil {
@@ -2870,7 +2870,7 @@ private struct DataTrendChart: View {
 
         if let selectedPoint {
             let selectedValue = Int(metricValue(for: selectedPoint).rounded())
-            fragments.append("Selected point \(selectedPoint.time.formatted(.dateTime.month().day())): \(selectedValue).")
+            fragments.append("Selected point \(selectedPoint.time.formatted(.dateTime.month().day())): \(selectedValue) percent.")
         }
 
         return fragments.joined(separator: " ")

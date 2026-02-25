@@ -426,7 +426,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem/SurfaceComponents.swift`
 
 ### F-35 Too many filter layers
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Merge overlapping filter sets.
   2. Move advanced filters to one collapsed row/sheet.
@@ -434,7 +434,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
 
 ### F-36 Meta-pill overload makes card feel like dashboard
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Limit visible meta pills to top 2 high-value tags.
   2. Move lower-priority metadata to details.
@@ -462,7 +462,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B9) Data Trends
 
 ### F-39 Missing clear axis/units framing
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Add explicit x/y labels and unit labels in visible chart frame.
   2. Ensure selected-point readout includes units.
