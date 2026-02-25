@@ -991,7 +991,7 @@ struct TodayView: View {
                 } else {
                     timelineSegmentBar
 
-                    HStack(spacing: 8) {
+                    HStack(spacing: MindSenseSpacing.xs) {
                         timelineLegendPill(title: "Stable", state: .stable)
                         timelineLegendPill(title: "Activated", state: .activated)
                         timelineLegendPill(title: "Recovery", state: .recovery)
@@ -1008,21 +1008,25 @@ struct TodayView: View {
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                 } else {
-                    VStack(spacing: 8) {
-                        ForEach(Array(store.recentStressEpisodes.prefix(3).enumerated()), id: \.element.id) { index, episode in
+                    let recentEpisodes = Array(store.recentStressEpisodes.prefix(3))
+                    VStack(spacing: 0) {
+                        ForEach(Array(recentEpisodes.enumerated()), id: \.element.id) { index, episode in
                             stressEpisodeRow(episode, rowIndex: index)
+                            if index < recentEpisodes.count - 1 {
+                                MindSenseSectionDivider(emphasis: 0.08)
+                            }
                         }
                     }
                 }
 
                 if attributionInboxCount > 0 {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    HStack(alignment: .firstTextBaseline, spacing: MindSenseSpacing.sm) {
                         Label(attributionInboxCountLabel, systemImage: "tag")
                             .font(MindSenseTypography.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
 
-                        Spacer(minLength: 8)
+                        Spacer(minLength: MindSenseSpacing.xs)
 
                         Button("Review labels") {
                             openTimelineDetails(
@@ -1039,7 +1043,7 @@ struct TodayView: View {
     }
 
     private var timelineSegmentBar: some View {
-        HStack(spacing: 5) {
+        HStack(spacing: MindSenseSpacing.xxxs) {
             ForEach(store.stressTimelineSegments) { segment in
                 TimelineStateSegmentCell(
                     state: segment.state,
@@ -1049,7 +1053,7 @@ struct TodayView: View {
                 )
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, MindSenseSpacing.xxxs)
         .accessibilityElement(children: .contain)
     }
 
@@ -1062,7 +1066,7 @@ struct TodayView: View {
     }
 
     private func stressEpisodeRow(_ episode: StressEpisodeRecord, rowIndex: Int) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+        HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
             MindSenseIconBadge(
                 systemName: "waveform.path.ecg",
                 tint: timelineTint(for: .activated),
@@ -1070,8 +1074,8 @@ struct TodayView: View {
                 size: 28
             )
 
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+                HStack(spacing: MindSenseSpacing.xs) {
                     Text("\(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
@@ -1079,8 +1083,8 @@ struct TodayView: View {
                         Text("Needs label")
                             .font(MindSenseTypography.micro)
                             .foregroundStyle(MindSensePalette.warning)
-                            .padding(.horizontal, 8)
-                            .frame(minHeight: 24)
+                            .padding(.horizontal, MindSenseSpacing.xs)
+                            .frame(minHeight: MindSenseSpacing.lg)
                             .background(
                                 Capsule(style: .continuous)
                                     .fill(MindSensePalette.warning.opacity(0.18))
@@ -1127,17 +1131,8 @@ struct TodayView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
-        .padding(.vertical, MindSenseLayout.tileVerticalInset)
-        .background(
-            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                .fill(MindSenseSurfaceLevel.base.fill)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-        )
-        .contentShape(RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous))
+        .padding(.vertical, MindSenseSpacing.sm)
+        .contentShape(Rectangle())
         .onTapGesture {
             selectedTimelineEpisode = episode
             store.track(
