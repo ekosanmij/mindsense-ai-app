@@ -393,9 +393,11 @@ struct RegulateView: View {
                 PillChip(label: flowLabel, state: .unselected)
             }
 
-            MindSenseSummaryMoreText(
+            MindSenseSummaryDisclosureText(
                 summary: "Run one protocol, then rate impact.",
-                detail: "Select one protocol, run the timer, then rate impact. \(store.intentModeHintLine)"
+                detail: "Select one protocol, run the timer, then rate impact. \(store.intentModeHintLine)",
+                collapsedLabel: "How this flow works",
+                expandedLabel: "Hide flow details"
             )
         }
     }
@@ -775,9 +777,11 @@ struct RegulateView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Why this works")
                     .font(MindSenseTypography.bodyStrong)
-                MindSenseSummaryMoreText(
+                MindSenseSummaryDisclosureText(
                     summary: runningPreset.whyNow,
-                    detail: "\(runningPreset.expectedEffect)\nWhat to think: \(store.todayCognitivePrompt)"
+                    detail: "\(runningPreset.expectedEffect)\nWhat to think: \(store.todayCognitivePrompt)",
+                    collapsedLabel: "Run guidance",
+                    expandedLabel: "Hide run guidance"
                 )
             }
 
@@ -944,9 +948,11 @@ struct RegulateView: View {
             }
         }
 
-        MindSenseSummaryMoreText(
+        MindSenseSummaryDisclosureText(
             summary: "Pick Yes or No to save.",
-            detail: "Pick Yes or No to save, or skip to log No rating with reduced learning weight."
+            detail: "Pick Yes or No to save, or skip to log No rating with reduced learning weight.",
+            collapsedLabel: "How ratings are saved",
+            expandedLabel: "Hide save details"
         )
 
         HStack {

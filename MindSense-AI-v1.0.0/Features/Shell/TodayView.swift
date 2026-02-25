@@ -11,6 +11,7 @@ struct TodayView: View {
     @EnvironmentObject private var store: MindSenseStore
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @Environment(\.mindSenseTabBarOverlayClearance) private var tabBarOverlayClearance
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("appReduceMotion") private var appReduceMotion = false
     @AppStorage("todayShowWhyStatePreference") private var showHeroWhyPreference = false
     @AppStorage("todayCheckInIgnoreStreak") private var checkInIgnoreStreak = 0
@@ -86,11 +87,25 @@ struct TodayView: View {
 
     private var inlineActionLabel: String {
         if hasUnfinishedRegulateStep {
-            return store.activeRegulateSession?.isAwaitingCheckIn == true
-                ? "Continue: Record impact"
-                : "Continue: \(store.activeRegulateSession?.preset.title ?? recommendation.preset.title) session"
+            return "Continue"
         }
-        return "Start \(recommendation.preset.title)"
+        if isLowCoverageRecommendationMode {
+            return "Start check-in"
+        }
+        return "Start"
+    }
+
+    private var inlineActionContextLabel: String {
+        if hasUnfinishedRegulateStep {
+            if store.activeRegulateSession?.isAwaitingCheckIn == true {
+                return "Record impact to finish today's loop."
+            }
+            return "Resume \(store.activeRegulateSession?.preset.title ?? recommendation.preset.title) session."
+        }
+        if isLowCoverageRecommendationMode {
+            return "Add a quick check-in first while coverage is low."
+        }
+        return "\(recommendation.preset.title) • \(recommendation.timeMinutes) min"
     }
 
     private var intentModeBinding: Binding<IntentMode> {
@@ -284,25 +299,23 @@ struct TodayView: View {
                     VStack(spacing: MindSenseRhythm.section) {
                         commandDeck
                             .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
-                        actionBlock
-                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                         timelineBlock
-                            .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                         if attributionInboxCount > 0 {
                             attributionInboxBlock
-                                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                         if episodeAwaitingContext != nil {
                             contextCaptureBlock
-                                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                         driversBlock
-                            .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
                         statusSnapshotBlock
-                            .mindSenseStaggerEntrance(6, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
                         if shouldShowCheckInPrompt {
                             checkInBlock
-                                .mindSenseStaggerEntrance(7, isPresented: didAppear, reduceMotion: reduceMotion)
+                                .mindSenseStaggerEntrance(6, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                     }
                     .mindSensePageInsets(bottom: bottomContentPadding)
@@ -453,61 +466,42 @@ struct TodayView: View {
             label: AppIA.today,
             title: heroInterpretation,
             detail: heroReferenceLabel,
-            metric: "Rec. confidence \(store.confidencePercent)%",
-            metricAction: {
-                showConfidenceDetails = true
-                store.triggerHaptic(intent: .selection)
-            },
-            metricAccessibilityLabel: "Recommendation confidence \(store.confidencePercent) percent. Show recommendation confidence details.",
             icon: "sun.max.fill",
             tone: .accent,
             watermarkTint: MindSensePalette.accent,
             watermarkHeight: 128
         ) {
-            Button {
-                showSignalSourceDetails = true
-                store.triggerHaptic(intent: .selection)
-            } label: {
-                HStack(spacing: 8) {
-                    Text(store.healthSourceStatusLine)
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 8)
-                    Image(systemName: "info.circle")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+            Button(inlineActionLabel) {
+                if isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep {
+                    saveCheckIn()
+                } else {
+                    triggerNextBestAction(source: "today_action_card_cta")
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: 44)
             }
-            .buttonStyle(.plain)
-
-            MindSenseSegmentedControl(
-                options: IntentMode.allCases,
-                selection: intentModeBinding,
-                title: { $0.shortTitle }
+            .accessibilityIdentifier("today_action_card_cta")
+            .buttonStyle(
+                MindSenseButtonStyle(
+                    hierarchy: .primary,
+                    minHeight: 52
+                )
             )
 
-            Text(store.intentModeHintLine)
+            Text(inlineActionContextLabel)
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: MindSenseSpacing.xs) {
-                ForEach(heroMetricCards) { card in
-                    heroMetricTile(
-                        title: card.title,
-                        value: card.value,
-                        delta: card.delta,
-                        metric: card.metric,
-                        tint: card.tint
-                    )
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(spacing: MindSenseSpacing.xs) {
+                    ForEach(heroMetricCards) { card in
+                        heroMetricCompactTile(card)
+                    }
+                }
+            } else {
+                HStack(spacing: MindSenseSpacing.xs) {
+                    ForEach(heroMetricCards) { card in
+                        heroMetricCompactTile(card)
+                    }
                 }
             }
 
@@ -522,7 +516,7 @@ struct TodayView: View {
                 store.triggerHaptic(intent: .selection)
             } label: {
                 HStack(spacing: MindSenseSpacing.xs) {
-                    Text("Why this state")
+                    Text(showHeroWhy ? "Hide details" : "Details")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: MindSenseSpacing.xs)
@@ -543,24 +537,135 @@ struct TodayView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("today_action_card_why_now")
 
             if showHeroWhy {
                 if shouldUseBulletWhyExplanation {
-                    VStack(alignment: .leading, spacing: 6) {
-                        ForEach(Array(heroWhyBullets.enumerated()), id: \.offset) { item in
-                            Text("• \(item.element)")
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
+                    VStack(alignment: .leading, spacing: 10) {
+                        heroDiagnosticsDetails
+                        heroIntentModeDetails
+                        heroActionContextDetails
+                        heroStateExplanationDetails(useBullets: true)
                     }
                 } else {
-                    Text(heroWhyDetail)
+                    VStack(alignment: .leading, spacing: 10) {
+                        heroDiagnosticsDetails
+                        heroIntentModeDetails
+                        heroActionContextDetails
+                        heroStateExplanationDetails(useBullets: false)
+                    }
+                }
+            }
+        }
+    }
+
+    private var heroDiagnosticsDetails: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button {
+                showConfidenceDetails = true
+                store.triggerHaptic(intent: .selection)
+            } label: {
+                HStack(spacing: 8) {
+                    Label("Recommendation confidence \(store.confidencePercent)%", systemImage: "chart.bar.xaxis")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
+
+            Button {
+                showSignalSourceDetails = true
+                store.triggerHaptic(intent: .selection)
+            } label: {
+                HStack(spacing: 8) {
+                    Text(store.healthSourceStatusLine)
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var heroIntentModeDetails: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            MindSenseSegmentedControl(
+                options: IntentMode.allCases,
+                selection: intentModeBinding,
+                title: { $0.shortTitle }
+            )
+
+            Text(store.intentModeHintLine)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    @ViewBuilder
+    private var heroActionContextDetails: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if hasUnfinishedRegulateStep {
+                Text("An active session is already running. Continue the session or record impact to finish today's primary loop.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if isLowCoverageRecommendationMode {
+                Text(lowCoverageSummaryLine)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("\(lowCoverageReasonLine) \(lowCoverageFixLine)")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                actionDetailRow(label: "Why now", value: recommendation.why)
+                actionDetailRow(label: "Expected effect", value: recommendation.expectedEffect)
+            }
+
+            Button(isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep ? "Choose a protocol manually" : "Pick a different protocol") {
+                openRegulateProtocolPicker(source: "today_action_card_pick_protocol")
+            }
+            .accessibilityIdentifier("today_action_card_pick_protocol")
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+        }
+    }
+
+    @ViewBuilder
+    private func heroStateExplanationDetails(useBullets: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Why this state")
+                .font(MindSenseTypography.bodyStrong)
+
+            if useBullets {
+                ForEach(Array(heroWhyBullets.enumerated()), id: \.offset) { item in
+                    Text("• \(item.element)")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
+            } else {
+                Text(heroWhyDetail)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -743,16 +848,20 @@ struct TodayView: View {
                     )
                 }
             } else {
-                MindSenseSummaryMoreText(
+                MindSenseSummaryDisclosureText(
                     summary: "An active session is already running. Use the sticky action below to finish the loop.",
-                    detail: "We keep one persistent action when a session is in progress so you can resume or record impact without hunting through cards."
+                    detail: "We keep one persistent action when a session is in progress so you can resume or record impact without hunting through cards.",
+                    collapsedLabel: "Why only one action?",
+                    expandedLabel: "Hide rationale"
                 )
             }
 
             if isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep {
-                MindSenseSummaryMoreText(
+                MindSenseSummaryDisclosureText(
                     summary: lowCoverageSummaryLine,
-                    detail: "\(lowCoverageReasonLine) \(lowCoverageFixLine)"
+                    detail: "\(lowCoverageReasonLine) \(lowCoverageFixLine)",
+                    collapsedLabel: "Why coverage is low",
+                    expandedLabel: "Hide coverage details"
                 )
 
                 Button("Open signal diagnostics") {
@@ -929,15 +1038,7 @@ struct TodayView: View {
                 }
 
                 HStack(spacing: 8) {
-                    episodeActionPill(
-                        title: "Start",
-                        systemImage: "play.fill",
-                        emphasized: true
-                    ) {
-                        startEpisodeRecommendation(episode, source: "today_timeline_card_start")
-                    }
-
-                    episodeActionPill(title: "Details") {
+                    episodeActionPill(title: "Open episode", systemImage: "chevron.right") {
                         selectedTimelineEpisode = episode
                         store.triggerHaptic(intent: .selection)
                     }
@@ -974,7 +1075,7 @@ struct TodayView: View {
             .font(MindSenseTypography.micro)
             .foregroundStyle(emphasized ? MindSensePalette.warning : .secondary)
             .padding(.horizontal, 10)
-            .frame(minHeight: 30)
+            .frame(minHeight: 44)
             .background(
                 Capsule(style: .continuous)
                     .fill(MindSenseSurfaceLevel.base.fill)
@@ -1197,9 +1298,11 @@ struct TodayView: View {
             }
 
             if isLowCoverageRecommendationMode {
-                MindSenseSummaryMoreText(
+                MindSenseSummaryDisclosureText(
                     summary: lowCoverageCheckInSummaryLine,
-                    detail: "\(lowCoverageReasonLine) \(lowCoverageFixLine)"
+                    detail: "\(lowCoverageReasonLine) \(lowCoverageFixLine)",
+                    collapsedLabel: "Why coverage is low",
+                    expandedLabel: "Hide coverage details"
                 )
             } else {
                 Text("Prefilled from your current state.")
@@ -1885,7 +1988,7 @@ struct TodayView: View {
     }
 
     private func applyHeroWhyExpansionPolicy() {
-        showHeroWhy = isWithinFirstSevenDays ? true : showHeroWhyPreference
+        showHeroWhy = showHeroWhyPreference
     }
 
     private func toggleHeroWhy() {
@@ -1944,6 +2047,65 @@ struct TodayView: View {
         let currentNights = (qualityPercent * 7) / 100
         let targetNights = (targetPercent * 7 + 99) / 100
         return max(0, targetNights - currentNights)
+    }
+
+    private func heroMetricCompactTile(_ card: HeroMetricCard) -> some View {
+        let bounded = max(0, min(100, card.value))
+        let deltaTone = card.delta.map { deltaTint(metric: card.metric, value: $0) } ?? Color.secondary
+        let metricState = stateLabel(for: card.metric, value: bounded)
+
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(card.title)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.6)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text("\(bounded)")
+                    .font(.system(size: 22, weight: .semibold, design: .rounded))
+                    .foregroundStyle(card.tint)
+                    .monospacedDigit()
+                    .lineLimit(1)
+
+                Text(compactMetricDeltaLabel(card.delta))
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(deltaTone)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .monospacedDigit()
+            }
+
+            Text(metricState)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .minimumScaleFactor(0.75)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 78 : 72, alignment: .topLeading)
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(heroMetricVoiceOverSummary(title: card.title, value: bounded, delta: card.delta, metric: card.metric))
+    }
+
+    private func compactMetricDeltaLabel(_ delta: Int?) -> String {
+        guard let delta else { return "No delta" }
+        if delta == 0 {
+            return "No change"
+        }
+        return signed(delta)
     }
 
     private func heroMetricTile(
@@ -2479,9 +2641,11 @@ private struct TodayModelDetailsSheet: View {
                             label: "Used for recommendation confidence",
                             value: "Data coverage, completion of today's primary loop, active experiment adherence, and repeated session cancellations (penalty)."
                         )
-                        MindSenseSummaryMoreText(
+                        MindSenseSummaryDisclosureText(
                             summary: "Not used in the recommendation confidence percent: episode attribution labels, note text, and optional respiratory/audio context.",
-                            detail: "Episode attribution feedback is saved for review. Session notes and tags are stored with outcomes, but the recommendation confidence percent is computed from coverage and behavior evidence. Respiratory rate and environmental audio are optional context signals and are not required for confidence scoring."
+                            detail: "Episode attribution feedback is saved for review. Session notes and tags are stored with outcomes, but the recommendation confidence percent is computed from coverage and behavior evidence. Respiratory rate and environmental audio are optional context signals and are not required for confidence scoring.",
+                            collapsedLabel: "What is not used",
+                            expandedLabel: "Hide exclusions"
                         )
                     }
 
@@ -2500,9 +2664,11 @@ private struct TodayModelDetailsSheet: View {
                             label: "Recommendation anchor",
                             value: "Today's recommendations compare current metrics with scenario baseline anchors (Load \(store.demoScenario.baseMetrics.load), Readiness \(store.demoScenario.baseMetrics.readiness), Consistency \(store.demoScenario.baseMetrics.consistency)) plus recent context signals."
                         )
-                        MindSenseSummaryMoreText(
+                        MindSenseSummaryDisclosureText(
                             summary: "Rolling 30-day personalized baseline is not used in the current recommendation score.",
-                            detail: "This build uses scenario base metrics plus recent sessions/events for recommendation ranking. Stress episode intensity compares deviation from derived HR/HRV baseline patterns plus duration, and the derived health baseline can be rebuilt from Settings."
+                            detail: "This build uses scenario base metrics plus recent sessions/events for recommendation ranking. Stress episode intensity compares deviation from derived HR/HRV baseline patterns plus duration, and the derived health baseline can be rebuilt from Settings.",
+                            collapsedLabel: "How baseline is used",
+                            expandedLabel: "Hide baseline details"
                         )
                     }
 
@@ -2525,9 +2691,11 @@ private struct TodayModelDetailsSheet: View {
                             label: "Model confidence (fit) (\(modelFitPercent)%)",
                             value: "A fit proxy shown in the confidence sheet to separate model fit from data coverage when explaining recommendation confidence."
                         )
-                        MindSenseSummaryMoreText(
+                        MindSenseSummaryDisclosureText(
                             summary: "Current formula uses a scenario confidence base plus evidence adjustments.",
-                            detail: "Recommendation confidence is adjusted by data coverage, a small bonus when today's primary loop is completed, a small bonus from active experiment adherence, and a penalty for repeated cancelled sessions."
+                            detail: "Recommendation confidence is adjusted by data coverage, a small bonus when today's primary loop is completed, a small bonus from active experiment adherence, and a penalty for repeated cancelled sessions.",
+                            collapsedLabel: "How confidence is calculated",
+                            expandedLabel: "Hide formula details"
                         )
                     }
 
@@ -2552,9 +2720,11 @@ private struct TodayModelDetailsSheet: View {
                             label: "Episode attribution labels",
                             value: "\(reviewedAttributionCount) reviewed, \(pendingAttributionCount) pending. Attribution feedback is stored for audit/review and does not currently change today's recommendation confidence score."
                         )
-                        MindSenseSummaryMoreText(
+                        MindSenseSummaryDisclosureText(
                             summary: "Structured outcome labels affect learning weight; free-text notes are context.",
-                            detail: "The learning reward uses direction, helpfulness, feeling rating, and measured effect metrics, then applies learning weight. Note text is saved for context and history, not parsed into the learning-weight calculation."
+                            detail: "The learning reward uses direction, helpfulness, feeling rating, and measured effect metrics, then applies learning weight. Note text is saved for context and history, not parsed into the learning-weight calculation.",
+                            collapsedLabel: "How learning weight works",
+                            expandedLabel: "Hide learning details"
                         )
                     }
 
@@ -3333,7 +3503,7 @@ struct TodayEpisodeDetailSheet: View {
 
                         HStack(spacing: 10) {
                             accuracyButton(title: "👍 Looks right", value: .accurate)
-                            accuracyButton(title: "👎 Off", value: .inaccurate)
+                            accuracyButton(title: "👎 Not accurate", value: .inaccurate)
                         }
 
                         VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
@@ -3606,7 +3776,7 @@ struct TodayEpisodeDetailSheet: View {
                 .font(MindSenseTypography.bodyStrong)
                 .foregroundStyle(selected ? MindSensePalette.onAccent : .primary)
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 42)
+            .frame(minHeight: 44)
             .background(
                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                     .fill(selected ? MindSensePalette.accent : MindSenseSurfaceLevel.base.fill)

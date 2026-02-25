@@ -81,7 +81,7 @@ struct IntroView: View {
                     .foregroundStyle(MindSensePalette.signalCoolStrong)
                     .tracking(1)
                 Spacer()
-                PillChip(label: "Setup < 1 min", state: .selected)
+                PillChip(label: "Setup < 45 sec", state: .selected)
             }
 
             MindSenseSectionHeader(

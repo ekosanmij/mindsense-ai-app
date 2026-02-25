@@ -743,12 +743,21 @@ struct MindSenseCollapsibleSection<Content: View>: View {
     }
 }
 
+@available(*, unavailable, message: "Use MindSenseSummaryDisclosureText with explicit collapsed/expanded labels.")
 struct MindSenseSummaryMoreText: View {
+    var body: some View {
+        EmptyView()
+    }
+}
+
+struct MindSenseSummaryDisclosureText: View {
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @AppStorage("appReduceMotion") private var appReduceMotion = false
 
     let summary: String
     let detail: String
+    var collapsedLabel: String = "Details"
+    var expandedLabel: String = "Hide details"
     var textStyle: Font = MindSenseTypography.caption
     var textColor: Color = .secondary
     @State private var expanded = false
@@ -777,7 +786,7 @@ struct MindSenseSummaryMoreText: View {
             }
 
             if hasExpandableDetail {
-                Button(expanded ? "Less" : "More") {
+                Button {
                     if reduceMotion {
                         expanded.toggle()
                     } else {
@@ -785,8 +794,16 @@ struct MindSenseSummaryMoreText: View {
                             expanded.toggle()
                         }
                     }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(expanded ? expandedLabel : collapsedLabel)
+                        Image(systemName: expanded ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 10, weight: .semibold, design: .rounded))
+                    }
                 }
                 .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 32))
+                .accessibilityLabel(expanded ? expandedLabel : collapsedLabel)
+                .accessibilityHint(expanded ? "Collapses details" : "Expands details")
             }
         }
     }
@@ -1157,8 +1174,11 @@ private struct MindSenseSegmentOptionView: View {
             .font(isSelected ? MindSenseTypography.bodyStrong : MindSenseTypography.body)
             .foregroundStyle(isSelected ? MindSensePalette.signalCoolStrong : .primary)
             .lineLimit(1)
+            .minimumScaleFactor(0.82)
+            .allowsTightening(true)
+            .padding(.horizontal, 6)
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 42)
+            .frame(minHeight: 44)
             .background(segmentBackground)
             .overlay(segmentStroke)
             .animation(reduceMotion ? nil : MindSenseMotion.selection, value: isSelected)

@@ -111,6 +111,7 @@ struct OnboardingView: View {
         .onAppear {
             didAppear = true
         }
+        .accessibilityIdentifier("onboarding_screen_root")
     }
 
     private var onboardingHeader: some View {
@@ -133,7 +134,7 @@ struct OnboardingView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Activate \(AppIA.today) in under 45 seconds",
-                    subtitle: "Step \(stepNumber) of \(activationSteps.count)."
+                    subtitle: "Two required steps, then optional setup in Settings."
                 )
             )
         }
@@ -142,13 +143,15 @@ struct OnboardingView: View {
     private var progressHero: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Step \(stepNumber) of \(activationSteps.count)")
+                Text("Progress")
                     .font(MindSenseTypography.metricCaption)
                     .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("onboarding_progress_heading")
                 Spacer()
-                Text("\(Int(store.onboardingPercent * 100))%")
+                Text("Step \(stepNumber) of \(activationSteps.count)")
                     .font(MindSenseTypography.metricBody)
                     .foregroundStyle(MindSensePalette.signalCoolStrong)
+                    .accessibilityIdentifier("onboarding_progress_step_text")
             }
 
             HStack(spacing: 10) {

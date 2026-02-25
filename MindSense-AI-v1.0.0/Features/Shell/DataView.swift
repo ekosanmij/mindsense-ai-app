@@ -1175,9 +1175,11 @@ struct DataView: View {
                             icon: "exclamationmark.triangle"
                         )
                     )
-                    MindSenseSummaryMoreText(
+                    MindSenseSummaryDisclosureText(
                         summary: coverageSummaryLine,
-                        detail: coverageReasonLine
+                        detail: coverageReasonLine,
+                        collapsedLabel: "Why coverage matters",
+                        expandedLabel: "Hide coverage details"
                     )
 
                     Button("Do this to improve coverage") {
@@ -1222,9 +1224,11 @@ struct DataView: View {
                 Text(insightNarrative)
                     .font(MindSenseTypography.bodyStrong)
                     .fixedSize(horizontal: false, vertical: true)
-                MindSenseSummaryMoreText(
+                MindSenseSummaryDisclosureText(
                     summary: selectedSignal.coachTitle,
-                    detail: selectedSignal.coachBody
+                    detail: selectedSignal.coachBody,
+                    collapsedLabel: "Why this signal matters",
+                    expandedLabel: "Hide rationale"
                 )
 
                 if shouldShowRecoveryAnchorPlanner {
@@ -1723,9 +1727,11 @@ struct DataView: View {
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(.primary)
 
-                MindSenseSummaryMoreText(
+                MindSenseSummaryDisclosureText(
                     summary: "One daily ping: tap Yes or No.",
-                    detail: "If No, add an optional reason tag."
+                    detail: "If No, add an optional reason tag.",
+                    collapsedLabel: "How this check-in works",
+                    expandedLabel: "Hide check-in details"
                 )
 
                 if let autoFill = selectedWakeAnchorAutoFill {
@@ -1834,9 +1840,11 @@ struct DataView: View {
         }
 
         if experimentCTA != nil {
-            MindSenseSummaryMoreText(
+            MindSenseSummaryDisclosureText(
                 summary: "Use the sticky action below for the next experiment step.",
-                detail: "We only pin a bottom CTA when the selected experiment has one clear next action, which reduces duplicate buttons inside the card stack."
+                detail: "We only pin a bottom CTA when the selected experiment has one clear next action, which reduces duplicate buttons inside the card stack.",
+                collapsedLabel: "Why the sticky action is shown",
+                expandedLabel: "Hide CTA rationale"
             )
         }
     }

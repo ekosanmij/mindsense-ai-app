@@ -31,9 +31,11 @@ struct RecommendationRationaleView: View {
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
 
-                MindSenseSummaryMoreText(
+                MindSenseSummaryDisclosureText(
                     summary: rationaleSummary,
-                    detail: whyRecommended
+                    detail: whyRecommended,
+                    collapsedLabel: "Why recommended",
+                    expandedLabel: "Hide rationale"
                 )
             }
         }
@@ -68,7 +70,12 @@ struct EscalationGuidanceView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Escalation guidance")
                         .font(MindSenseTypography.bodyStrong)
-                    MindSenseSummaryMoreText(summary: summaryLine, detail: message)
+                    MindSenseSummaryDisclosureText(
+                        summary: summaryLine,
+                        detail: message,
+                        collapsedLabel: "When to escalate",
+                        expandedLabel: "Hide guidance"
+                    )
                 }
             }
         }

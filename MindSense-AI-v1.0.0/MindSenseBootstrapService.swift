@@ -71,7 +71,9 @@ final class MindSenseBootstrapService {
             defaults.removePersistentDomain(forName: domain)
         }
 
-        guard arguments.contains("-uitest-ready") else { return }
+        let isUITestReady = arguments.contains("-uitest-ready")
+        let isUITestOnboarding = arguments.contains("-uitest-onboarding")
+        guard isUITestReady || isUITestOnboarding else { return }
 
         defaults.set(true, forKey: "hasSeenIntro")
         defaults.set("uitest@mindsense.ai", forKey: "auth.fallback_session_email")
@@ -80,9 +82,11 @@ final class MindSenseBootstrapService {
         defaults.set("UI Test", forKey: "auth.session.display_name.v1")
 
         var onboarding = OnboardingProgress()
-        OnboardingStep.allCases.forEach { onboarding.markComplete($0) }
-        onboarding.baselineStart = Calendar.current.date(byAdding: .day, value: -7, to: Date())
-        onboarding.firstCheckInValue = 4
+        if isUITestReady {
+            OnboardingStep.allCases.forEach { onboarding.markComplete($0) }
+            onboarding.baselineStart = Calendar.current.date(byAdding: .day, value: -7, to: Date())
+            onboarding.firstCheckInValue = 4
+        }
         if let data = try? encoder.encode(onboarding) {
             defaults.set(data, forKey: "onboarding.progress.uitest@mindsense.ai")
         }

@@ -10,6 +10,20 @@ private enum UITestAppearance: String, CaseIterable {
     }
 }
 
+private enum UITestLaunchMode {
+    case ready
+    case onboarding
+
+    var launchFlag: String {
+        switch self {
+        case .ready:
+            return "-uitest-ready"
+        case .onboarding:
+            return "-uitest-onboarding"
+        }
+    }
+}
+
 final class MindSenseCoreScreensUITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -18,7 +32,7 @@ final class MindSenseCoreScreensUITests: XCTestCase {
     func testCoreScreenNavigationAndPrimaryCTAs() {
         let app = launchReadyApp()
 
-        XCTAssertTrue(app.buttons["today_primary_cta"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
 
         app.tabBars.buttons["Regulate"].tap()
         XCTAssertTrue(app.buttons["regulate_primary_cta"].waitForExistence(timeout: 3))
@@ -34,8 +48,8 @@ final class MindSenseCoreScreensUITests: XCTestCase {
     func testTodayPrimaryCTADeterministicRegulateOutcomeLoop() {
         let app = launchReadyApp()
 
-        XCTAssertTrue(app.buttons["today_primary_cta"].waitForExistence(timeout: 5))
-        app.buttons["today_primary_cta"].tap()
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
+        app.buttons["today_action_card_cta"].tap()
 
         XCTAssertTrue(app.buttons["regulate_complete_now_cta"].waitForExistence(timeout: 4))
         XCTAssertTrue(app.staticTexts["regulate_session_timer"].waitForExistence(timeout: 3))
@@ -46,6 +60,50 @@ final class MindSenseCoreScreensUITests: XCTestCase {
 
         app.buttons["regulate_outcome_submit_cta"].tap()
         XCTAssertTrue(app.buttons["regulate_primary_cta"].waitForExistence(timeout: 3))
+    }
+
+    func testTodayHeroPrimaryCTAVisibility() {
+        let app = launchReadyApp()
+
+        let heroCTA = app.buttons["today_action_card_cta"]
+        XCTAssertTrue(heroCTA.waitForExistence(timeout: 5))
+        XCTAssertTrue(heroCTA.isHittable, "Today hero CTA should be visible and tappable on launch.")
+    }
+
+    func testSettingsPrivacyPolicyLinkPresence() {
+        let app = launchReadyApp()
+
+        app.buttons["Profile and access"].tap()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+
+        let privacyRow = app.buttons["settings_privacy_policy_row"]
+        XCTAssertTrue(privacyRow.waitForExistence(timeout: 3))
+        XCTAssertTrue(privacyRow.isHittable, "Privacy policy row should remain visible and tappable.")
+    }
+
+    func testOnboardingProgressCopyUsesStepModelOnly() {
+        let app = launchOnboardingApp(
+            appearance: .system,
+            reset: true,
+            enableHaptics: false,
+            reduceMotion: true
+        )
+
+        waitForOnboardingReady(app: app)
+
+        let progressHeading = app.staticTexts["onboarding_progress_heading"]
+        XCTAssertTrue(progressHeading.waitForExistence(timeout: 2))
+        XCTAssertEqual(progressHeading.label, "Progress")
+
+        let progressStep = app.staticTexts["onboarding_progress_step_text"]
+        XCTAssertTrue(progressStep.waitForExistence(timeout: 2))
+        XCTAssertEqual(progressStep.label, "Step 1 of 2")
+
+        let percentLabels = app.staticTexts.matching(
+            NSPredicate(format: "label MATCHES %@", ".*[0-9]+%.*")
+        )
+        XCTAssertEqual(percentLabels.count, 0, "Onboarding hero should use step-based progress copy without percent duplication.")
     }
 
     func testDataExperimentLifecycle() {
@@ -97,8 +155,8 @@ final class MindSenseCoreScreensUITests: XCTestCase {
             reduceMotion: true
         )
 
-        XCTAssertTrue(app.buttons["today_primary_cta"].waitForExistence(timeout: 5))
-        XCTAssertTrue(app.buttons["today_primary_cta"].isHittable, "Today primary CTA should remain tappable at large text sizes.")
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["today_action_card_cta"].isHittable, "Today hero CTA should remain tappable at large text sizes.")
         attachSnapshot(named: "dynamic_type_today_axxxl")
 
         app.tabBars.buttons["Regulate"].tap()
@@ -120,7 +178,7 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         )
         let premiumLatencyBudgetMS = 750.0
 
-        XCTAssertTrue(app.buttons["today_primary_cta"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
 
         var tabSwitchSamples: [Double] = []
         for _ in 0..<6 {
@@ -133,7 +191,7 @@ final class MindSenseCoreScreensUITests: XCTestCase {
 
             let toToday = tapLatencyMS(
                 element: app.tabBars.buttons["Today"],
-                waitFor: app.buttons["today_primary_cta"],
+                waitFor: app.buttons["today_action_card_cta"],
                 timeout: 3
             )
             tabSwitchSamples.append(toToday)
@@ -169,8 +227,43 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         enableHaptics: Bool? = nil,
         reduceMotion: Bool? = nil
     ) -> XCUIApplication {
+        launchApp(
+            mode: .ready,
+            appearance: appearance,
+            contentSizeCategory: contentSizeCategory,
+            reset: reset,
+            enableHaptics: enableHaptics,
+            reduceMotion: reduceMotion
+        )
+    }
+
+    private func launchOnboardingApp(
+        appearance: UITestAppearance = .system,
+        contentSizeCategory: String? = nil,
+        reset: Bool = true,
+        enableHaptics: Bool? = nil,
+        reduceMotion: Bool? = nil
+    ) -> XCUIApplication {
+        launchApp(
+            mode: .onboarding,
+            appearance: appearance,
+            contentSizeCategory: contentSizeCategory,
+            reset: reset,
+            enableHaptics: enableHaptics,
+            reduceMotion: reduceMotion
+        )
+    }
+
+    private func launchApp(
+        mode: UITestLaunchMode,
+        appearance: UITestAppearance = .system,
+        contentSizeCategory: String? = nil,
+        reset: Bool = true,
+        enableHaptics: Bool? = nil,
+        reduceMotion: Bool? = nil
+    ) -> XCUIApplication {
         let app = XCUIApplication()
-        var arguments = ["-uitest-ready", appearance.launchFlag]
+        var arguments = [mode.launchFlag, appearance.launchFlag]
         if reset {
             arguments.insert("-uitest-reset", at: 0)
         }
@@ -190,7 +283,7 @@ final class MindSenseCoreScreensUITests: XCTestCase {
 
     private func captureCoreScreens(app: XCUIApplication, prefix: String) {
         waitForTodayReady(app: app)
-        XCTAssertTrue(app.buttons["today_primary_cta"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
         attachSnapshot(named: "\(prefix)_today")
 
         app.tabBars.buttons["Regulate"].tap()
@@ -211,6 +304,19 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         let launchRoot = app.otherElements["launch_screen_root"]
         let todayRoot = app.otherElements["today_screen_root"]
         XCTAssertTrue(todayRoot.waitForExistence(timeout: 6))
+
+        let expectation = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "exists == false"),
+            object: launchRoot
+        )
+        _ = XCTWaiter.wait(for: [expectation], timeout: 2.5)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.35))
+    }
+
+    private func waitForOnboardingReady(app: XCUIApplication) {
+        let launchRoot = app.otherElements["launch_screen_root"]
+        let onboardingPrimaryCTA = app.buttons["onboarding_primary_cta"]
+        XCTAssertTrue(onboardingPrimaryCTA.waitForExistence(timeout: 6))
 
         let expectation = XCTNSPredicateExpectation(
             predicate: NSPredicate(format: "exists == false"),

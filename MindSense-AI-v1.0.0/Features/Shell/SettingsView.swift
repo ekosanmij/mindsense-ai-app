@@ -24,6 +24,7 @@ struct SettingsView: View {
     private let settingsRowMinHeight: CGFloat = 50
     private let settingsToggleRowMinHeight: CGFloat = 56
     private let settingsIconSize: CGFloat = 16
+    private let privacyPolicyURLString = "https://mindsense-ai-app.vercel.app/privacy"
 
     private var appearanceBinding: Binding<AppearanceMode> {
         Binding {
@@ -271,10 +272,17 @@ struct SettingsView: View {
             .listRowBackground(Color.clear)
 
             settingsRow(title: "Privacy policy", icon: "lock.shield") {
-                if let url = URL(string: "https://example.com/privacy") {
-                    openURL(url)
+                guard let url = URL(string: privacyPolicyURLString) else {
+                    store.showBanner(
+                        title: "Privacy policy unavailable",
+                        detail: "The privacy policy link is not configured correctly yet. Please try again later.",
+                        severity: .warning
+                    )
+                    return
                 }
+                openURL(url)
             }
+            .accessibilityIdentifier("settings_privacy_policy_row")
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
         } header: {

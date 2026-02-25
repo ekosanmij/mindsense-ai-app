@@ -659,9 +659,11 @@ struct MindSenseGlossarySheet: View {
                         Text(entry.term)
                             .font(MindSenseTypography.caption.weight(.semibold))
                             .foregroundStyle(.primary)
-                        MindSenseSummaryMoreText(
+                        MindSenseSummaryDisclosureText(
                             summary: entry.summary,
                             detail: entry.detail,
+                            collapsedLabel: "Full definition",
+                            expandedLabel: "Hide definition",
                             textStyle: MindSenseTypography.caption,
                             textColor: .secondary
                         )

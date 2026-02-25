@@ -7,7 +7,10 @@ These UI tests verify:
 - `Data`
 - `Settings` (opened from profile/access menu)
 - deterministic `Today -> Regulate` CTA routing with timer -> complete -> post-session check-in
+- Today hero CTA visibility checks
 - `Data` 7-day experiment lifecycle (`start -> active -> complete -> result saved`)
+- Settings privacy policy row presence
+- onboarding progress copy consistency (step-based progress, no percentage duplicate)
 - snapshot matrix across `light` and `dark` appearance
 - dynamic type scaling at accessibility sizes (`AXXXL`)
 - interaction latency budgets for tab transitions and primary completion flows
@@ -16,6 +19,7 @@ The tests launch with:
 
 - `-uitest-reset`
 - `-uitest-ready`
+- `-uitest-onboarding`
 - `-uitest-system | -uitest-light | -uitest-dark`
 - `-uitest-enable-haptics 0|1`
 - `-uitest-reduce-motion 0|1`
