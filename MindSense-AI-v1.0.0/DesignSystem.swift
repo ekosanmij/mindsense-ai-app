@@ -241,6 +241,9 @@ enum MindSenseLayout {
     static let pageHorizontal: CGFloat = 16
     static let pageTop: CGFloat = 14
     static let pageBottom: CGFloat = 16
+    static let floatingTabBarCompactClearance: CGFloat = 72
+    static let floatingTabBarStandardClearance: CGFloat = 88
+    static let floatingTabBarExpandedClearance: CGFloat = 104
 
     static let sheetHorizontal: CGFloat = 16
     static let sheetVertical: CGFloat = 20
@@ -248,6 +251,26 @@ enum MindSenseLayout {
     static let tileHorizontalInset: CGFloat = 12
     static let tileVerticalInset: CGFloat = 10
     static let tileMinHeight: CGFloat = 60
+
+    static func tabBarClearance(
+        measuredOverlay: CGFloat,
+        tier: MindSenseTabBarClearanceTier
+    ) -> CGFloat {
+        switch tier {
+        case .compact:
+            return max(floatingTabBarCompactClearance, measuredOverlay - 16)
+        case .standard:
+            return max(floatingTabBarStandardClearance, measuredOverlay)
+        case .expanded:
+            return max(floatingTabBarExpandedClearance, measuredOverlay + 16)
+        }
+    }
+}
+
+enum MindSenseTabBarClearanceTier {
+    case compact
+    case standard
+    case expanded
 }
 
 struct MindSenseRadius {
@@ -468,6 +491,21 @@ extension View {
         padding(.horizontal, MindSenseLayout.sheetHorizontal)
             .padding(.vertical, MindSenseLayout.sheetVertical)
     }
+
+    func mindSenseSheetPresentationChrome() -> some View {
+        presentationDragIndicator(.visible)
+    }
+}
+
+private struct MindSenseTabBarOverlayClearanceKey: EnvironmentKey {
+    static let defaultValue: CGFloat = MindSenseLayout.floatingTabBarStandardClearance
+}
+
+extension EnvironmentValues {
+    var mindSenseTabBarOverlayClearance: CGFloat {
+        get { self[MindSenseTabBarOverlayClearanceKey.self] }
+        set { self[MindSenseTabBarOverlayClearanceKey.self] = newValue }
+    }
 }
 
 struct ScreenEmptyState: Equatable {
@@ -497,4 +535,152 @@ extension String {
         value = value.replacingOccurrences(of: "-", with: "\u{2011}")
         return value
     }
+}
+
+struct MindSenseGlossarySheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    private let confidenceEntries: [MindSenseGlossaryEntry] = [
+        .init(
+            term: "Recommendation confidence",
+            summary: "How much trust to place in the app's current suggestions.",
+            detail: "This combines data coverage and model fit. Lower values mean the app is giving directional guidance, not a strong recommendation."
+        ),
+        .init(
+            term: "Model confidence (fit)",
+            summary: "How well today's signals match the model's learned baseline and patterns.",
+            detail: "Model confidence is one factor inside recommendation confidence. Good fit improves trust, but it does not replace data coverage."
+        ),
+        .init(
+            term: "Data confidence",
+            summary: "Signal coverage and quality supporting today's estimates.",
+            detail: "This reflects usable imports such as sleep, HR, HRV, and wear continuity. Low data confidence usually lowers recommendation confidence."
+        ),
+        .init(
+            term: "Attribution confidence",
+            summary: "How certain the app is about a likely driver for a detected episode.",
+            detail: "This is specific to an episode explanation and is separate from recommendation confidence for today's actions."
+        )
+    ]
+
+    private let scoreEntries: [MindSenseGlossaryEntry] = [
+        .init(
+            term: "Load",
+            summary: "Overall strain across the day or recent carryover window.",
+            detail: "Use Load to judge general demand on your system. It is not the same as the severity of a single stress episode."
+        ),
+        .init(
+            term: "Episode intensity",
+            summary: "Severity of one detected stress episode.",
+            detail: "Episode intensity is based on deviation from baseline patterns and duration for that event only. Use Load for overall strain."
+        )
+    ]
+
+    private let stateEntries: [MindSenseGlossaryEntry] = [
+        .init(
+            term: "Flow ready / Flow running",
+            summary: "Regulate-session state labels, not readiness scores.",
+            detail: "Flow ready means conditions suggest a focus/regulate session is a good time to start. Flow running means a session is currently active."
+        ),
+        .init(
+            term: "Managed / Ready / Steady",
+            summary: "Band labels shown inside different score types.",
+            detail: "These labels are metric-specific: Managed is a Load band, Ready is a Readiness band, and Steady is a Consistency band."
+        )
+    ]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: MindSenseSpacing.md) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "How terms are used",
+                                subtitle: "Short definitions for labels used across Today, Regulate, and Data.",
+                                icon: "text.book.closed"
+                            )
+                        )
+                    }
+
+                    glossarySection(
+                        title: "Confidence terms",
+                        subtitle: "Different confidence labels mean different things.",
+                        icon: "checkmark.shield",
+                        entries: confidenceEntries
+                    )
+
+                    glossarySection(
+                        title: "Scores",
+                        subtitle: "Load and episode intensity describe different scopes.",
+                        icon: "gauge.with.dots.needle.50percent",
+                        entries: scoreEntries
+                    )
+
+                    glossarySection(
+                        title: "State labels",
+                        subtitle: "App state labels that are easy to confuse with score labels.",
+                        icon: "tag",
+                        entries: stateEntries
+                    )
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("Glossary")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "Glossary")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+    }
+
+    private func glossarySection(
+        title: String,
+        subtitle: String,
+        icon: String,
+        entries: [MindSenseGlossaryEntry]
+    ) -> some View {
+        InsetSurface {
+            MindSenseSectionHeader(
+                model: .init(
+                    title: title,
+                    subtitle: subtitle,
+                    icon: icon
+                )
+            )
+
+            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+                ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(entry.term)
+                            .font(MindSenseTypography.caption.weight(.semibold))
+                            .foregroundStyle(.primary)
+                        MindSenseSummaryMoreText(
+                            summary: entry.summary,
+                            detail: entry.detail,
+                            textStyle: MindSenseTypography.caption,
+                            textColor: .secondary
+                        )
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if index < entries.count - 1 {
+                        MindSenseSectionDivider(emphasis: 0.18)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct MindSenseGlossaryEntry: Identifiable {
+    let term: String
+    let summary: String
+    let detail: String
+
+    var id: String { term }
 }

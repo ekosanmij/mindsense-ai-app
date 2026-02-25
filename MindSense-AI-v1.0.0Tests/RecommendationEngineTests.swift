@@ -6,6 +6,7 @@ final class RecommendationEngineTests: XCTestCase {
         let scenario = DemoScenario.highStressDay
         let context = RecommendationEngine.Context(
             scenario: scenario,
+            intentMode: .recovery,
             metrics: .init(load: 84, readiness: 54, consistency: 60),
             baseMetrics: scenario.baseMetrics,
             confidenceScore: 0.8,
@@ -27,6 +28,7 @@ final class RecommendationEngineTests: XCTestCase {
         let scenario = DemoScenario.balancedDay
         let context = RecommendationEngine.Context(
             scenario: scenario,
+            intentMode: .focus,
             metrics: .init(load: 46, readiness: 79, consistency: 74),
             baseMetrics: scenario.baseMetrics,
             confidenceScore: 0.86,
@@ -48,6 +50,7 @@ final class RecommendationEngineTests: XCTestCase {
         let scenario = DemoScenario.balancedDay
         let lowStressContext = RecommendationEngine.Context(
             scenario: scenario,
+            intentMode: .focus,
             metrics: scenario.baseMetrics,
             baseMetrics: scenario.baseMetrics,
             confidenceScore: 0.84,
@@ -57,6 +60,7 @@ final class RecommendationEngineTests: XCTestCase {
         )
         let highStressContext = RecommendationEngine.Context(
             scenario: scenario,
+            intentMode: .focus,
             metrics: scenario.baseMetrics,
             baseMetrics: scenario.baseMetrics,
             confidenceScore: 0.84,
@@ -80,6 +84,7 @@ final class RecommendationEngineTests: XCTestCase {
         ]
         let context = RecommendationEngine.Context(
             scenario: scenario,
+            intentMode: .recovery,
             metrics: .init(load: 88, readiness: 50, consistency: 58),
             baseMetrics: scenario.baseMetrics,
             confidenceScore: 0.78,
@@ -93,5 +98,49 @@ final class RecommendationEngineTests: XCTestCase {
         XCTAssertEqual(ranked.count, baseDrivers.count)
         XCTAssertTrue(ranked[0].impact >= ranked[1].impact)
         XCTAssertTrue(ranked[1].impact >= ranked[2].impact)
+    }
+
+    func testSleepModePrefersSleepDownshiftAtManageableLoad() {
+        let scenario = DemoScenario.balancedDay
+        let context = RecommendationEngine.Context(
+            scenario: scenario,
+            intentMode: .sleep,
+            metrics: .init(load: 58, readiness: 70, consistency: 66),
+            baseMetrics: scenario.baseMetrics,
+            confidenceScore: 0.82,
+            stressSignals: 1,
+            recoverySignals: 2,
+            caffeineSignals: 0
+        )
+
+        let recommendation = RecommendationEngine.primaryRecommendation(
+            context: context,
+            presets: DemoScenarioProfile.make(for: scenario).presets,
+            fallback: scenario.primaryRecommendation
+        )
+
+        XCTAssertEqual(recommendation.preset, .sleepDownshift)
+    }
+
+    func testFocusModeUsesCalmNowWhenLoadIsAcute() {
+        let scenario = DemoScenario.balancedDay
+        let context = RecommendationEngine.Context(
+            scenario: scenario,
+            intentMode: .focus,
+            metrics: .init(load: 89, readiness: 66, consistency: 70),
+            baseMetrics: scenario.baseMetrics,
+            confidenceScore: 0.82,
+            stressSignals: 3,
+            recoverySignals: 0,
+            caffeineSignals: 1
+        )
+
+        let recommendation = RecommendationEngine.primaryRecommendation(
+            context: context,
+            presets: DemoScenarioProfile.make(for: scenario).presets,
+            fallback: scenario.primaryRecommendation
+        )
+
+        XCTAssertEqual(recommendation.preset, .calmNow)
     }
 }

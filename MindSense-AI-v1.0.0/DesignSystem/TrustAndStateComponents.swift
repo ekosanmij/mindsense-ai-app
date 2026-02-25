@@ -20,29 +20,35 @@ struct ScreenPromiseView: View {
 struct RecommendationRationaleView: View {
     let estimate: String
     let whyRecommended: String
-    @State private var expanded = false
 
     var body: some View {
         InsetSurface {
-            DisclosureGroup(isExpanded: $expanded) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(estimate)
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                    Divider()
-                    Text(whyRecommended)
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .padding(.top, 4)
-            } label: {
-                HStack {
-                    Text("Estimate and rationale")
-                        .font(MindSenseTypography.bodyStrong)
-                    Spacer()
-                }
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Estimate and rationale")
+                    .font(MindSenseTypography.bodyStrong)
+
+                Text(estimate)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+
+                MindSenseSummaryMoreText(
+                    summary: rationaleSummary,
+                    detail: whyRecommended
+                )
             }
         }
+    }
+
+    private var rationaleSummary: String {
+        let trimmed = whyRecommended.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "No rationale available yet." }
+        if let periodIndex = trimmed.firstIndex(of: ".") {
+            let candidate = String(trimmed[...periodIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !candidate.isEmpty {
+                return candidate
+            }
+        }
+        return trimmed
     }
 }
 
@@ -62,12 +68,20 @@ struct EscalationGuidanceView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Escalation guidance")
                         .font(MindSenseTypography.bodyStrong)
-                    Text(message)
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    MindSenseSummaryMoreText(summary: summaryLine, detail: message)
                 }
             }
+        }
+    }
+
+    private var summaryLine: String {
+        switch context {
+        case .immediateRisk:
+            return "Use emergency support now."
+        case .sustainedHighLoad:
+            return "Get direct clinical support if distress persists or worsens."
+        case .communityConcern:
+            return "Use crisis resources for urgent safety concerns."
         }
     }
 

@@ -3,6 +3,7 @@ import Foundation
 struct RecommendationEngine {
     struct Context {
         let scenario: DemoScenario
+        let intentMode: IntentMode
         let metrics: DemoMetricSnapshot
         let baseMetrics: DemoMetricSnapshot
         let confidenceScore: Double
@@ -19,6 +20,14 @@ struct RecommendationEngine {
         let load = context.metrics.load
         let readiness = context.metrics.readiness
         let consistency = context.metrics.consistency
+
+        if let modeRecommendation = modeDrivenRecommendation(
+            context: context,
+            presets: presets,
+            fallback: fallback
+        ) {
+            return modeRecommendation
+        }
 
         switch context.scenario {
         case .highStressDay:
@@ -166,6 +175,7 @@ struct RecommendationEngine {
                     adjustedImpact += (Double(context.stressSignals - context.recoverySignals) * 0.01)
                 }
 
+                adjustedImpact += modeDriverBoost(for: driver.id, mode: context.intentMode)
                 let clampedImpact = clamp(adjustedImpact, min: 0.05, max: 0.62)
                 let influenceText: String
                 if clampedImpact - driver.impact > 0.03 {
@@ -180,7 +190,8 @@ struct RecommendationEngine {
                     id: driver.id,
                     name: driver.name,
                     detail: "\(driver.detail) • \(influenceText)",
-                    impact: clampedImpact
+                    impact: clampedImpact,
+                    source: driver.source
                 )
             }
             .sorted { lhs, rhs in
@@ -189,6 +200,107 @@ struct RecommendationEngine {
                 }
                 return lhs.impact > rhs.impact
             }
+    }
+
+    private static func modeDrivenRecommendation(
+        context: Context,
+        presets: [DemoRegulatePreset],
+        fallback: DemoRecommendation
+    ) -> DemoRecommendation? {
+        let load = context.metrics.load
+        let readiness = context.metrics.readiness
+        let consistency = context.metrics.consistency
+
+        switch context.intentMode {
+        case .focus:
+            if load >= 84 || context.stressSignals >= 3 {
+                return recommendation(
+                    for: .calmNow,
+                    what: "Run Calm now first, then re-enter Focus prep once load settles.",
+                    why: "Focus mode detected elevated strain (\(load)) that can erode concentration quality.",
+                    context: context,
+                    presets: presets,
+                    fallback: fallback
+                )
+            }
+            if readiness >= 56 {
+                return recommendation(
+                    for: .focusPrep,
+                    what: "Run Focus prep before your highest-value concentration block.",
+                    why: "Focus mode prioritizes quality output while readiness is at \(readiness).",
+                    context: context,
+                    presets: presets,
+                    fallback: fallback
+                )
+            }
+            return nil
+
+        case .recovery:
+            if consistency < 60 && context.stressSignals <= 1 {
+                return recommendation(
+                    for: .sleepDownshift,
+                    what: "Use Sleep downshift to recover early and avoid carryover strain tonight.",
+                    why: "Recovery mode sees consistency at \(consistency), making routine stabilization the fastest lever.",
+                    context: context,
+                    presets: presets,
+                    fallback: fallback
+                )
+            }
+            return recommendation(
+                for: .calmNow,
+                what: "Run Calm now to reduce near-term load before your next demand spike.",
+                why: "Recovery mode prioritizes strain control with load at \(load) and \(context.stressSignals) recent stress markers.",
+                context: context,
+                presets: presets,
+                fallback: fallback
+            )
+
+        case .sleep:
+            if load >= 90 && context.stressSignals >= 3 {
+                return recommendation(
+                    for: .calmNow,
+                    what: "Run Calm now first to reduce arousal, then transition into Sleep downshift tonight.",
+                    why: "Sleep mode detected acute strain (\(load)) that can block effective wind-down.",
+                    context: context,
+                    presets: presets,
+                    fallback: fallback
+                )
+            }
+            return recommendation(
+                for: .sleepDownshift,
+                what: "Run Sleep downshift as your anchor protocol before bed.",
+                why: "Sleep mode emphasizes consistency and evening regulation to protect next-day recovery.",
+                context: context,
+                presets: presets,
+                fallback: fallback
+            )
+        }
+    }
+
+    private static func modeDriverBoost(for driverID: String, mode: IntentMode) -> Double {
+        switch mode {
+        case .focus:
+            switch driverID {
+            case "training_response", "movement_consistency", "stable_sleep", "sleep_rebound", "load_taper":
+                return 0.045
+            default:
+                return 0
+            }
+        case .recovery:
+            switch driverID {
+            case "deadline_density", "meeting_stack", "moderate_meeting_load", "hydration_drag", "late_caffeine", "caffeine_timing":
+                return 0.045
+            default:
+                return 0
+            }
+        case .sleep:
+            switch driverID {
+            case "sleep_fragmentation", "stable_sleep", "sleep_rebound", "evening_routine", "reduced_stimulus", "screen_exposure":
+                return 0.045
+            default:
+                return 0
+            }
+        }
     }
 
     private static func recommendation(

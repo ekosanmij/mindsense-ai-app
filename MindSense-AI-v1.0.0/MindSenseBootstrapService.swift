@@ -30,6 +30,9 @@ final class MindSenseBootstrapService {
         if defaults.object(forKey: "demo.scenario.v1") == nil {
             defaults.set(DemoScenario.balancedDay.rawValue, forKey: "demo.scenario.v1")
         }
+        if defaults.object(forKey: "demo.meeting_call_signals_enabled.v1") == nil {
+            defaults.set(true, forKey: "demo.meeting_call_signals_enabled.v1")
+        }
         if defaults.object(forKey: "demo.day.v1") == nil {
             defaults.set(DemoScenario.balancedDay.defaultDay, forKey: "demo.day.v1")
         }

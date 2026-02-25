@@ -2,24 +2,65 @@ import SwiftUI
 import UIKit
 
 struct TodayView: View {
+    private enum CheckInPromptMode: String {
+        case standard
+        case reduced
+        case lowConfidenceOnly
+    }
+
     @EnvironmentObject private var store: MindSenseStore
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.mindSenseTabBarOverlayClearance) private var tabBarOverlayClearance
     @AppStorage("appReduceMotion") private var appReduceMotion = false
+    @AppStorage("todayShowWhyStatePreference") private var showHeroWhyPreference = false
+    @AppStorage("todayCheckInIgnoreStreak") private var checkInIgnoreStreak = 0
+    @AppStorage("todayCheckInPromptMode") private var checkInPromptModeRaw = CheckInPromptMode.standard.rawValue
+    @AppStorage("todayCheckInReducedLastPromptDayStamp") private var reducedPromptLastShownDayStamp = -1
+    @AppStorage("todayCheckInLowConfidenceLastPromptDayStamp") private var lowConfidencePromptLastShownDayStamp = -1
+    @AppStorage("todayCheckInLastSavedDayStamp") private var checkInLastSavedDayStamp = -1
+    @AppStorage("notifications.stressNudge") private var stressNudge = true
 
-    @State private var loadSlider = 4.0
+    @State private var loadSlider = 5.0
     @State private var didAppear = false
     @State private var showHeroWhy = false
     @State private var showActionDetails = false
     @State private var showAllDrivers = false
     @State private var showSecondarySignals = false
     @State private var showModelDetails = false
+    @State private var showConfidenceDetails = false
     @State private var checkInJustSaved = false
+    @State private var checkInPromptShownThisVisit = false
+    @State private var checkInSavedThisVisit = false
+    @State private var shouldShowCheckInPrompt = true
+    @State private var selectedCheckInDriver: String?
     @State private var showSignalSourceDetails = false
     @State private var showTimelineDetails = false
     @State private var selectedTimelineEpisode: StressEpisodeRecord?
+    @State private var intensityInfoEpisode: StressEpisodeRecord?
+    @State private var selectedMetricDefinition: CoreMetric?
     @State private var focusedContextEpisodeID: UUID?
     @State private var contextTags: Set<String> = []
+    @State private var allowMultipleContextTags = false
+    @State private var contextPrimaryTag: String?
+    @State private var contextSecondaryTag: String?
     @State private var contextNote = ""
+
+    private let checkInDriverOptions = [
+        "Meetings",
+        "Workout",
+        "Poor sleep",
+        "Travel"
+    ]
+
+    private struct HeroMetricCard: Identifiable {
+        let metric: CoreMetric
+        let title: String
+        let value: Int
+        let delta: Int?
+        let tint: Color
+
+        var id: CoreMetric { metric }
+    }
 
     private var recommendation: DemoRecommendation {
         store.primaryRecommendation
@@ -48,11 +89,170 @@ struct TodayView: View {
                 ? "Continue: Record impact"
                 : "Continue: \(store.activeRegulateSession?.preset.title ?? recommendation.preset.title) session"
         }
-        return "Start \(recommendation.preset.title) (\(recommendation.timeMinutes) min)"
+        return "Start \(recommendation.preset.title)"
+    }
+
+    private var intentModeBinding: Binding<IntentMode> {
+        Binding(
+            get: { store.intentMode },
+            set: { mode in
+                store.triggerHaptic(intent: .selection)
+                store.setIntentMode(mode, source: "today_mode_switch")
+            }
+        )
+    }
+
+    private var heroMetricCards: [HeroMetricCard] {
+        store.todayMetricCardOrder.map { metric in
+            switch metric {
+            case .load:
+                return HeroMetricCard(
+                    metric: .load,
+                    title: "Load",
+                    value: store.demoMetrics.load,
+                    delta: latestDailyDelta?.load,
+                    tint: MindSensePalette.warning
+                )
+            case .readiness:
+                return HeroMetricCard(
+                    metric: .readiness,
+                    title: "Readiness",
+                    value: store.demoMetrics.readiness,
+                    delta: latestDailyDelta?.readiness,
+                    tint: MindSensePalette.success
+                )
+            case .consistency:
+                return HeroMetricCard(
+                    metric: .consistency,
+                    title: "Consistency",
+                    value: store.demoMetrics.consistency,
+                    delta: latestDailyDelta?.consistency,
+                    tint: MindSensePalette.signalCool
+                )
+            }
+        }
     }
 
     private var bottomContentPadding: CGFloat {
-        16
+        MindSenseLayout.pageBottom + (
+            hasUnfinishedRegulateStep
+                ? MindSenseLayout.tabBarClearance(
+                    measuredOverlay: tabBarOverlayClearance,
+                    tier: .compact
+                )
+                : MindSenseLayout.tabBarClearance(
+                    measuredOverlay: tabBarOverlayClearance,
+                    tier: .standard
+                )
+        )
+    }
+
+    private var checkInPromptMode: CheckInPromptMode {
+        CheckInPromptMode(rawValue: checkInPromptModeRaw) ?? .standard
+    }
+
+    private var todayDayStamp: Int {
+        Calendar.current.ordinality(of: .day, in: .era, for: Date()) ?? 0
+    }
+
+    private var isLowConfidenceDay: Bool {
+        store.confidencePercent < 62
+    }
+
+    private var hasSavedCheckInToday: Bool {
+        checkInLastSavedDayStamp == todayDayStamp
+    }
+
+    private var shouldShowCheckInFatigueOffer: Bool {
+        shouldShowCheckInPrompt && checkInPromptMode == .standard && checkInIgnoreStreak >= 3
+    }
+
+    private var attributionInboxEpisodes: [StressEpisodeRecord] {
+        let now = Date()
+        return store.recentStressEpisodes.filter { episode in
+            !episode.hasContext &&
+            episode.end <= now &&
+            now.timeIntervalSince(episode.end) <= (24 * 3_600)
+        }
+    }
+
+    private var attributionInboxCount: Int {
+        attributionInboxEpisodes.count
+    }
+
+    private var recentAttributionPromptEpisode: StressEpisodeRecord? {
+        let now = Date()
+        return attributionInboxEpisodes.first { episode in
+            let age = now.timeIntervalSince(episode.end)
+            return age >= (15 * 60) && age <= (30 * 60)
+        }
+    }
+
+    private var attributionInboxCountLabel: String {
+        if attributionInboxCount == 1 {
+            return "1 episode needs a label."
+        }
+        return "\(attributionInboxCount) episodes need labels."
+    }
+
+    private func evaluateCheckInPromptVisibilityForVisit() {
+        checkInSavedThisVisit = false
+
+        let shouldShow: Bool
+        switch checkInPromptMode {
+        case .standard:
+            shouldShow = true
+        case .reduced:
+            shouldShow = reducedPromptLastShownDayStamp < 0 || (todayDayStamp - reducedPromptLastShownDayStamp >= 2)
+        case .lowConfidenceOnly:
+            shouldShow = isLowConfidenceDay && todayDayStamp != lowConfidencePromptLastShownDayStamp
+        }
+
+        shouldShowCheckInPrompt = shouldShow
+        checkInPromptShownThisVisit = shouldShow
+
+        if shouldShow {
+            switch checkInPromptMode {
+            case .standard:
+                break
+            case .reduced:
+                reducedPromptLastShownDayStamp = todayDayStamp
+            case .lowConfidenceOnly:
+                lowConfidencePromptLastShownDayStamp = todayDayStamp
+            }
+        }
+    }
+
+    private func registerIgnoredCheckInIfNeeded() {
+        defer {
+            checkInPromptShownThisVisit = false
+            checkInSavedThisVisit = false
+        }
+
+        guard case .ready = resolvedState else { return }
+        guard checkInPromptShownThisVisit else { return }
+        guard !checkInSavedThisVisit else { return }
+        guard !hasSavedCheckInToday else { return }
+        guard checkInPromptMode == .standard else { return }
+        checkInIgnoreStreak = min(checkInIgnoreStreak + 1, 6)
+    }
+
+    private func applyCheckInPromptMode(_ mode: CheckInPromptMode) {
+        checkInPromptModeRaw = mode.rawValue
+        checkInIgnoreStreak = 0
+        checkInPromptShownThisVisit = false
+        shouldShowCheckInPrompt = false
+
+        switch mode {
+        case .standard:
+            shouldShowCheckInPrompt = true
+            checkInPromptShownThisVisit = true
+        case .reduced:
+            reducedPromptLastShownDayStamp = todayDayStamp
+        case .lowConfidenceOnly:
+            lowConfidencePromptLastShownDayStamp = todayDayStamp
+        }
+        store.triggerHaptic(intent: .selection)
     }
 
     var body: some View {
@@ -69,16 +269,22 @@ struct TodayView: View {
                             .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                         timelineBlock
                             .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
-                        if episodeAwaitingContext != nil {
-                            contextCaptureBlock
+                        if attributionInboxCount > 0 {
+                            attributionInboxBlock
                                 .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
+                        if episodeAwaitingContext != nil {
+                            contextCaptureBlock
+                                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                        }
                         driversBlock
-                            .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
-                        statusSnapshotBlock
                             .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
-                        checkInBlock
+                        statusSnapshotBlock
                             .mindSenseStaggerEntrance(6, isPresented: didAppear, reduceMotion: reduceMotion)
+                        if shouldShowCheckInPrompt {
+                            checkInBlock
+                                .mindSenseStaggerEntrance(7, isPresented: didAppear, reduceMotion: reduceMotion)
+                        }
                     }
                     .mindSensePageInsets(bottom: bottomContentPadding)
                 }
@@ -99,12 +305,23 @@ struct TodayView: View {
                     primarySessionCTA
                 }
             }
+            .sheet(isPresented: $showConfidenceDetails) {
+                TodayConfidenceSheet(
+                    confidencePercent: store.confidencePercent,
+                    confidenceLabel: store.confidenceLabel,
+                    modelFitPercent: confidenceModelFitPercent,
+                    quality: store.demoHealthProfile.quality,
+                    improvementActions: confidenceImprovementActions
+                )
+            }
             .sheet(isPresented: $showModelDetails) {
                 TodayModelDetailsSheet(
                     confidenceStatusLine: store.confidenceStatusLine,
                     coveragePercent: store.demoDataCoveragePercent,
                     confidencePercent: store.confidencePercent,
-                    lastUpdatedLabel: store.lastUpdatedLabel
+                    lastUpdatedLabel: store.lastUpdatedLabel,
+                    modelFitPercent: confidenceModelFitPercent,
+                    dataConfidencePercent: store.healthDataQualityScore
                 )
             }
             .sheet(isPresented: $showSignalSourceDetails) {
@@ -132,7 +349,16 @@ struct TodayView: View {
                     onSelectEpisode: { episode in
                         selectedTimelineEpisode = episode
                         store.triggerHaptic(intent: .selection)
+                    },
+                    onInspectIntensity: { episode in
+                        presentIntensityDetails(for: episode, source: "timeline_detail_sheet")
                     }
+                )
+            }
+            .sheet(item: $intensityInfoEpisode) { episode in
+                TodayEpisodeIntensitySheet(
+                    episode: episode,
+                    higherThanPercentile: store.recentStressEpisodes.higherThanPercent(for: episode)
                 )
             }
             .sheet(item: $selectedTimelineEpisode) { episode in
@@ -163,23 +389,41 @@ struct TodayView: View {
                     }
                 )
             }
+            .sheet(item: $selectedMetricDefinition) { metric in
+                TodayMetricDefinitionSheet(metric: metric)
+            }
             .onAppear {
                 let firstAppearance = !didAppear
                 if firstAppearance {
                     didAppear = true
                 }
-                loadSlider = Double(max(0, min(10, store.demoMetrics.load / 10)))
+                applyHeroWhyExpansionPolicy()
                 store.prepareCoreScreen(.today)
+                loadSlider = Double(max(1, min(10, store.demoMetrics.load / 10)))
+                evaluateCheckInPromptVisibilityForVisit()
+                consumeContextCaptureLaunchIfNeeded()
                 if firstAppearance {
                     store.track(event: .screenView, surface: .today)
                 }
             }
+            .onDisappear {
+                registerIgnoredCheckInIfNeeded()
+            }
             .onChange(of: store.demoScenario) { _, _ in
                 store.prepareCoreScreen(.today)
-                loadSlider = Double(max(0, min(10, store.demoMetrics.load / 10)))
-                focusedContextEpisodeID = nil
-                contextTags = []
-                contextNote = ""
+                loadSlider = Double(max(1, min(10, store.demoMetrics.load / 10)))
+                evaluateCheckInPromptVisibilityForVisit()
+                resetInlineContextCaptureState(clearFocusedID: true)
+                intensityInfoEpisode = nil
+            }
+            .onChange(of: store.intentMode) { _, _ in
+                store.prepareCoreScreen(.today)
+            }
+            .onChange(of: store.todayContextCaptureEpisodeID) { _, _ in
+                consumeContextCaptureLaunchIfNeeded()
+            }
+            .onChange(of: store.onboarding.baselineStart) { _, _ in
+                applyHeroWhyExpansionPolicy()
             }
         }
         .accessibilityIdentifier("today_screen_root")
@@ -190,7 +434,12 @@ struct TodayView: View {
             label: AppIA.today,
             title: heroInterpretation,
             detail: heroReferenceLabel,
-            metric: "Confidence \(store.confidencePercent)%",
+            metric: "Rec. confidence \(store.confidencePercent)%",
+            metricAction: {
+                showConfidenceDetails = true
+                store.triggerHaptic(intent: .selection)
+            },
+            metricAccessibilityLabel: "Recommendation confidence \(store.confidencePercent) percent. Show recommendation confidence details.",
             icon: "sun.max.fill",
             tone: .accent,
             watermarkTint: MindSensePalette.accent,
@@ -220,36 +469,35 @@ struct TodayView: View {
             }
             .buttonStyle(.plain)
 
+            MindSenseSegmentedControl(
+                options: IntentMode.allCases,
+                selection: intentModeBinding,
+                title: { $0.shortTitle }
+            )
+
+            Text(store.intentModeHintLine)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             HStack(spacing: MindSenseSpacing.xs) {
-                heroMetricTile(
-                    title: "Load",
-                    value: store.demoMetrics.load,
-                    delta: latestDailyDelta?.load,
-                    metric: .load,
-                    tint: MindSensePalette.warning
-                )
-                heroMetricTile(
-                    title: "Readiness",
-                    value: store.demoMetrics.readiness,
-                    delta: latestDailyDelta?.readiness,
-                    metric: .readiness,
-                    tint: MindSensePalette.success
-                )
-                heroMetricTile(
-                    title: "Consistency",
-                    value: store.demoMetrics.consistency,
-                    delta: latestDailyDelta?.consistency,
-                    metric: .consistency,
-                    tint: MindSensePalette.signalCool
-                )
+                ForEach(heroMetricCards) { card in
+                    heroMetricTile(
+                        title: card.title,
+                        value: card.value,
+                        delta: card.delta,
+                        metric: card.metric,
+                        tint: card.tint
+                    )
+                }
             }
 
             Button {
                 if reduceMotion {
-                    showHeroWhy.toggle()
+                    toggleHeroWhy()
                 } else {
                     withAnimation(MindSenseMotion.selection) {
-                        showHeroWhy.toggle()
+                        toggleHeroWhy()
                     }
                 }
                 store.triggerHaptic(intent: .selection)
@@ -278,94 +526,120 @@ struct TodayView: View {
             .buttonStyle(.plain)
 
             if showHeroWhy {
-                Text(heroWhyDetail)
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                if shouldUseBulletWhyExplanation {
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(Array(heroWhyBullets.enumerated()), id: \.offset) { item in
+                            Text("• \(item.element)")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                } else {
+                    Text(heroWhyDetail)
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
 
     private var statusSnapshotBlock: some View {
         InsetSurface {
-            MindSenseSectionHeader(
+            MindSenseCollapsibleSection(
                 model: .init(
-                    title: "Current state",
+                    title: "Now",
                     subtitle: "Updated \(store.lastUpdatedLabel).",
                     icon: "heart.text.square"
-                )
-            )
+                ),
+                storageKey: "ui.collapse.today.status_snapshot",
+                collapsedSummary: "Load \(store.demoMetrics.load) • Readiness \(store.demoMetrics.readiness) • Consistency \(store.demoMetrics.consistency)"
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Load \(store.demoMetrics.load) (\(loadStateLabel))  •  Readiness \(store.demoMetrics.readiness) (\(readinessStateLabel))")
+                        .font(MindSenseTypography.body)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Consistency \(store.demoMetrics.consistency) (\(consistencyStateLabel))")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                }
 
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Load \(store.demoMetrics.load) (\(loadStateLabel))  •  Readiness \(store.demoMetrics.readiness) (\(readinessStateLabel))")
-                    .font(MindSenseTypography.body)
+                Text("Daily deltas are shown directly in the KPI cards above.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Consistency \(store.demoMetrics.consistency) (\(consistencyStateLabel))")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-            }
 
-            if let delta = store.latestCheckInDeltaSummary {
-                Text("Since \(delta.baselineTitle): Load \(signed(delta.loadDelta)), Readiness \(signed(delta.readinessDelta)).")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else {
-                Text("Save your first check-in to unlock day-over-day changes.")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
+                Button {
+                    showModelDetails = true
+                    store.triggerHaptic(intent: .selection)
+                } label: {
+                    Label("Model details", systemImage: "info.circle")
+                        .font(MindSenseTypography.caption)
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
             }
-
-            Button {
-                showModelDetails = true
-                store.triggerHaptic(intent: .selection)
-            } label: {
-                Label("Model details", systemImage: "info.circle")
-                    .font(MindSenseTypography.caption)
-            }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
         }
     }
 
     private var driversBlock: some View {
         PrimarySurface {
-            MindSenseSectionHeader(
+            MindSenseCollapsibleSection(
                 model: .init(
                     title: "Top drivers now",
-                    subtitle: "The strongest factors shaping your state now.",
+                    subtitle: "The strongest factors shaping your state now, biased for \(store.intentMode.shortTitle.lowercased()) intent. Percentages show each signal's share of top-driver weight.",
                     icon: "bolt.heart"
-                )
-            )
-
-            VStack(spacing: 10) {
-                ForEach(visibleDrivers) { driver in
-                    DriverImpactRowView(driver: driver)
-                }
-            }
-
-            if store.todayPrimaryDrivers.count > 2 {
-                Button(showAllDrivers ? "Show fewer drivers" : "See all drivers") {
-                    showAllDrivers.toggle()
-                    store.triggerHaptic(intent: .selection)
-                }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
-            }
-
-            if !store.todaySecondaryDrivers.isEmpty {
-                MindSenseSectionDivider(emphasis: 0.28)
-                DisclosureGroup(isExpanded: $showSecondarySignals) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        ForEach(store.todaySecondaryDrivers.prefix(2)) { secondary in
-                            Text("• \(secondary.name) also appears in your context.")
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
+                ),
+                storageKey: "ui.collapse.today.top_drivers",
+                collapsedSummary: driverCollapsedSummary
+            ) {
+                VStack(spacing: 10) {
+                    ForEach(visibleDrivers) { driver in
+                        DriverImpactRowView(
+                            driver: driver,
+                            weightShare: driverWeightShare(for: driver),
+                            sourceLine: driverSourceLine(for: driver),
+                            controlLine: driverControlLine(for: driver),
+                            microActionTitle: driverMicroActionLabel(for: driver),
+                            onMicroAction: driverMicroActionLabel(for: driver) == nil
+                                ? nil
+                                : { triggerDriverMicroAction(for: driver) }
+                        )
                     }
-                    .padding(.top, 4)
-                } label: {
-                    Text("More signals")
+                }
+
+                if scenarioIncludesMeetingCallDrivers {
+                    Text("Control: Use meeting/call signals is \(store.useMeetingCallSignals ? "On" : "Off") in Settings > Health and data.")
                         .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                if store.todayPrimaryDrivers.count > 2 {
+                    Button(showAllDrivers ? "Show fewer drivers" : "See all drivers") {
+                        showAllDrivers.toggle()
+                        store.triggerHaptic(intent: .selection)
+                    }
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                }
+
+                if !store.todaySecondaryDrivers.isEmpty {
+                    MindSenseSectionDivider(emphasis: 0.28)
+                    DisclosureGroup(isExpanded: $showSecondarySignals) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            ForEach(store.todaySecondaryDrivers.prefix(2)) { secondary in
+                                Text("• \(secondary.name) also appears in your context.")
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(.top, 4)
+                    } label: {
+                        Text("More signals")
+                            .font(MindSenseTypography.caption)
+                    }
                 }
             }
         }
@@ -375,7 +649,7 @@ struct TodayView: View {
         PrimarySurface {
             MindSenseSectionHeader(
                 model: .init(
-                    title: "Your best next step",
+                    title: "Do this next",
                     subtitle: "Do this now.",
                     icon: "scope"
                 )
@@ -393,31 +667,27 @@ struct TodayView: View {
                         .font(MindSenseTypography.body)
                 }
                 Spacer()
+                PillChip(label: store.intentMode.shortTitle, state: .selected)
                 PillChip(label: "\(recommendation.timeMinutes) min", state: .unselected)
             }
 
-            Text("Reason: \(recommendation.why)")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text("Expected effect: \(recommendation.expectedEffect)")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button(inlineActionLabel) {
-                triggerNextBestAction(source: "today_action_card_cta")
-            }
-            .accessibilityIdentifier("today_action_card_cta")
-            .buttonStyle(
-                MindSenseButtonStyle(
-                    hierarchy: hasUnfinishedRegulateStep ? .secondary : .primary,
-                    minHeight: 52
+            if !hasUnfinishedRegulateStep {
+                Button(inlineActionLabel) {
+                    triggerNextBestAction(source: "today_action_card_cta")
+                }
+                .accessibilityIdentifier("today_action_card_cta")
+                .buttonStyle(
+                    MindSenseButtonStyle(
+                        hierarchy: .primary,
+                        minHeight: 52
+                    )
                 )
-            )
+            } else {
+                MindSenseSummaryMoreText(
+                    summary: "An active session is already running. Use the sticky action below to finish the loop.",
+                    detail: "We keep one persistent action when a session is in progress so you can resume or record impact without hunting through cards."
+                )
+            }
 
             Button {
                 if reduceMotion {
@@ -430,7 +700,7 @@ struct TodayView: View {
                 store.triggerHaptic(intent: .selection)
             } label: {
                 HStack(spacing: MindSenseSpacing.xs) {
-                    Text("See details")
+                    Text("Why this now?")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: MindSenseSpacing.xs)
@@ -451,11 +721,18 @@ struct TodayView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("today_action_card_why_now")
+
+            Button("Pick a different protocol") {
+                openRegulateProtocolPicker(source: "today_action_card_pick_protocol")
+            }
+            .accessibilityIdentifier("today_action_card_pick_protocol")
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
 
             if showActionDetails {
                 VStack(alignment: .leading, spacing: 8) {
-                    actionDetailRow(label: "Protocol", value: recommendation.what)
-                    actionDetailRow(label: "Estimate", value: store.whatIfPreviewLine)
+                    actionDetailRow(label: "Why now", value: recommendation.why)
+                    actionDetailRow(label: "Expected effect", value: recommendation.expectedEffect)
                 }
             }
         }
@@ -463,78 +740,70 @@ struct TodayView: View {
 
     private var timelineBlock: some View {
         InsetSurface {
-            MindSenseSectionHeader(
+            MindSenseCollapsibleSection(
                 model: .init(
                     title: "Today timeline",
                     subtitle: "Stress episodes and recovery windows inferred from recent signals.",
                     icon: "clock.arrow.circlepath"
-                )
-            )
+                ),
+                storageKey: "ui.collapse.today.timeline",
+                collapsedSummary: timelineCollapsedSummary
+            ) {
+                if store.stressTimelineSegments.isEmpty {
+                    Text("No stress timeline available yet. Resync health data in Settings.")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    timelineSegmentBar
 
-            if store.stressTimelineSegments.isEmpty {
-                Text("No stress timeline available yet. Resync health data in Settings.")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                timelineSegmentBar
-
-                HStack(spacing: 8) {
-                    timelineLegendPill(title: "Stable", state: .stable)
-                    timelineLegendPill(title: "Activated", state: .activated)
-                    timelineLegendPill(title: "Recovery", state: .recovery)
-                }
-            }
-
-            if store.recentStressEpisodes.isEmpty {
-                Text("No detected episodes yet.")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                VStack(spacing: 8) {
-                    ForEach(store.recentStressEpisodes.prefix(3)) { episode in
-                        stressEpisodeRow(episode)
+                    HStack(spacing: 8) {
+                        timelineLegendPill(title: "Stable", state: .stable)
+                        timelineLegendPill(title: "Activated", state: .activated)
+                        timelineLegendPill(title: "Recovery", state: .recovery)
                     }
                 }
-            }
 
-            Button("View timeline details") {
-                showTimelineDetails = true
-                store.triggerHaptic(intent: .selection)
+                if store.recentStressEpisodes.isEmpty {
+                    Text("No detected episodes yet.")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    VStack(spacing: 8) {
+                        ForEach(store.recentStressEpisodes.prefix(3)) { episode in
+                            stressEpisodeRow(episode)
+                        }
+                    }
+                }
+
+                Button("View timeline details") {
+                    showTimelineDetails = true
+                    store.triggerHaptic(intent: .selection)
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
         }
     }
 
     private var timelineSegmentBar: some View {
         HStack(spacing: 5) {
             ForEach(store.stressTimelineSegments) { segment in
-                RoundedRectangle(cornerRadius: MindSenseRadius.pill, style: .continuous)
-                    .fill(timelineTint(for: segment.state))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 10)
+                TimelineStateSegmentCell(
+                    state: segment.state,
+                    tint: timelineTint(for: segment.state),
+                    height: 20,
+                    prefersExpandedLabel: false
+                )
             }
         }
         .padding(.vertical, 2)
+        .accessibilityElement(children: .contain)
     }
 
     private func timelineLegendPill(title: String, state: StressTimelineState) -> some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(timelineTint(for: state))
-                .frame(width: 8, height: 8)
-            Text(title)
-                .font(MindSenseTypography.micro)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
-        .background(
-            Capsule(style: .continuous)
-                .fill(MindSenseSurfaceLevel.base.fill)
-        )
-        .overlay(
-            Capsule(style: .continuous)
-                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        TimelineStateLegendPill(
+            title: title,
+            state: state,
+            tint: timelineTint(for: state)
         )
     }
 
@@ -552,21 +821,23 @@ struct TodayView: View {
                     Text("\(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
-                    Text("Intensity \(episode.intensity)")
-                        .font(MindSenseTypography.micro)
-                        .foregroundStyle(MindSensePalette.warning)
-                        .tracking(0.6)
+                    EpisodeIntensityBadge(intensity: episode.intensity) {
+                        presentIntensityDetails(for: episode, source: "today_timeline_card")
+                    }
                 }
 
-                Text("\(episode.likelyDriver.title) driver • confidence \(episode.confidence)%")
+                Text("\(episode.likelyDriver.title) driver • attribution confidence \(episode.confidence)%")
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
+                Text("Recommended: \(episode.recommendedPreset.title)")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 if episode.hasContext {
-                    let contextSummary = episode.userTags.isEmpty
-                        ? (episode.userNote ?? "Note captured")
-                        : episode.userTags.joined(separator: ", ")
+                    let contextSummary = episode.contextSummaryLine ?? "Note captured"
                     Text("Context captured: \(contextSummary)")
                         .font(MindSenseTypography.micro)
                         .foregroundStyle(MindSensePalette.success)
@@ -584,15 +855,21 @@ struct TodayView: View {
                         .foregroundStyle(MindSensePalette.accent)
                 }
 
-                Button("View details") {
-                    selectedTimelineEpisode = episode
-                    store.triggerHaptic(intent: .selection)
-                }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
-            }
-            Spacer(minLength: 8)
+                HStack(spacing: 8) {
+                    episodeActionPill(
+                        title: "Start",
+                        systemImage: "play.fill",
+                        emphasized: true
+                    ) {
+                        startEpisodeRecommendation(episode, source: "today_timeline_card_start")
+                    }
 
-            PillChip(label: episode.recommendedPreset.title, state: .unselected)
+                    episodeActionPill(title: "Details") {
+                        selectedTimelineEpisode = episode
+                        store.triggerHaptic(intent: .selection)
+                    }
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
@@ -605,6 +882,136 @@ struct TodayView: View {
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
         )
+    }
+
+    private func episodeActionPill(
+        title: String,
+        systemImage: String? = nil,
+        emphasized: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Group {
+                if let systemImage {
+                    Label(title, systemImage: systemImage)
+                } else {
+                    Text(title)
+                }
+            }
+            .font(MindSenseTypography.micro)
+            .foregroundStyle(emphasized ? MindSensePalette.warning : .secondary)
+            .padding(.horizontal, 10)
+            .frame(minHeight: 30)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(MindSenseSurfaceLevel.base.fill)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var attributionInboxBlock: some View {
+        FocusSurface {
+            MindSenseSectionHeader(
+                model: .init(
+                    title: "Attribution inbox",
+                    subtitle: attributionInboxCountLabel,
+                    icon: "tray.full"
+                )
+            )
+
+            if stressNudge, let promptEpisode = recentAttributionPromptEpisode {
+                Text("We detected an activation spike. What was happening?")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(MindSensePalette.warning)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Detected \(attributionEpisodeAgeLabel(for: promptEpisode)) near \(promptEpisode.end.formattedTimeLabel()).")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+            }
+
+            VStack(spacing: 8) {
+                ForEach(attributionInboxEpisodes.prefix(2)) { episode in
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("\(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                            Text("\(episode.likelyDriver.title) spike • intensity \(episode.intensity)")
+                                .font(MindSenseTypography.bodyStrong)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(attributionEpisodeAgeLabel(for: episode))
+                                .font(MindSenseTypography.micro)
+                                .foregroundStyle(.secondary)
+                        }
+
+                        Spacer(minLength: 8)
+
+                        Button("Label now") {
+                            openAttributionInboxEpisode(episode, source: "attribution_inbox_row")
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 38))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
+                    .padding(.vertical, MindSenseLayout.tileVerticalInset)
+                    .background(
+                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                            .fill(MindSenseSurfaceLevel.base.fill)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                            .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+                    )
+                }
+            }
+
+            if attributionInboxCount > 2 {
+                Button("Review all unlabeled episodes") {
+                    showTimelineDetails = true
+                    store.track(
+                        event: .secondaryActionTapped,
+                        surface: .today,
+                        action: "attribution_inbox_review_all",
+                        metadata: ["count": "\(attributionInboxCount)"]
+                    )
+                    store.triggerHaptic(intent: .selection)
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+            }
+        }
+    }
+
+    private func openAttributionInboxEpisode(_ episode: StressEpisodeRecord, source: String) {
+        focusContextCapture(for: episode)
+        store.track(
+            event: .secondaryActionTapped,
+            surface: .today,
+            action: "attribution_inbox_label_now",
+            metadata: [
+                "source": source,
+                "episode_id": episode.id.uuidString
+            ]
+        )
+    }
+
+    private func attributionEpisodeAgeLabel(for episode: StressEpisodeRecord) -> String {
+        let minutes = max(1, Int(Date().timeIntervalSince(episode.end) / 60))
+        if minutes < 60 {
+            return "\(minutes) min ago"
+        }
+
+        let hours = max(1, minutes / 60)
+        if hours < 24 {
+            return hours == 1 ? "1 hr ago" : "\(hours) hr ago"
+        }
+
+        let days = max(1, hours / 24)
+        return days == 1 ? "1 day ago" : "\(days) days ago"
     }
 
     private var episodeAwaitingContext: StressEpisodeRecord? {
@@ -623,7 +1030,7 @@ struct TodayView: View {
                 MindSenseSectionHeader(
                     model: .init(
                         title: "What caused the spike?",
-                        subtitle: "Label one context signal to improve future attribution.",
+                        subtitle: "Quick pick one tag. Add another or set primary/secondary if it was multi-causal.",
                         icon: "text.bubble"
                     )
                 )
@@ -632,8 +1039,21 @@ struct TodayView: View {
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
 
-                FlexibleChipGrid(items: DemoHealthSignalEngine.contextTags, selectedItems: $contextTags) { _, _ in
-                    store.triggerHaptic(intent: .selection)
+                FlexibleChipGrid(items: DemoHealthSignalEngine.contextTags, selectedItems: $contextTags) { item, isSelected in
+                    handleInlineContextTagSelection(item: item, isSelected: isSelected)
+                }
+
+                if contextTags.count == 1 && !allowMultipleContextTags {
+                    Button("Add another (optional)") {
+                        allowMultipleContextTags = true
+                        store.track(event: .secondaryActionTapped, surface: .today, action: "stress_context_add_another_enabled")
+                        store.triggerHaptic(intent: .selection)
+                    }
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                }
+
+                if contextTags.count >= 2 {
+                    inlineContextWeightingBlock
                 }
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -659,9 +1079,7 @@ struct TodayView: View {
                 HStack {
                     Spacer()
                     Button("Skip") {
-                        focusedContextEpisodeID = nil
-                        contextTags = []
-                        contextNote = ""
+                        resetInlineContextCaptureState(clearFocusedID: true)
                         store.triggerHaptic(intent: .selection)
                     }
                     .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
@@ -681,7 +1099,7 @@ struct TodayView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Quick check-in",
-                    subtitle: "Capture load now to keep tomorrow's recommendation accurate.",
+                    subtitle: "Rate current load in one quick step.",
                     icon: "checkmark.circle"
                 )
             )
@@ -692,31 +1110,85 @@ struct TodayView: View {
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button(checkInJustSaved ? "Saved" : "Save check-in") {
+                Button("Save check-in") {
                     saveCheckIn()
                 }
                 .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 40))
-                .disabled(checkInJustSaved)
             }
 
-            DisclosureGroup("Adjust load score") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("How does your current load feel?")
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                Slider(value: $loadSlider, in: 0...10, step: 1)
-                    .tint(MindSensePalette.warning)
-
-                HStack {
-                    Text("Calm")
-                    Spacer()
-                    Text("High")
-                }
+            Text("Prefilled from your current state.")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
+
+            Slider(value: $loadSlider, in: 1...10, step: 1)
+                .tint(MindSensePalette.warning)
+                .onChange(of: loadSlider) { _, _ in
+                    checkInJustSaved = false
                 }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("1-3 Light / effortless")
+                Text("4-6 Moderate / sustainable")
+                Text("7-10 Heavy / draining")
             }
             .font(MindSenseTypography.caption)
+            .foregroundStyle(.secondary)
+
+            Text("5 = normal workday demand.")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Main driver today: meetings / workout / poor sleep / travel")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 112), spacing: 8)], alignment: .leading, spacing: 8) {
+                    ForEach(checkInDriverOptions, id: \.self) { option in
+                        Button {
+                            if selectedCheckInDriver == option {
+                                selectedCheckInDriver = nil
+                            } else {
+                                selectedCheckInDriver = option
+                            }
+                            checkInJustSaved = false
+                            store.triggerHaptic(intent: .selection)
+                        } label: {
+                            PillChip(label: option, state: selectedCheckInDriver == option ? .selected : .unselected)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(minHeight: 40)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityHint(selectedCheckInDriver == option ? "Double tap to clear." : "Double tap to select.")
+                    }
+                }
+            }
+
+            if checkInJustSaved {
+                Text("This improves tomorrow's recommendation.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(MindSensePalette.accent)
+            }
+
+            if shouldShowCheckInFatigueOffer {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Want fewer check-ins?")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+
+                    HStack(spacing: 8) {
+                        Button("Reduce check-ins") {
+                            applyCheckInPromptMode(.reduced)
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 38))
+
+                        Button("Only ask on low-confidence days") {
+                            applyCheckInPromptMode(.lowConfidenceOnly)
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 38))
+                    }
+                }
+            }
 
             if needsEscalationGuidance {
                 EscalationGuidanceView(context: .sustainedHighLoad)
@@ -725,13 +1197,37 @@ struct TodayView: View {
     }
 
     private var primarySessionCTA: some View {
-        MindSenseBottomActionDock {
+        MindSenseDoItNowDock(
+            subtitle: store.activeRegulateSession?.isAwaitingCheckIn == true
+                ? "Finish the loop by recording impact."
+                : "Resume the active regulate session."
+        ) {
             Button(store.activeRegulateSession?.isAwaitingCheckIn == true ? "Record impact" : "Continue session") {
                 triggerNextBestAction(source: "today_sticky_cta")
             }
             .accessibilityIdentifier("today_primary_cta")
             .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 42))
         }
+    }
+
+    private var driverCollapsedSummary: String {
+        if let lead = visibleDrivers.first {
+            let extraCount = max(0, visibleDrivers.count - 1)
+            if extraCount > 0 {
+                return "Lead driver: \(lead.name) • +\(extraCount) more"
+            }
+            return "Lead driver: \(lead.name)"
+        }
+        return "No driver signals are available yet."
+    }
+
+    private var timelineCollapsedSummary: String {
+        let segmentCount = store.stressTimelineSegments.count
+        let episodeCount = store.recentStressEpisodes.count
+        if segmentCount == 0 && episodeCount == 0 {
+            return "No timeline data yet."
+        }
+        return "\(episodeCount) recent episodes • \(segmentCount) timeline segments"
     }
 
     private func actionDetailRow(label: String, value: String) -> some View {
@@ -754,8 +1250,179 @@ struct TodayView: View {
     private func focusContextCapture(for episode: StressEpisodeRecord) {
         focusedContextEpisodeID = episode.id
         contextTags = Set(episode.userTags)
+        allowMultipleContextTags = episode.userTags.count > 1
+        contextPrimaryTag = episode.primaryContextTag ?? episode.userTags.first
+        contextSecondaryTag = episode.secondaryContextTag
+        normalizeInlineContextTagWeights()
         contextNote = episode.userNote ?? ""
         store.triggerHaptic(intent: .selection)
+    }
+
+    private func consumeContextCaptureLaunchIfNeeded() {
+        guard let episodeID = store.consumeTodayContextCaptureEpisodeID() else { return }
+        guard let episode = store.recentStressEpisodes.first(where: { $0.id == episodeID }) else {
+            store.showActionFeedback(.updated, detail: "Episode context is no longer available.")
+            return
+        }
+        focusContextCapture(for: episode)
+    }
+
+    @ViewBuilder
+    private var inlineContextWeightingBlock: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Optional weighting")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+            Text("If more than one factor contributed, mark primary and secondary.")
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            inlineContextWeightRow(title: "Primary", selectedTag: contextPrimaryTag, allowNone: false) { tag in
+                contextPrimaryTag = tag
+                if contextSecondaryTag == tag {
+                    contextSecondaryTag = nil
+                }
+                store.triggerHaptic(intent: .selection)
+            }
+
+            inlineContextWeightRow(title: "Secondary", selectedTag: contextSecondaryTag, allowNone: true) { tag in
+                guard tag != contextPrimaryTag else { return }
+                contextSecondaryTag = tag
+                store.triggerHaptic(intent: .selection)
+            }
+        }
+    }
+
+    private func inlineContextWeightRow(
+        title: String,
+        selectedTag: String?,
+        allowNone: Bool,
+        onSelect: @escaping (String?) -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.7)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    if allowNone {
+                        Button {
+                            onSelect(nil)
+                        } label: {
+                            Text("None")
+                                .font(MindSenseTypography.micro)
+                                .foregroundStyle(selectedTag == nil ? MindSensePalette.signalCoolStrong : .secondary)
+                                .padding(.horizontal, 10)
+                                .frame(minHeight: 30)
+                                .background(
+                                    Capsule(style: .continuous)
+                                        .fill(selectedTag == nil ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
+                                )
+                                .overlay(
+                                    Capsule(style: .continuous)
+                                        .stroke(
+                                            selectedTag == nil ? MindSensePalette.strokeEdge : MindSensePalette.strokeSubtle,
+                                            lineWidth: 1
+                                        )
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    ForEach(weightingTagOptions, id: \.self) { tag in
+                        Button(tag) {
+                            onSelect(tag)
+                        }
+                        .buttonStyle(.plain)
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(selectedTag == tag ? MindSensePalette.signalCoolStrong : .secondary)
+                        .padding(.horizontal, 10)
+                        .frame(minHeight: 30)
+                        .background(
+                            Capsule(style: .continuous)
+                                .fill(selectedTag == tag ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
+                        )
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .stroke(
+                                    selectedTag == tag ? MindSensePalette.strokeEdge : MindSensePalette.strokeSubtle,
+                                    lineWidth: 1
+                                )
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    private var weightingTagOptions: [String] {
+        contextTags.sorted()
+    }
+
+    private func handleInlineContextTagSelection(item: String, isSelected: Bool) {
+        if isSelected, !allowMultipleContextTags {
+            contextTags = [item]
+        }
+
+        normalizeInlineContextTagWeights()
+        store.triggerHaptic(intent: .selection)
+    }
+
+    private func normalizeInlineContextTagWeights() {
+        if contextTags.count <= 1 {
+            allowMultipleContextTags = false
+        }
+
+        if let primary = contextPrimaryTag, !contextTags.contains(primary) {
+            contextPrimaryTag = nil
+        }
+        if contextPrimaryTag == nil {
+            contextPrimaryTag = contextTags.sorted().first
+        }
+
+        if let secondary = contextSecondaryTag,
+           !contextTags.contains(secondary) || secondary == contextPrimaryTag {
+            contextSecondaryTag = nil
+        }
+
+        if contextTags.count < 2 {
+            contextSecondaryTag = nil
+        }
+    }
+
+    private func orderedContextTags(
+        from tags: Set<String>,
+        primaryTag: String?,
+        secondaryTag: String?
+    ) -> [String] {
+        var ordered: [String] = []
+
+        func appendTag(_ tag: String?) {
+            guard let tag, tags.contains(tag), !ordered.contains(tag) else { return }
+            ordered.append(tag)
+        }
+
+        appendTag(primaryTag)
+        appendTag(secondaryTag)
+
+        for tag in tags.sorted() where !ordered.contains(tag) {
+            ordered.append(tag)
+        }
+        return ordered
+    }
+
+    private func resetInlineContextCaptureState(clearFocusedID: Bool) {
+        if clearFocusedID {
+            focusedContextEpisodeID = nil
+        }
+        contextTags = []
+        allowMultipleContextTags = false
+        contextPrimaryTag = nil
+        contextSecondaryTag = nil
+        contextNote = ""
     }
 
     private func saveContext(for episodeID: UUID) {
@@ -763,6 +1430,8 @@ struct TodayView: View {
             episodeID: episodeID,
             tags: contextTags,
             note: contextNote,
+            primaryTag: contextPrimaryTag,
+            secondaryTag: contextSecondaryTag,
             shouldResetInlineCapture: true
         )
     }
@@ -771,17 +1440,19 @@ struct TodayView: View {
         episodeID: UUID,
         tags: Set<String>,
         note: String,
+        primaryTag: String? = nil,
+        secondaryTag: String? = nil,
         shouldResetInlineCapture: Bool
     ) {
         store.saveStressEpisodeContext(
             episodeID: episodeID,
-            tags: tags,
-            note: note
+            tags: orderedContextTags(from: tags, primaryTag: primaryTag, secondaryTag: secondaryTag),
+            note: note,
+            primaryTag: primaryTag,
+            secondaryTag: secondaryTag
         )
         if shouldResetInlineCapture {
-            focusedContextEpisodeID = nil
-            contextTags = []
-            contextNote = ""
+            resetInlineContextCaptureState(clearFocusedID: true)
             store.triggerHaptic(intent: .success)
         }
         if let updated = store.recentStressEpisodes.first(where: { $0.id == episodeID }) {
@@ -790,10 +1461,14 @@ struct TodayView: View {
     }
 
     private func saveCheckIn() {
-        store.saveTodayCheckIn(loadScore: Int(loadSlider.rounded()), tags: [], showFeedback: false)
+        let tags = selectedCheckInDriver.map { Set([$0.lowercased()]) } ?? []
+        store.saveTodayCheckIn(loadScore: Int(loadSlider.rounded()), tags: tags, showFeedback: false)
         store.triggerHaptic(intent: .success)
         checkInJustSaved = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+        checkInSavedThisVisit = true
+        checkInIgnoreStreak = 0
+        checkInLastSavedDayStamp = todayDayStamp
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             checkInJustSaved = false
         }
     }
@@ -802,16 +1477,87 @@ struct TodayView: View {
         showAllDrivers ? store.todayPrimaryDrivers : Array(store.todayPrimaryDrivers.prefix(2))
     }
 
-    private var loadStateLabel: String {
-        store.demoMetrics.load >= 70 ? "Elevated" : "Managed"
+    private var topDriverWeightTotal: Double {
+        let total = store.todayPrimaryDrivers.reduce(0) { partial, driver in
+            partial + max(0, driver.impact)
+        }
+        return total > 0 ? total : 1
     }
 
-    private var readinessStateLabel: String {
-        store.demoMetrics.readiness >= 70 ? "Ready" : "Recovering"
+    private var scenarioIncludesMeetingCallDrivers: Bool {
+        let scenarioDrivers = store.scenarioProfile.primaryDrivers + store.scenarioProfile.secondaryDrivers
+        return scenarioDrivers.contains { $0.source.isMeetingOrCallSignal }
     }
 
-    private var consistencyStateLabel: String {
-        store.demoMetrics.consistency >= 70 ? "Steady" : "Variable"
+    private func driverSourceLine(for driver: DriverImpact) -> String {
+        "Source: \(driver.source.title)"
+    }
+
+    private func driverControlLine(for driver: DriverImpact) -> String? {
+        guard driver.source.isMeetingOrCallSignal else { return nil }
+        return "Control: Use meeting/call signals is \(store.useMeetingCallSignals ? "On" : "Off")"
+    }
+
+    private func driverMicroActionLabel(for driver: DriverImpact) -> String? {
+        switch driver.id {
+        case "moderate_meeting_load":
+            return "Add buffer"
+        case "meeting_stack":
+            return "Schedule recovery"
+        case "stable_sleep":
+            return "Downshift tonight"
+        case "training_response":
+            return "Light day tomorrow"
+        default:
+            return nil
+        }
+    }
+
+    private func triggerDriverMicroAction(for driver: DriverImpact) {
+        switch driver.id {
+        case "moderate_meeting_load", "meeting_stack":
+            store.openRegulatePreset(.calmNow, startImmediately: false)
+            store.showBanner(
+                title: "Recovery buffer queued",
+                detail: "Calm now is ready for your next meeting transition.",
+                severity: .info
+            )
+        case "stable_sleep":
+            store.openRegulatePreset(.sleepDownshift, startImmediately: false)
+            store.showBanner(
+                title: "Downshift queued",
+                detail: "Sleep downshift is ready in Regulate for tonight.",
+                severity: .info
+            )
+        case "training_response":
+            store.showBanner(
+                title: "Light day planned",
+                detail: "Keep tomorrow low-intensity and preserve recovery capacity.",
+                severity: .info
+            )
+        default:
+            return
+        }
+
+        store.track(
+            event: .secondaryActionTapped,
+            surface: .today,
+            action: "driver_micro_action",
+            metadata: [
+                "driver_id": driver.id,
+                "label": driverMicroActionLabel(for: driver) ?? "unknown"
+            ]
+        )
+        store.triggerHaptic(intent: .selection)
+    }
+
+    private func driverWeightShare(for driver: DriverImpact) -> Double {
+        max(0, driver.impact) / topDriverWeightTotal
+    }
+
+    private func stateLabel(for metric: CoreMetric, value: Int) -> String {
+        let bounded = max(0, min(100, value))
+        return metric.thresholdBands.first(where: { $0.range.contains(bounded) })?.label ?? "Unclassified"
     }
 
     private func triggerNextBestAction(source: String) {
@@ -819,7 +1565,7 @@ struct TodayView: View {
             store.resumeWhereLeftOff()
             store.track(event: .primaryCTATapped, surface: .today, action: "resume_where_left_off", metadata: ["source": source])
         } else {
-            store.openRegulatePreset(recommendation.preset, startImmediately: true)
+            store.openRegulatePreset(recommendation.preset, startImmediately: true, source: source)
             store.track(
                 event: .primaryCTATapped,
                 surface: .today,
@@ -830,8 +1576,36 @@ struct TodayView: View {
         store.triggerHaptic(intent: .primary)
     }
 
+    private var loadStateLabel: String {
+        stateLabel(for: .load, value: store.demoMetrics.load)
+    }
+
+    private var readinessStateLabel: String {
+        stateLabel(for: .readiness, value: store.demoMetrics.readiness)
+    }
+
+    private var consistencyStateLabel: String {
+        stateLabel(for: .consistency, value: store.demoMetrics.consistency)
+    }
+
+    private func openRegulateProtocolPicker(source: String) {
+        store.regulateLaunchRequest = nil
+        store.selectedTab = .regulate
+        store.track(
+            event: .secondaryActionTapped,
+            surface: .today,
+            action: "open_regulate_picker",
+            metadata: ["source": source]
+        )
+        store.triggerHaptic(intent: .selection)
+    }
+
     private func startEpisodeRecommendation(_ episode: StressEpisodeRecord, source: String) {
-        store.openRegulatePreset(episode.recommendedPreset, startImmediately: true)
+        store.openRegulatePreset(
+            episode.recommendedPreset,
+            startImmediately: true,
+            source: "episode:\(episode.id.uuidString)|\(source)"
+        )
         store.track(
             event: .primaryCTATapped,
             surface: .today,
@@ -839,6 +1613,27 @@ struct TodayView: View {
             metadata: ["source": source, "episode_id": episode.id.uuidString]
         )
         store.triggerHaptic(intent: .primary)
+    }
+
+    private func presentIntensityDetails(for episode: StressEpisodeRecord, source: String) {
+        intensityInfoEpisode = episode
+
+        var metadata: [String: String] = [
+            "source": source,
+            "episode_id": episode.id.uuidString,
+            "intensity": "\(episode.intensity)"
+        ]
+        if let percentile = store.recentStressEpisodes.higherThanPercent(for: episode) {
+            metadata["higher_than_percentile"] = "\(percentile)"
+        }
+
+        store.track(
+            event: .secondaryActionTapped,
+            surface: .today,
+            action: "episode_intensity_explainer_opened",
+            metadata: metadata
+        )
+        store.triggerHaptic(intent: .selection)
     }
 
     private func presetIcon(for preset: RegulatePresetID) -> String {
@@ -870,10 +1665,7 @@ struct TodayView: View {
     }
 
     private var heroReferenceLabel: String {
-        if let delta = store.latestCheckInDeltaSummary {
-            return "Change since \(delta.baselineTitle)"
-        }
-        return "Change vs baseline"
+        "Updated \(store.lastUpdatedLabel)."
     }
 
     private var heroInterpretation: String {
@@ -902,9 +1694,108 @@ struct TodayView: View {
         return store.todayInsightDetail
     }
 
+    private var shouldUseBulletWhyExplanation: Bool {
+        isWithinFirstSevenDays
+    }
+
+    private var isWithinFirstSevenDays: Bool {
+        guard let baselineStart = store.onboarding.baselineStart else {
+            return !store.onboarding.isComplete(.baseline)
+        }
+        let elapsedDays = Calendar.current.dateComponents([.day], from: baselineStart, to: Date()).day ?? 0
+        return elapsedDays < 7
+    }
+
+    private var heroWhyBullets: [String] {
+        var bullets: [String] = []
+
+        if let delta = latestDailyDelta {
+            bullets.append(
+                "Compared with yesterday: load \(deltaMovementText(delta.load)), readiness \(deltaMovementText(delta.readiness)), consistency \(deltaMovementText(delta.consistency))."
+            )
+        } else {
+            bullets.append("Compared with yesterday: insufficient data, so this state leans more on baseline and recent context.")
+        }
+
+        for driver in store.todayPrimaryDrivers.prefix(2) {
+            bullets.append("\(driver.name): \(driver.detail)")
+        }
+
+        if bullets.count < 2 {
+            bullets.append(heroWhyDetail)
+        }
+
+        return Array(bullets.prefix(3))
+    }
+
+    private func deltaMovementText(_ value: Int) -> String {
+        if value == 0 {
+            return "is unchanged"
+        }
+        let points = abs(value)
+        return value > 0 ? "is up \(points) pt\(points == 1 ? "" : "s")" : "is down \(points) pt\(points == 1 ? "" : "s")"
+    }
+
+    private func applyHeroWhyExpansionPolicy() {
+        showHeroWhy = isWithinFirstSevenDays ? true : showHeroWhyPreference
+    }
+
+    private func toggleHeroWhy() {
+        showHeroWhy.toggle()
+        showHeroWhyPreference = showHeroWhy
+    }
+
     private var latestDailyDelta: (load: Int, readiness: Int, consistency: Int)? {
         guard let delta = store.latestCheckInDeltaSummary else { return nil }
         return (load: delta.loadDelta, readiness: delta.readinessDelta, consistency: delta.consistencyDelta)
+    }
+
+    private var confidenceModelFitPercent: Int {
+        let coverageFactor = (store.demoDataCoverageScore - 0.5) * 0.22
+        let modelFitScore = min(1.0, max(0.0, store.confidenceScore - coverageFactor))
+        return Int((modelFitScore * 100).rounded())
+    }
+
+    private var confidenceImprovementActions: [String] {
+        let quality = store.demoHealthProfile.quality
+        var actions: [String] = []
+
+        let overnightGap = nightsNeeded(for: quality.sleepCoverage)
+        if overnightGap > 0 {
+            actions.append("Wear watch overnight \(overnightGap)/7 nights more.")
+        }
+        if quality.heartRateDensity < 68 {
+            actions.append("Keep watch on during the day and enable Background App Refresh to raise HR density.")
+        }
+        if quality.hrvAvailability < 68 {
+            let hrvGranted = store.healthPermissions.first(where: { $0.signal == .hrv })?.state == .granted
+            if hrvGranted {
+                let hrvGap = max(1, nightsNeeded(for: quality.hrvAvailability))
+                actions.append("Capture HRV on \(hrvGap)/7 more days by wearing your watch overnight.")
+            } else {
+                actions.append("Allow HRV in Apple Health permissions to raise HRV availability.")
+            }
+        }
+        let wearGap = nightsNeeded(for: quality.watchWear)
+        if wearGap > 0 {
+            actions.append("Increase wear continuity by keeping your watch on for \(wearGap)/7 more full days.")
+        }
+        if !store.hasCompletedTodayPrimaryLoop {
+            actions.append("Complete one regulate session and one check-in today to improve model fit.")
+        } else if let activeExperiment = store.activeExperiment, activeExperiment.adherencePercent < 70 {
+            actions.append("Raise experiment adherence above 70% to strengthen model fit.")
+        }
+        if actions.isEmpty {
+            actions.append("Keep overnight wear and daily check-ins consistent to maintain strong confidence.")
+        }
+
+        return Array(actions.prefix(3))
+    }
+
+    private func nightsNeeded(for qualityPercent: Int, targetPercent: Int = 68) -> Int {
+        let currentNights = (qualityPercent * 7) / 100
+        let targetNights = (targetPercent * 7 + 99) / 100
+        return max(0, targetNights - currentNights)
     }
 
     private func heroMetricTile(
@@ -915,19 +1806,39 @@ struct TodayView: View {
         tint: Color
     ) -> some View {
         let bounded = max(0, min(100, value))
+        let deltaTone = delta.map { deltaTint(metric: metric, value: $0) } ?? Color.secondary
         return VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(title)
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(.secondary)
-                    .tracking(0.6)
-                Spacer(minLength: 6)
-                dailyDeltaBadge(metric: metric, delta: delta)
-            }
+            Text(title)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.6)
+                .lineLimit(1)
+                .minimumScaleFactor(0.9)
+                .padding(.trailing, 24)
             Text("\(bounded)")
                 .font(.system(size: 24, weight: .semibold, design: .rounded))
                 .foregroundStyle(tint)
                 .monospacedDigit()
+            Text(metricDirectionalLegend(for: metric))
+                .font(.system(size: 9, weight: .medium, design: .rounded))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .truncationMode(.tail)
+            Rectangle()
+                .fill(MindSensePalette.strokeSubtle.opacity(0.9))
+                .frame(height: 1)
+            HStack(spacing: 5) {
+                Image(systemName: deltaSymbol(for: delta))
+                    .font(.system(size: 10, weight: .semibold))
+                Text(deltaLabel(for: delta))
+                    .font(MindSenseTypography.micro)
+                    .monospacedDigit()
+                    .lineLimit(1)
+            }
+            .foregroundStyle(deltaTone)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            metricThresholdBandRows(metric: metric, value: bounded, tint: tint)
         }
         .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
         .padding(.vertical, MindSenseLayout.tileVerticalInset)
@@ -941,36 +1852,43 @@ struct TodayView: View {
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
         )
-        .overlay(alignment: .topLeading) {
-            Capsule(style: .continuous)
-                .fill(tint.opacity(0.65))
-                .frame(width: 28, height: 4)
-                .padding(.top, 7)
-                .padding(.leading, MindSenseLayout.tileHorizontalInset)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(heroMetricVoiceOverSummary(title: title, value: bounded, delta: delta, metric: metric))
+        .overlay(alignment: .topTrailing) {
+            Button {
+                selectedMetricDefinition = metric
+                store.triggerHaptic(intent: .selection)
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 18, height: 18)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, MindSenseLayout.tileVerticalInset + 1)
+            .padding(.trailing, MindSenseLayout.tileHorizontalInset)
+            .accessibilityLabel("About \(title)")
         }
     }
 
-    private func dailyDeltaBadge(metric: CoreMetric, delta: Int?) -> some View {
-        let display = delta.map(signed) ?? "—"
-        let tone = delta.map { deltaTint(metric: metric, value: $0) } ?? Color.secondary
-        return HStack(spacing: 4) {
-            Image(systemName: deltaSymbol(for: delta))
-                .font(.system(size: 9, weight: .semibold))
-            Text("1d \(display)")
-                .font(MindSenseTypography.micro)
-                .monospacedDigit()
+    private func heroMetricVoiceOverSummary(
+        title: String,
+        value: Int,
+        delta: Int?,
+        metric: CoreMetric
+    ) -> String {
+        let state = stateLabel(for: metric, value: value)
+        let deltaSummary = heroMetricDeltaVoiceOverPhrase(delta)
+        return "\(title): \(value), \(state), \(deltaSummary), confidence \(store.confidencePercent) percent"
+    }
+
+    private func heroMetricDeltaVoiceOverPhrase(_ delta: Int?) -> String {
+        guard let delta else { return "insufficient comparison data vs yesterday" }
+        if delta == 0 {
+            return "unchanged vs yesterday"
         }
-        .foregroundStyle(tone)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
-        .background(
-            Capsule(style: .continuous)
-                .fill(MindSenseSurfaceLevel.base.fill)
-        )
-        .overlay(
-            Capsule(style: .continuous)
-                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-        )
+        let direction = delta > 0 ? "up" : "down"
+        return "\(direction) \(abs(delta)) vs yesterday"
     }
 
     private func deltaSymbol(for delta: Int?) -> String {
@@ -982,6 +1900,14 @@ struct TodayView: View {
             return "arrow.down.right"
         }
         return "minus"
+    }
+
+    private func deltaLabel(for delta: Int?) -> String {
+        guard let delta else { return "Insufficient data today" }
+        if delta == 0 {
+            return "No change vs yesterday"
+        }
+        return "\(signed(delta)) vs yesterday"
     }
 
     private func deltaTint(metric: CoreMetric, value: Int) -> Color {
@@ -1004,6 +1930,56 @@ struct TodayView: View {
         return MindSensePalette.accent
     }
 
+    private func metricDirectionalLegend(for metric: CoreMetric) -> String {
+        switch metric {
+        case .load:
+            return "Higher = more strain / demand"
+        case .readiness:
+            return "Higher = more capacity"
+        case .consistency:
+            return "Higher = more predictable stability"
+        }
+    }
+
+    private func metricThresholdBandRows(metric: CoreMetric, value: Int, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Threshold bands")
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            ForEach(metric.thresholdBands) { band in
+                thresholdBandRow(band: band, value: value, tint: tint)
+            }
+        }
+    }
+
+    private func thresholdBandRow(band: MetricThresholdBand, value: Int, tint: Color) -> some View {
+        let isActive = band.range.contains(value)
+        return HStack(spacing: 6) {
+            Text(band.rangeLabel)
+                .font(.system(size: 9, weight: .semibold, design: .rounded))
+                .foregroundStyle(.secondary)
+                .monospacedDigit()
+            Text(band.label)
+                .font(MindSenseTypography.micro)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .foregroundStyle(isActive ? .primary : .secondary)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isActive ? tint.opacity(0.15) : MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .stroke(isActive ? tint.opacity(0.48) : MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+    }
+
     private func timelineTint(for state: StressTimelineState) -> Color {
         switch state {
         case .stable:
@@ -1022,13 +1998,11 @@ struct TodayView: View {
     private var checkInLabel: String {
         switch Int(loadSlider.rounded()) {
         case 0...3:
-            return "calm"
+            return "light"
         case 4...6:
-            return "steady"
-        case 7...8:
-            return "elevated"
+            return "moderate"
         default:
-            return "high"
+            return "heavy"
         }
     }
 
@@ -1046,29 +2020,408 @@ struct TodayView: View {
     }
 }
 
+private struct TodayConfidenceSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let confidencePercent: Int
+    let confidenceLabel: String
+    let modelFitPercent: Int
+    let quality: DemoHealthQualityBreakdown
+    let improvementActions: [String]
+
+    private var factors: [(String, Int)] {
+        [
+            ("Sleep coverage", quality.sleepCoverage),
+            ("HR density", quality.heartRateDensity),
+            ("HRV availability", quality.hrvAvailability),
+            ("Wear continuity", quality.watchWear),
+            ("Model confidence (fit)", modelFitPercent)
+        ]
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 14) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Recommendation confidence \(confidencePercent)%",
+                                subtitle: "\(confidenceLabel) trust in today's recommendations."
+                            )
+                        )
+                        Text("Recommendation confidence is based on sleep coverage, HR density, HRV availability, wear continuity, and model confidence (fit).")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(practicalTrustLine)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(MindSensePalette.accent)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "What drives it",
+                                subtitle: "Current factor quality."
+                            )
+                        )
+                        ForEach(factors, id: \.0) { factor in
+                            factorRow(label: factor.0, value: factor.1)
+                        }
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "What would raise it",
+                                subtitle: "Highest-leverage next steps."
+                            )
+                        )
+                        ForEach(Array(improvementActions.enumerated()), id: \.offset) { action in
+                            Text("• \(action.element)")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Safety and limits",
+                                subtitle: "Use this to calibrate trust, not replace clinical care."
+                            )
+                        )
+                        Text("This is not medical advice.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Signals can be influenced by illness, alcohol, travel, and sensor gaps.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("Recommendation confidence")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "Recommendation confidence")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+    }
+
+    private var practicalTrustLine: String {
+        if confidencePercent >= 82 {
+            return "High trust: recommendations are usually reliable as direct actions."
+        }
+        if confidencePercent >= 62 {
+            return "Directional trust: use recommendations as guidance, then confirm with your next check-in."
+        }
+        return "Lower trust: improve coverage before making major routine changes."
+    }
+
+    private func factorRow(label: String, value: Int) -> some View {
+        HStack {
+            Text(label)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
+            Text("\(value)")
+                .font(MindSenseTypography.bodyStrong)
+                .monospacedDigit()
+        }
+    }
+}
+
+private struct TodayMetricDefinitionSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let metric: CoreMetric
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 14) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "\(metric.title) metric",
+                                subtitle: "How this score is estimated and what movement means.",
+                                icon: metricIcon,
+                                iconTint: metricTint
+                            )
+                        )
+                        Text(metric.definition)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "How to interpret",
+                                subtitle: "Scores are normalized to a 0-100 range."
+                            )
+                        )
+                        detailRow(label: "Higher score", value: higherInterpretation)
+                        detailRow(label: "Lower score", value: lowerInterpretation)
+                        Text("Use the 1d delta in the card for short-term direction, and combine it with the trend chart for context.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(metricTint)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("\(metric.title) metric")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "Metric details")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+    }
+
+    private var metricIcon: String {
+        switch metric {
+        case .load:
+            return "waveform.path.ecg"
+        case .readiness:
+            return "bolt.heart.fill"
+        case .consistency:
+            return "clock.arrow.trianglehead.counterclockwise.rotate.90"
+        }
+    }
+
+    private var metricTint: Color {
+        switch metric {
+        case .load:
+            return MindSensePalette.warning
+        case .readiness:
+            return MindSensePalette.success
+        case .consistency:
+            return MindSensePalette.signalCool
+        }
+    }
+
+    private var higherInterpretation: String {
+        switch metric {
+        case .load:
+            return "More accumulated strain and lower short-term recovery buffer."
+        case .readiness:
+            return "Stronger recovery capacity and better tolerance for focused demand."
+        case .consistency:
+            return "More stable daily rhythm with lower physiological variability."
+        }
+    }
+
+    private var lowerInterpretation: String {
+        switch metric {
+        case .load:
+            return "Lower immediate strain; recovery systems are carrying less stress."
+        case .readiness:
+            return "Lower available capacity; prioritize recovery before high demand blocks."
+        case .consistency:
+            return "Greater day-to-day rhythm disruption and less predictable recovery response."
+        }
+    }
+
+    private func detailRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.4)
+            Text(value)
+                .font(MindSenseTypography.body)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 2)
+    }
+}
+
 private struct TodayModelDetailsSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var store: MindSenseStore
 
     let confidenceStatusLine: String
     let coveragePercent: Int
     let confidencePercent: Int
     let lastUpdatedLabel: String
+    let modelFitPercent: Int
+    let dataConfidencePercent: Int
+
+    private var completedOutcomes: [SessionOutcome] {
+        store.regulateSessionHistory.compactMap(\.outcome)
+    }
+
+    private var ratedOutcomeCount: Int {
+        completedOutcomes.filter(\.isRated).count
+    }
+
+    private var unratedOutcomeCount: Int {
+        completedOutcomes.filter { !$0.isRated }.count
+    }
+
+    private var reviewedAttributionCount: Int {
+        store.demoHealthProfile.stressEpisodes.filter { $0.attributionFeedback != nil }.count
+    }
+
+    private var pendingAttributionCount: Int {
+        max(0, store.demoHealthProfile.stressEpisodes.count - reviewedAttributionCount)
+    }
+
+    private var activeExperimentAdherenceLine: String {
+        if let active = store.activeExperiment {
+            return "\(active.title): adherence \(active.adherencePercent)% (affects recommendation confidence and experiment estimates)."
+        }
+        return "No active experiment. When an experiment is active, adherence contributes a small bonus to recommendation confidence."
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                InsetSurface {
-                    MindSenseSectionHeader(
-                        model: .init(
-                            title: "Model details",
-                            subtitle: "Diagnostics stay available without taking over the main dashboard."
+                VStack(spacing: 14) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Model details",
+                                subtitle: "Diagnostics stay available without taking over the main dashboard."
+                            )
                         )
-                    )
-                    VStack(alignment: .leading, spacing: 10) {
-                        detailRow(label: "Confidence", value: "\(confidencePercent)%")
-                        detailRow(label: "Coverage", value: "\(coveragePercent)%")
-                        detailRow(label: "Last updated", value: lastUpdatedLabel)
-                        Text(confidenceStatusLine)
+                        VStack(alignment: .leading, spacing: 10) {
+                            detailRow(label: "Recommendation confidence", value: "\(confidencePercent)%")
+                            detailRow(label: "Coverage", value: "\(coveragePercent)%")
+                            detailRow(label: "Data confidence", value: "\(dataConfidencePercent)")
+                            detailRow(label: "Last updated", value: lastUpdatedLabel)
+                            Text(confidenceStatusLine)
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Inputs used and not used",
+                                subtitle: "Scope is shown explicitly so confidence is calibrated."
+                            )
+                        )
+                        noteRow(
+                            label: "Used for today's recommendation ranking",
+                            value: "Current Load, Readiness, and Consistency; intent mode; recent event-derived stress/recovery signals; and \(store.useMeetingCallSignals ? "meeting/call metadata drivers" : "meeting/call metadata drivers are disabled by your setting")."
+                        )
+                        noteRow(
+                            label: "Used for recommendation confidence",
+                            value: "Data coverage, completion of today's primary loop, active experiment adherence, and repeated session cancellations (penalty)."
+                        )
+                        MindSenseSummaryMoreText(
+                            summary: "Not used in the recommendation confidence percent: episode attribution labels, note text, and optional respiratory/audio context.",
+                            detail: "Episode attribution feedback is saved for review. Session notes and tags are stored with outcomes, but the recommendation confidence percent is computed from coverage and behavior evidence. Respiratory rate and environmental audio are optional context signals and are not required for confidence scoring."
+                        )
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Baseline definition",
+                                subtitle: "What baseline means in the current build."
+                            )
+                        )
+                        noteRow(
+                            label: "Onboarding baseline",
+                            value: "\(store.baselineText). This is a 14-day baseline-building progress tracker."
+                        )
+                        noteRow(
+                            label: "Recommendation anchor",
+                            value: "Today's recommendations compare current metrics with scenario baseline anchors (Load \(store.demoScenario.baseMetrics.load), Readiness \(store.demoScenario.baseMetrics.readiness), Consistency \(store.demoScenario.baseMetrics.consistency)) plus recent context signals."
+                        )
+                        MindSenseSummaryMoreText(
+                            summary: "Rolling 30-day personalized baseline is not used in the current recommendation score.",
+                            detail: "This build uses scenario base metrics plus recent sessions/events for recommendation ranking. Stress episode intensity compares deviation from derived HR/HRV baseline patterns plus duration, and the derived health baseline can be rebuilt from Settings."
+                        )
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "What confidence means",
+                                subtitle: "Trust estimate, not certainty or diagnosis."
+                            )
+                        )
+                        noteRow(
+                            label: "Recommendation confidence (\(confidencePercent)%)",
+                            value: "An estimate of how reliable today's ranked recommendations are given current evidence quality and recent behavior signal coverage. It is not a guarantee of outcome."
+                        )
+                        noteRow(
+                            label: "Data confidence (\(dataConfidencePercent))",
+                            value: "Signal quality and coverage from imports such as sleep, heart-rate density, HRV availability, and wear continuity."
+                        )
+                        noteRow(
+                            label: "Model confidence (fit) (\(modelFitPercent)%)",
+                            value: "A fit proxy shown in the confidence sheet to separate model fit from data coverage when explaining recommendation confidence."
+                        )
+                        MindSenseSummaryMoreText(
+                            summary: "Current formula uses a scenario confidence base plus evidence adjustments.",
+                            detail: "Recommendation confidence is adjusted by data coverage, a small bonus when today's primary loop is completed, a small bonus from active experiment adherence, and a penalty for repeated cancelled sessions."
+                        )
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "How your labels affect learning",
+                                subtitle: "Structured labels carry explicit learning weight."
+                            )
+                        )
+                        noteRow(
+                            label: "Regulate outcome labels",
+                            value: "Helped, Mixed, and Didn't help are saved with full learning weight (1.00). No rating is saved with reduced learning weight (0.35)."
+                        )
+                        detailRow(label: "Rated outcomes", value: "\(ratedOutcomeCount)")
+                        detailRow(label: "No-rating outcomes", value: "\(unratedOutcomeCount)")
+                        noteRow(
+                            label: "Experiment check-ins",
+                            value: activeExperimentAdherenceLine
+                        )
+                        noteRow(
+                            label: "Episode attribution labels",
+                            value: "\(reviewedAttributionCount) reviewed, \(pendingAttributionCount) pending. Attribution feedback is stored for audit/review and does not currently change today's recommendation confidence score."
+                        )
+                        MindSenseSummaryMoreText(
+                            summary: "Structured outcome labels affect learning weight; free-text notes are context.",
+                            detail: "The learning reward uses direction, helpfulness, feeling rating, and measured effect metrics, then applies learning weight. Note text is saved for context and history, not parsed into the learning-weight calculation."
+                        )
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Safety guardrails",
+                                subtitle: "Keep interpretation bounded."
+                            )
+                        )
+                        Text("This is not medical advice.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Signals can be influenced by illness, alcohol, travel, and sensor gaps.")
                             .font(MindSenseTypography.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -1083,13 +2436,9 @@ private struct TodayModelDetailsSheet: View {
                 ToolbarItem(placement: .principal) {
                     MindSenseNavTitleLockup(title: "Diagnostics")
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
             }
         }
+        .mindSenseSheetPresentationChrome()
     }
 
     private func detailRow(label: String, value: String) -> some View {
@@ -1103,10 +2452,26 @@ private struct TodayModelDetailsSheet: View {
                 .monospacedDigit()
         }
     }
+
+    private func noteRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.4)
+            Text(value)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.primary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, 2)
+    }
 }
 
 private struct TodaySignalSourceSheet: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedRemediationGuide: DemoHealthPermissionRemediationGuide?
 
     let sourceLine: String
     let lastSyncRelativeLabel: String
@@ -1145,7 +2510,7 @@ private struct TodaySignalSourceSheet: View {
                         )
                         infoRow(label: "Sleep import", value: sleepImportLabel)
                         infoRow(label: "HRV sample", value: hrvImportLabel)
-                        infoRow(label: "Data quality", value: "\(qualityScore)")
+                        infoRow(label: "Data confidence", value: "\(qualityScore)")
                     }
 
                     InsetSurface {
@@ -1155,30 +2520,21 @@ private struct TodaySignalSourceSheet: View {
                                 subtitle: "Requested Apple Health data types."
                             )
                         )
-
                         ForEach(permissions) { permission in
-                            HStack(spacing: 10) {
-                                Image(systemName: permission.state.statusIcon)
-                                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                                    .foregroundStyle(permissionTint(for: permission.state))
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(permission.signal.title)
-                                        .font(MindSenseTypography.bodyStrong)
-                                    Text(permission.state.title)
-                                        .font(MindSenseTypography.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                            }
-                            .padding(.vertical, 2)
+                            permissionRow(permission)
                         }
+
+                        Text("Recommendation confidence uses sleep coverage, heart-rate density, HRV availability, and watch wear continuity. Respiratory rate and environmental audio are optional context signals.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     InsetSurface {
                         MindSenseSectionHeader(
                             model: .init(
-                                title: "Data quality diagnostics",
-                                subtitle: "Coverage checks driving confidence."
+                                title: "Data confidence diagnostics",
+                                subtitle: "Coverage checks driving data confidence."
                             )
                         )
                         ForEach(diagnostics, id: \.0) { item in
@@ -1199,13 +2555,55 @@ private struct TodaySignalSourceSheet: View {
                 ToolbarItem(placement: .principal) {
                     MindSenseNavTitleLockup(title: "Signal Diagnostics")
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
+            }
+            .sheet(item: $selectedRemediationGuide) { guide in
+                TodayPermissionRemediationSheet(guide: guide)
             }
         }
+        .mindSenseSheetPresentationChrome()
+    }
+
+    @ViewBuilder
+    private func permissionRow(_ permission: DemoHealthPermissionStatus) -> some View {
+        if let remediationGuide = permission.remediationGuide {
+            Button {
+                selectedRemediationGuide = remediationGuide
+            } label: {
+                permissionRowContent(permission, showsDisclosure: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens setup steps")
+        } else {
+            permissionRowContent(permission, showsDisclosure: false)
+        }
+    }
+
+    private func permissionRowContent(_ permission: DemoHealthPermissionStatus, showsDisclosure: Bool) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: permission.state.statusIcon)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(permissionTint(for: permission.state))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(permission.signal.title)
+                    .font(MindSenseTypography.bodyStrong)
+                Text(permission.state.title)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                if let statusDetail = permission.statusDetail {
+                    Text(statusDetail)
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer()
+            if showsDisclosure {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
     }
 
     private func permissionTint(for state: DemoHealthPermissionState) -> Color {
@@ -1232,6 +2630,104 @@ private struct TodaySignalSourceSheet: View {
     }
 }
 
+private struct TodayPermissionRemediationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let guide: DemoHealthPermissionRemediationGuide
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 14) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: guide.title,
+                                subtitle: "How to enable"
+                            )
+                        )
+                        Text(guide.summary)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Checklist",
+                                subtitle: "Complete each step in order."
+                            )
+                        )
+                        ForEach(Array(guide.checklist.enumerated()), id: \.offset) { index, item in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text("\(index + 1).")
+                                    .font(MindSenseTypography.bodyStrong)
+                                    .foregroundStyle(.secondary)
+                                Text(item)
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer()
+                            }
+                        }
+                    }
+
+                    InsetSurface {
+                        Text(guide.expectedTimeToPopulate)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(MindSensePalette.accent)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(guide.modelUsageNote)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("How to enable")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "How to enable")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+    }
+}
+
+private struct EpisodeIntensityBadge: View {
+    let intensity: Int
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 4) {
+                Text("Episode intensity \(intensity)")
+                    .font(MindSenseTypography.micro)
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(MindSensePalette.warning)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(MindSenseSurfaceLevel.base.fill)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Episode intensity \(intensity). Show episode severity interpretation.")
+    }
+}
+
 private struct TodayTimelineDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -1245,6 +2741,7 @@ private struct TodayTimelineDetailSheet: View {
     let episodes: [StressEpisodeRecord]
     let timelineSegments: [StressTimelineSegment]
     let onSelectEpisode: (StressEpisodeRecord) -> Void
+    let onInspectIntensity: (StressEpisodeRecord) -> Void
 
     @State private var dayFilter: DayFilter = .today
 
@@ -1281,11 +2778,18 @@ private struct TodayTimelineDetailSheet: View {
                         if dayFilter == .today {
                             HStack(spacing: 5) {
                                 ForEach(timelineSegments) { segment in
-                                    RoundedRectangle(cornerRadius: MindSenseRadius.pill, style: .continuous)
-                                        .fill(timelineTint(for: segment.state))
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 10)
+                                    TimelineStateSegmentCell(
+                                        state: segment.state,
+                                        tint: timelineTint(for: segment.state),
+                                        height: 24,
+                                        prefersExpandedLabel: true
+                                    )
                                 }
+                            }
+                            HStack(spacing: 8) {
+                                TimelineStateLegendPill(title: "Stable", state: .stable, tint: timelineTint(for: .stable))
+                                TimelineStateLegendPill(title: "Activated", state: .activated, tint: timelineTint(for: .activated))
+                                TimelineStateLegendPill(title: "Recovery", state: .recovery, tint: timelineTint(for: .recovery))
                             }
                         } else {
                             Text("Timeline detail for yesterday appears after enough imported history.")
@@ -1308,50 +2812,7 @@ private struct TodayTimelineDetailSheet: View {
                                 .foregroundStyle(.secondary)
                         } else {
                             ForEach(filteredEpisodes) { episode in
-                                Button {
-                                    onSelectEpisode(episode)
-                                    dismiss()
-                                } label: {
-                                    HStack(alignment: .top, spacing: 10) {
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            HStack(spacing: 6) {
-                                                Text("\(episode.start.formattedDateLabel()) \(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
-                                                    .font(MindSenseTypography.caption)
-                                                    .foregroundStyle(.secondary)
-                                                Spacer()
-                                                Text("Intensity \(episode.intensity)")
-                                                    .font(MindSenseTypography.micro)
-                                                    .foregroundStyle(MindSensePalette.warning)
-                                            }
-                                            Text("\(episode.likelyDriver.title) • confidence \(episode.confidence)%")
-                                                .font(MindSenseTypography.bodyStrong)
-                                                .foregroundStyle(.primary)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                            if episode.hasContext {
-                                                let tags = episode.userTags.isEmpty ? "Note captured" : episode.userTags.joined(separator: ", ")
-                                                Text("Context: \(tags)")
-                                                    .font(MindSenseTypography.caption)
-                                                    .foregroundStyle(MindSensePalette.success)
-                                                    .lineLimit(1)
-                                            }
-                                        }
-                                        Image(systemName: "chevron.right")
-                                            .font(.caption.weight(.semibold))
-                                            .foregroundStyle(.secondary)
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
-                                    .padding(.vertical, MindSenseLayout.tileVerticalInset)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                                            .fill(MindSenseSurfaceLevel.base.fill)
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                                            .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-                                    )
-                                }
-                                .buttonStyle(.plain)
+                                timelineEpisodeRow(episode)
                             }
                         }
                     }
@@ -1365,13 +2826,9 @@ private struct TodayTimelineDetailSheet: View {
                 ToolbarItem(placement: .principal) {
                     MindSenseNavTitleLockup(title: "Timeline")
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
             }
         }
+        .mindSenseSheetPresentationChrome()
     }
 
     private func timelineTint(for state: StressTimelineState) -> Color {
@@ -1384,9 +2841,265 @@ private struct TodayTimelineDetailSheet: View {
             return MindSensePalette.signalCoolStrong
         }
     }
+
+    private func timelineEpisodeRow(_ episode: StressEpisodeRecord) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("\(episode.start.formattedDateLabel()) \(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    EpisodeIntensityBadge(intensity: episode.intensity) {
+                        onInspectIntensity(episode)
+                    }
+                }
+                Text("\(episode.likelyDriver.title) • attribution confidence \(episode.confidence)%")
+                    .font(MindSenseTypography.bodyStrong)
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if episode.hasContext {
+                    let tags = episode.contextSummaryLine ?? "Note captured"
+                    Text("Context: \(tags)")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(MindSensePalette.success)
+                        .lineLimit(1)
+                }
+            }
+            Image(systemName: "chevron.right")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
+        .padding(.vertical, MindSenseLayout.tileVerticalInset)
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous))
+        .onTapGesture {
+            onSelectEpisode(episode)
+            dismiss()
+        }
+        .accessibilityHint("Opens episode details")
+        .accessibilityAddTraits(.isButton)
+    }
 }
 
-private struct TodayEpisodeDetailSheet: View {
+private struct TimelineStateSegmentCell: View {
+    let state: StressTimelineState
+    let tint: Color
+    var height: CGFloat = 22
+    var prefersExpandedLabel = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: MindSenseRadius.pill, style: .continuous)
+            .fill(segmentFill)
+            .overlay(
+                RoundedRectangle(cornerRadius: MindSenseRadius.pill, style: .continuous)
+                    .stroke(MindSensePalette.strokeStrong.opacity(0.9), lineWidth: 1)
+            )
+            .overlay {
+                overlayLabel
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 2)
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("\(state.timelineDisplayTitle) segment")
+    }
+
+    private var segmentFill: Color {
+        switch state {
+        case .stable:
+            return tint.opacity(0.92)
+        case .activated:
+            return tint.opacity(0.95)
+        case .recovery:
+            return tint.opacity(0.94)
+        }
+    }
+
+    @ViewBuilder
+    private var overlayLabel: some View {
+        if prefersExpandedLabel {
+            ViewThatFits(in: .horizontal) {
+                labelRow(text: state.timelineDisplayTitle)
+                labelRow(text: state.timelineShortCode)
+                compactGlyph
+            }
+        } else {
+            ViewThatFits(in: .horizontal) {
+                labelRow(text: state.timelineShortCode)
+                compactGlyph
+            }
+        }
+    }
+
+    private func labelRow(text: String) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: state.timelineSymbolName)
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+            Text(text)
+                .font(MindSenseTypography.micro)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(contentForeground)
+        .frame(maxWidth: .infinity)
+    }
+
+    private var compactGlyph: some View {
+        Image(systemName: state.timelineSymbolName)
+            .font(.system(size: 10, weight: .semibold, design: .rounded))
+            .foregroundStyle(contentForeground)
+            .frame(maxWidth: .infinity)
+    }
+
+    private var contentForeground: Color {
+        switch state {
+        case .stable:
+            return .primary
+        case .activated:
+            return Color.black.opacity(0.82)
+        case .recovery:
+            return MindSensePalette.onAccent
+        }
+    }
+}
+
+private struct TimelineStateLegendPill: View {
+    let title: String
+    let state: StressTimelineState
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 6) {
+            TimelineStateSegmentCell(state: state, tint: tint, height: 18, prefersExpandedLabel: false)
+                .frame(width: 34)
+                .accessibilityHidden(true)
+            Text(title)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(
+            Capsule(style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(title) timeline state")
+    }
+}
+
+private extension StressTimelineState {
+    var timelineDisplayTitle: String {
+        switch self {
+        case .stable:
+            return "Stable"
+        case .activated:
+            return "Activated"
+        case .recovery:
+            return "Recovery"
+        }
+    }
+
+    var timelineShortCode: String {
+        switch self {
+        case .stable:
+            return "S"
+        case .activated:
+            return "A"
+        case .recovery:
+            return "R"
+        }
+    }
+
+    var timelineSymbolName: String {
+        switch self {
+        case .stable:
+            return "pause.fill"
+        case .activated:
+            return "bolt.fill"
+        case .recovery:
+            return "arrow.counterclockwise"
+        }
+    }
+}
+
+private struct TodayEpisodeIntensitySheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let episode: StressEpisodeRecord
+    let higherThanPercentile: Int?
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: MindSenseSpacing.md) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Episode intensity \(episode.intensity)",
+                                subtitle: "\(episode.start.formattedDateLabel()) \(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())"
+                            )
+                        )
+                        Text("Episode intensity is based on deviation from baseline HR/HRV patterns plus duration.")
+                            .font(MindSenseTypography.bodyStrong)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Higher values indicate stronger or longer activation spikes relative to your baseline. Use Load for overall daily strain.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Personal percentile",
+                                subtitle: "Compared with your recent episodes."
+                            )
+                        )
+                        if let higherThanPercentile {
+                            Text("\(episode.intensity) = higher than your typical \(higherThanPercentile)% of episodes.")
+                                .font(MindSenseTypography.bodyStrong)
+                                .foregroundStyle(MindSensePalette.warning)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text("Track a few more episodes to personalize this percentile.")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("Episode intensity")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "Episode intensity")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+    }
+}
+
+struct TodayEpisodeDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let episode: StressEpisodeRecord
@@ -1397,8 +3110,20 @@ private struct TodayEpisodeDetailSheet: View {
     let onStartRecommended: (StressEpisodeRecord) -> Void
 
     @State private var tags: Set<String>
-    @State private var note: String
     @State private var feedback: StressEpisodeAttributionFeedback?
+    @State private var showEvidenceDetails = false
+
+    private struct ConfounderQuickTag: Identifiable {
+        let label: String
+        let storedTag: String
+        var id: String { storedTag }
+    }
+
+    private let confounderQuickTags: [ConfounderQuickTag] = [
+        .init(label: "I'm sick", storedTag: "Illness"),
+        .init(label: "I traveled", storedTag: "Travel"),
+        .init(label: "I drank", storedTag: "Alcohol")
+    ]
 
     init(
         episode: StressEpisodeRecord,
@@ -1415,7 +3140,6 @@ private struct TodayEpisodeDetailSheet: View {
         self.onSaveFeedback = onSaveFeedback
         self.onStartRecommended = onStartRecommended
         _tags = State(initialValue: Set(episode.userTags))
-        _note = State(initialValue: episode.userNote ?? "")
         _feedback = State(initialValue: episode.attributionFeedback)
     }
 
@@ -1434,56 +3158,94 @@ private struct TodayEpisodeDetailSheet: View {
                         VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
                             infoRow(label: "State", value: "Activation spike • \(durationLabel)")
                             infoRow(label: "Likely driver", value: "\(episode.likelyDriver.title) (\(confidenceLabel))")
-                            infoRow(label: "Body signal", value: "Heart-rate elevation versus your baseline.")
+                            infoRow(label: "Body signals", value: bodySignalSummary)
+                        }
+
+                        DisclosureGroup(isExpanded: $showEvidenceDetails) {
+                            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                                evidenceRow(label: "Heart-rate evidence", value: heartRateEvidenceLine)
+                                evidenceRow(label: "HRV pattern", value: hrvEvidenceLine)
+                                evidenceRow(label: "Time-of-day typicality", value: timeOfDayEvidenceLine)
+                                evidenceRow(label: "Movement level", value: movementEvidenceLine)
+                            }
+                            .padding(.top, 6)
+                        } label: {
+                            Text("Why we think this")
+                                .font(MindSenseTypography.bodyStrong)
                         }
                     }
 
-                    FocusSurface {
-                        MindSenseSectionHeader(model: contextHeaderModel)
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Was this accurate?",
+                                subtitle: "Quick feedback that improves attribution quality."
+                            )
+                        )
 
-                        FlexibleChipGrid(items: DemoHealthSignalEngine.contextTags, selectedItems: $tags) { _, _ in
-                            // Selection feedback is triggered by the parent flow.
+                        HStack(spacing: 10) {
+                            accuracyButton(title: "👍 Looks right", value: .accurate)
+                            accuracyButton(title: "👎 Off", value: .inaccurate)
                         }
 
-                        VStack(alignment: .leading, spacing: MindSenseSpacing.xxs) {
-                            Text("Custom context")
+                        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                            Text("Quick confounder tags")
                                 .font(MindSenseTypography.caption)
                                 .foregroundStyle(.secondary)
+                            Text("Signals can be influenced by illness, alcohol, travel, and sensor gaps.")
+                                .font(MindSenseTypography.micro)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
 
-                            HStack(spacing: MindSenseSpacing.xs) {
-                                TextField("Type a context label…", text: $note)
-                                    .textInputAutocapitalization(.sentences)
-                                    .disableAutocorrection(false)
-
-                                if !trimmedNote.isEmpty {
+                            LazyVGrid(
+                                columns: [GridItem(.adaptive(minimum: 120), spacing: 8)],
+                                alignment: .leading,
+                                spacing: 8
+                            ) {
+                                ForEach(confounderQuickTags) { item in
                                     Button {
-                                        note = ""
+                                        applyConfounderQuickTag(item)
                                     } label: {
-                                        Image(systemName: "xmark.circle.fill")
-                                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                                            .foregroundStyle(.secondary)
+                                        PillChip(
+                                            label: item.label,
+                                            state: tags.contains(item.storedTag) ? .selected : .unselected
+                                        )
                                     }
                                     .buttonStyle(.plain)
-                                    .accessibilityLabel("Clear custom context")
+                                    .accessibilityHint("Marks this episode as influenced by \(item.storedTag.lowercased()) and saves context.")
                                 }
                             }
-                            .padding(.horizontal, 12)
-                            .frame(minHeight: 44)
-                            .background(
-                                RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                                    .fill(MindSenseSurfaceLevel.base.fill)
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-                            )
+                        }
+                        .padding(.top, MindSenseSpacing.xs)
+
+                        if feedback == .inaccurate {
+                            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                                Text("What was it mostly?")
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(.secondary)
+
+                                FlexibleChipGrid(items: DemoHealthSignalEngine.contextTags, selectedItems: $tags) { item, isSelected in
+                                    saveInaccurateAttributionTag(item: item, isSelected: isSelected)
+                                }
+                            }
+                            .padding(.top, MindSenseSpacing.xs)
                         }
 
-                        Button("Save context") {
-                            onSaveContext(episode.id, tags, note)
+                        HStack {
+                            Text("Need more time?")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer(minLength: 8)
+                            Button("Edit later") {
+                                dismiss()
+                            }
+                            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 38))
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
-                        .disabled(!hasContextDraft)
+
+                        Text("You can revisit attribution from Data > History.")
+                            .font(MindSenseTypography.micro)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     InsetSurface {
@@ -1546,19 +3308,6 @@ private struct TodayEpisodeDetailSheet: View {
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
                     }
 
-                    InsetSurface {
-                        MindSenseSectionHeader(
-                            model: .init(
-                                title: "Was this accurate?",
-                                subtitle: "This helps tune episode attribution quality."
-                            )
-                        )
-
-                        HStack(spacing: 10) {
-                            feedbackButton(title: "Accurate", icon: "hand.thumbsup.fill", value: .accurate)
-                            feedbackButton(title: "Not accurate", icon: "hand.thumbsdown.fill", value: .inaccurate)
-                        }
-                    }
                 }
                 .mindSenseSheetInsets()
             }
@@ -1569,13 +3318,9 @@ private struct TodayEpisodeDetailSheet: View {
                 ToolbarItem(placement: .principal) {
                     MindSenseNavTitleLockup(title: "Episode")
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
             }
         }
+        .mindSenseSheetPresentationChrome()
     }
 
     private var durationLabel: String {
@@ -1593,21 +3338,56 @@ private struct TodayEpisodeDetailSheet: View {
         return "low confidence"
     }
 
-    private var trimmedNote: String {
-        note.trimmingCharacters(in: .whitespacesAndNewlines)
+    private var bodySignalSummary: String {
+        guard let evidence = episode.evidence else {
+            return "Heart-rate elevation detected versus your baseline."
+        }
+
+        var fragments = ["HR +\(evidence.heartRateAboveBaselineBPM) bpm for \(evidence.elevatedDurationMinutes) min"]
+        if let shift = evidence.hrvShiftMS {
+            fragments.append("HRV \(hrvShiftLabel(shift))")
+        }
+        return fragments.joined(separator: " • ")
     }
 
-    private var hasContextDraft: Bool {
-        !tags.isEmpty || !trimmedNote.isEmpty
+    private var heartRateEvidenceLine: String {
+        guard let evidence = episode.evidence else {
+            return "Heart-rate elevation detected across \(durationLabel)."
+        }
+        return "HR above baseline band by +\(evidence.heartRateAboveBaselineBPM) bpm for \(evidence.elevatedDurationMinutes) min."
     }
 
-    private var contextHeaderModel: SectionHeaderModel {
-        SectionHeaderModel(
-            title: "What might have triggered this?",
-            subtitle: "Add one context tag to improve attribution over time.",
-            actionTitle: hasContextDraft ? "Clear" : nil,
-            action: hasContextDraft ? { clearContextDraft() } : nil
-        )
+    private var hrvEvidenceLine: String {
+        guard let shift = episode.evidence?.hrvShiftMS else {
+            return "HRV pattern was not used for this episode."
+        }
+        if shift == 0 {
+            return "HRV stayed near baseline."
+        }
+        if shift < 0 {
+            return "HRV dropped by \(abs(shift)) ms versus baseline."
+        }
+        return "HRV rose by \(shift) ms versus baseline."
+    }
+
+    private var timeOfDayEvidenceLine: String {
+        guard let typicality = episode.evidence?.timeOfDayTypicality else {
+            return "Time-of-day pattern is not available."
+        }
+        if typicality >= 75 {
+            return "Typical timing for your recent spikes (\(typicality)% match)."
+        }
+        if typicality >= 50 {
+            return "Moderately typical timing (\(typicality)% match)."
+        }
+        return "Less typical timing (\(typicality)% match)."
+    }
+
+    private var movementEvidenceLine: String {
+        guard let level = episode.evidence?.movementLevel else {
+            return "Movement level is not available."
+        }
+        return "\(level.title) movement during this spike."
     }
 
     private func infoRow(label: String, value: String) -> some View {
@@ -1626,14 +3406,47 @@ private struct TodayEpisodeDetailSheet: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func clearContextDraft() {
-        tags = []
-        note = ""
+    private func evidenceRow(label: String, value: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.7)
+            Text(value)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
-    private func feedbackButton(
+    private func hrvShiftLabel(_ shift: Int) -> String {
+        if shift == 0 {
+            return "0 ms"
+        }
+        let sign = shift > 0 ? "+" : "-"
+        return "\(sign)\(abs(shift)) ms"
+    }
+
+    private func saveInaccurateAttributionTag(item: String, isSelected: Bool) {
+        if isSelected {
+            tags = [item]
+            onSaveContext(episode.id, tags, episode.userNote ?? "")
+        } else {
+            tags.remove(item)
+        }
+    }
+
+    private func applyConfounderQuickTag(_ item: ConfounderQuickTag) {
+        if feedback != .inaccurate {
+            feedback = .inaccurate
+            onSaveFeedback(episode.id, .inaccurate)
+        }
+        tags = [item.storedTag]
+        onSaveContext(episode.id, tags, episode.userNote ?? "")
+    }
+
+    private func accuracyButton(
         title: String,
-        icon: String,
         value: StressEpisodeAttributionFeedback
     ) -> some View {
         let selected = feedback == value
@@ -1641,18 +3454,14 @@ private struct TodayEpisodeDetailSheet: View {
             feedback = value
             onSaveFeedback(episode.id, value)
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                Text(title)
-                    .font(MindSenseTypography.caption)
-            }
-            .foregroundStyle(selected ? MindSensePalette.signalCoolStrong : .secondary)
+            Text(title)
+                .font(MindSenseTypography.bodyStrong)
+                .foregroundStyle(selected ? MindSensePalette.onAccent : .primary)
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 38)
+            .frame(minHeight: 42)
             .background(
                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                    .fill(selected ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
+                    .fill(selected ? MindSensePalette.accent : MindSenseSurfaceLevel.base.fill)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
@@ -1660,5 +3469,34 @@ private struct TodayEpisodeDetailSheet: View {
             )
         }
         .buttonStyle(.plain)
+    }
+}
+
+private extension Array where Element == StressEpisodeRecord {
+    func higherThanPercent(for episode: StressEpisodeRecord) -> Int? {
+        let comparisonPool = filter { $0.id != episode.id }
+        guard !comparisonPool.isEmpty else { return nil }
+
+        let lowerIntensityCount = comparisonPool.filter { $0.intensity < episode.intensity }.count
+        let ratio = Double(lowerIntensityCount) / Double(comparisonPool.count)
+        return Int((ratio * 100).rounded())
+    }
+}
+
+private extension StressEpisodeRecord {
+    var contextSummaryLine: String? {
+        if let primaryContextTag, let secondaryContextTag {
+            return "Primary: \(primaryContextTag) • Secondary: \(secondaryContextTag)"
+        }
+        if let primaryContextTag {
+            return "Primary: \(primaryContextTag)"
+        }
+        if !userTags.isEmpty {
+            return userTags.joined(separator: ", ")
+        }
+        if let userNote, !userNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return userNote
+        }
+        return nil
     }
 }

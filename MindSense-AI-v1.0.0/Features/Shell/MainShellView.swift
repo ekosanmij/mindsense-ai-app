@@ -5,6 +5,7 @@ struct MainShellView: View {
     @EnvironmentObject private var store: MindSenseStore
     @AppStorage("appReduceMotion") private var appReduceMotion = false
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @State private var tabBarOverlayClearance = MindSenseLayout.floatingTabBarStandardClearance
 
     private var reduceMotion: Bool {
         appReduceMotion || accessibilityReduceMotion
@@ -67,9 +68,11 @@ struct MainShellView: View {
                 .tag(MainTab.data)
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .environment(\.mindSenseTabBarOverlayClearance, tabBarOverlayClearance)
         .background(
             TabBarMinimizeConfigurator(
-                behavior: .onScrollDown
+                behavior: .onScrollDown,
+                overlayClearance: $tabBarOverlayClearance
             )
             .allowsHitTesting(false)
         )
@@ -115,18 +118,27 @@ struct MainShellView: View {
 
 private struct TabBarMinimizeConfigurator: UIViewControllerRepresentable {
     let behavior: UITabBarController.MinimizeBehavior
+    @Binding var overlayClearance: CGFloat
 
     func makeUIViewController(context: Context) -> TabBarMinimizeConfiguratorController {
         TabBarMinimizeConfiguratorController()
     }
 
     func updateUIViewController(_ uiViewController: TabBarMinimizeConfiguratorController, context: Context) {
+        uiViewController.onOverlayClearanceChange = { value in
+            guard abs(overlayClearance - value) > 0.5 else { return }
+            DispatchQueue.main.async {
+                overlayClearance = value
+            }
+        }
         uiViewController.applyMinimizeBehavior(behavior)
     }
 }
 
 private final class TabBarMinimizeConfiguratorController: UIViewController {
     private var pendingBehavior: UITabBarController.MinimizeBehavior?
+    private var lastReportedOverlayClearance: CGFloat = -1
+    var onOverlayClearanceChange: ((CGFloat) -> Void)?
 
     func applyMinimizeBehavior(_ behavior: UITabBarController.MinimizeBehavior) {
         pendingBehavior = behavior
@@ -146,6 +158,17 @@ private final class TabBarMinimizeConfiguratorController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         applyPendingBehaviorIfPossible()
+        reportOverlayClearanceIfPossible()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        reportOverlayClearanceIfPossible()
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        reportOverlayClearanceIfPossible()
     }
 
     private func applyPendingBehaviorIfPossible() {
@@ -153,5 +176,17 @@ private final class TabBarMinimizeConfiguratorController: UIViewController {
         guard let tabBarController else { return }
         guard tabBarController.tabBarMinimizeBehavior != behavior else { return }
         tabBarController.tabBarMinimizeBehavior = behavior
+        reportOverlayClearanceIfPossible()
+    }
+
+    private func reportOverlayClearanceIfPossible() {
+        guard let tabBarController else { return }
+        guard let containerView = tabBarController.viewIfLoaded else { return }
+        let tabBar = tabBarController.tabBar
+        let clearance = max(0, containerView.bounds.maxY - tabBar.frame.minY)
+
+        guard abs(clearance - lastReportedOverlayClearance) > 0.5 else { return }
+        lastReportedOverlayClearance = clearance
+        onOverlayClearanceChange?(clearance)
     }
 }

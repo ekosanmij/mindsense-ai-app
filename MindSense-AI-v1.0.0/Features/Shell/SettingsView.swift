@@ -50,6 +50,13 @@ struct SettingsView: View {
         )
     }
 
+    private var meetingCallSignalsBinding: Binding<Bool> {
+        Binding(
+            get: { store.useMeetingCallSignals },
+            set: { store.setUseMeetingCallSignals($0, source: "settings_health_data") }
+        )
+    }
+
     var body: some View {
         Group {
             if case .ready = screenState {
@@ -89,7 +96,9 @@ struct SettingsView: View {
         .onChange(of: enableHaptics) { _, newValue in
             autosaveSetting("Haptic preference saved")
             store.track(event: .settingAutosaved, surface: .settings, action: "haptics", metadata: ["value": "\(newValue)"])
-            store.triggerHaptic(intent: .selection)
+            if newValue {
+                store.triggerHaptic(intent: .selection)
+            }
         }
         .onChange(of: gentlePrompts) { _, newValue in
             autosaveSetting("Notification preference saved")
@@ -124,6 +133,10 @@ struct SettingsView: View {
         .onChange(of: quietEndMinutes) { _, newValue in
             autosaveSetting("Quiet hours saved")
             store.track(event: .settingAutosaved, surface: .settings, action: "quiet_hours_end", metadata: ["minutes": "\(newValue)"])
+            store.triggerHaptic(intent: .selection)
+        }
+        .onChange(of: store.useMeetingCallSignals) { _, _ in
+            autosaveSetting("Signal source preference saved")
             store.triggerHaptic(intent: .selection)
         }
     }
@@ -230,6 +243,14 @@ struct SettingsView: View {
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
 
+            settingsToggleRow(
+                title: "Use meeting/call signals",
+                subtitle: "Allow Calendar and calls metadata to influence Top drivers ranking.",
+                isOn: meetingCallSignalsBinding
+            )
+            .listRowInsets(settingsRowInsets)
+            .listRowBackground(Color.clear)
+
             settingsRow(title: "Data export and delete", icon: "tray.and.arrow.down") {
                 store.showBanner(title: "Data controls", detail: "Export and delete workflows can be connected here.", severity: .info)
             }
@@ -305,10 +326,10 @@ struct SettingsView: View {
             .listRowInsets(settingsRowInsets)
             .listRowBackground(Color.clear)
 
-            settingsToggleRow(title: "Reduce motion", subtitle: "Lower animation amplitude throughout the app.", isOn: $appReduceMotion)
+            settingsToggleRow(title: "Reduce motion", subtitle: "Lower animation amplitude throughout the app. Also follows iOS Reduce Motion.", isOn: $appReduceMotion)
                 .listRowInsets(settingsRowInsets)
                 .listRowBackground(Color.clear)
-            settingsToggleRow(title: "Haptics", subtitle: "Tactile confirmation for key actions and completions.", isOn: $enableHaptics)
+            settingsToggleRow(title: "Haptics", subtitle: "Tactile confirmation for key actions and completions. iOS System Haptics off will suppress output.", isOn: $enableHaptics)
                 .listRowInsets(settingsRowInsets)
                 .listRowBackground(Color.clear)
         } header: {
@@ -488,10 +509,11 @@ struct SettingsView: View {
     }
 }
 
-private struct AppleHealthPermissionsView: View {
+struct AppleHealthPermissionsView: View {
     @EnvironmentObject private var store: MindSenseStore
     @Environment(\.openURL) private var openURL
     @State private var showDeleteDerivedConfirmation = false
+    @State private var selectedRemediationGuide: DemoHealthPermissionRemediationGuide?
 
     var body: some View {
         ScrollView {
@@ -499,7 +521,7 @@ private struct AppleHealthPermissionsView: View {
                 MindSenseCommandDeck(
                     label: "Apple Health",
                     title: "Permissions and sync diagnostics",
-                    detail: "Review connection, imports, and data quality from Apple Health.",
+                    detail: "Review connection, imports, and data confidence from Apple Health.",
                     metric: store.healthSourceStatusLine
                 )
 
@@ -519,7 +541,7 @@ private struct AppleHealthPermissionsView: View {
                             size: 34
                         )
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("Data quality \(store.healthDataQualityScore)")
+                            Text("Data confidence \(store.healthDataQualityScore)")
                                 .font(MindSenseTypography.bodyStrong)
                             Text(store.demoHealthProfile.quality.actionHint)
                                 .font(MindSenseTypography.caption)
@@ -538,27 +560,19 @@ private struct AppleHealthPermissionsView: View {
                     )
 
                     ForEach(store.healthPermissions) { permission in
-                        HStack(spacing: 10) {
-                            Image(systemName: permission.state.statusIcon)
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                .foregroundStyle(permissionTint(for: permission.state))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(permission.signal.title)
-                                    .font(MindSenseTypography.bodyStrong)
-                                Text(permission.state.title)
-                                    .font(MindSenseTypography.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                            Spacer()
-                        }
-                        .padding(.vertical, 2)
+                        permissionRow(permission)
                     }
+
+                    Text("Recommendation confidence uses sleep coverage, heart-rate density, HRV availability, and watch wear continuity. Respiratory rate and environmental audio are optional context signals.")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 InsetSurface {
                     MindSenseSectionHeader(
                         model: .init(
-                            title: "Data quality diagnostics",
+                            title: "Data confidence diagnostics",
                             subtitle: "Coverage by signal category."
                         )
                     )
@@ -643,6 +657,52 @@ private struct AppleHealthPermissionsView: View {
         } message: {
             Text("This keeps account data but clears derived signal outputs. You can resync to rebuild.")
         }
+        .sheet(item: $selectedRemediationGuide) { guide in
+            SettingsPermissionRemediationSheet(guide: guide)
+        }
+    }
+
+    @ViewBuilder
+    private func permissionRow(_ permission: DemoHealthPermissionStatus) -> some View {
+        if let remediationGuide = permission.remediationGuide {
+            Button {
+                selectedRemediationGuide = remediationGuide
+            } label: {
+                permissionRowContent(permission, showsDisclosure: true)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens setup steps")
+        } else {
+            permissionRowContent(permission, showsDisclosure: false)
+        }
+    }
+
+    private func permissionRowContent(_ permission: DemoHealthPermissionStatus, showsDisclosure: Bool) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: permission.state.statusIcon)
+                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .foregroundStyle(permissionTint(for: permission.state))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(permission.signal.title)
+                    .font(MindSenseTypography.bodyStrong)
+                Text(permission.state.title)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                if let statusDetail = permission.statusDetail {
+                    Text(statusDetail)
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Spacer()
+            if showsDisclosure {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
     }
 
     private func permissionTint(for state: DemoHealthPermissionState) -> Color {
@@ -664,5 +724,74 @@ private struct AppleHealthPermissionsView: View {
             return MindSensePalette.accent
         }
         return MindSensePalette.warning
+    }
+}
+
+private struct SettingsPermissionRemediationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let guide: DemoHealthPermissionRemediationGuide
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 14) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: guide.title,
+                                subtitle: "How to enable"
+                            )
+                        )
+                        Text(guide.summary)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Checklist",
+                                subtitle: "Complete each step in order."
+                            )
+                        )
+                        ForEach(Array(guide.checklist.enumerated()), id: \.offset) { index, item in
+                            HStack(alignment: .top, spacing: 8) {
+                                Text("\(index + 1).")
+                                    .font(MindSenseTypography.bodyStrong)
+                                    .foregroundStyle(.secondary)
+                                Text(item)
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                Spacer()
+                            }
+                        }
+                    }
+
+                    InsetSurface {
+                        Text(guide.expectedTimeToPopulate)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(MindSensePalette.accent)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(guide.modelUsageNote)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("How to enable")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "How to enable")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
     }
 }

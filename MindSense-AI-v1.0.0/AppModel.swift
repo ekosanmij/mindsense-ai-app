@@ -2,6 +2,7 @@ import Foundation
 import SwiftUI
 import UIKit
 import Combine
+import CoreHaptics
 
 enum AppLaunchState {
     case launching
@@ -289,6 +290,93 @@ enum RegulatePresetID: String, CaseIterable, Codable {
     }
 }
 
+enum IntentMode: String, CaseIterable, Codable, Identifiable {
+    case focus
+    case recovery
+    case sleep
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .focus:
+            return "Focus mode"
+        case .recovery:
+            return "Recovery mode"
+        case .sleep:
+            return "Sleep mode"
+        }
+    }
+
+    var shortTitle: String {
+        switch self {
+        case .focus:
+            return "Focus"
+        case .recovery:
+            return "Recovery"
+        case .sleep:
+            return "Sleep"
+        }
+    }
+
+    var preferredPreset: RegulatePresetID {
+        switch self {
+        case .focus:
+            return .focusPrep
+        case .recovery:
+            return .calmNow
+        case .sleep:
+            return .sleepDownshift
+        }
+    }
+
+    var preferredSignalFocus: SignalFocus {
+        switch self {
+        case .focus:
+            return .readiness
+        case .recovery:
+            return .load
+        case .sleep:
+            return .consistency
+        }
+    }
+
+    var preferredMetricOrder: [CoreMetric] {
+        switch self {
+        case .focus:
+            return [.readiness, .load, .consistency]
+        case .recovery:
+            return [.load, .readiness, .consistency]
+        case .sleep:
+            return [.consistency, .readiness, .load]
+        }
+    }
+
+    var todayNarrativeSuffix: String {
+        switch self {
+        case .focus:
+            return "Priority: protect one high-focus block while readiness is favorable."
+        case .recovery:
+            return "Priority: downshift load before stress accumulation compounds."
+        case .sleep:
+            return "Priority: reinforce evening routines that stabilize overnight recovery."
+        }
+    }
+
+    func insightEmphasis(for focus: SignalFocus) -> String? {
+        switch (self, focus) {
+        case (.focus, .readiness):
+            return "Mode emphasis: convert high-readiness windows into focused output blocks."
+        case (.recovery, .load):
+            return "Mode emphasis: reduce strain early to protect recovery reserve."
+        case (.sleep, .consistency):
+            return "Mode emphasis: stabilize evening rhythm to compound overnight recovery."
+        default:
+            return nil
+        }
+    }
+}
+
 enum CoreScreenID: String, CaseIterable, Identifiable {
     case today
     case regulate
@@ -386,8 +474,12 @@ struct DataSignalTrendTile: Identifiable {
 
 struct DemoWhatIsWorkingSummary {
     let topProtocol: String
+    let topProtocolEvidence: String
     let topTrigger: String
     let bestRecoveryWindow: String
+    let bestRecoveryWindowEvidence: String
+    let bestRecoveryWindowStart: Date?
+    let bestRecoveryWindowEnd: Date?
 }
 
 enum DemoEventKind: String, Codable, CaseIterable {
@@ -575,13 +667,13 @@ struct DemoScenarioProfile {
             return .init(
                 scenario: scenario,
                 primaryDrivers: [
-                    .init(id: "sleep_fragmentation", name: "Sleep fragmentation", detail: "3 awakenings", impact: 0.35),
-                    .init(id: "deadline_density", name: "Deadline density", detail: "2 urgent deliverables", impact: 0.28),
-                    .init(id: "late_caffeine", name: "Late caffeine", detail: "after 2 PM", impact: 0.17)
+                    .init(id: "sleep_fragmentation", name: "Sleep fragmentation", detail: "3 awakenings", impact: 0.35, source: .sleep),
+                    .init(id: "deadline_density", name: "Deadline density", detail: "2 urgent deliverables", impact: 0.28, source: .checkIn),
+                    .init(id: "late_caffeine", name: "Late caffeine", detail: "after 2 PM", impact: 0.17, source: .routine)
                 ],
                 secondaryDrivers: [
-                    .init(id: "meeting_stack", name: "Meeting stack", detail: "4 back-to-back meetings", impact: 0.12),
-                    .init(id: "hydration_drag", name: "Hydration drag", detail: "below target this morning", impact: 0.08)
+                    .init(id: "meeting_stack", name: "Meeting stack", detail: "4 back-to-back meetings", impact: 0.12, source: .calendar),
+                    .init(id: "hydration_drag", name: "Hydration drag", detail: "below target this morning", impact: 0.08, source: .routine)
                 ],
                 presets: [
                     .init(
@@ -625,13 +717,13 @@ struct DemoScenarioProfile {
             return .init(
                 scenario: scenario,
                 primaryDrivers: [
-                    .init(id: "moderate_meeting_load", name: "Meeting load", detail: "2 priority calls", impact: 0.24),
-                    .init(id: "stable_sleep", name: "Sleep continuity", detail: "1 brief awakening", impact: 0.19),
-                    .init(id: "training_response", name: "Training response", detail: "light recovery run", impact: 0.16)
+                    .init(id: "moderate_meeting_load", name: "Meeting load", detail: "2 priority calls", impact: 0.24, source: .callsMetadata),
+                    .init(id: "stable_sleep", name: "Sleep continuity", detail: "1 brief awakening", impact: 0.19, source: .sleep),
+                    .init(id: "training_response", name: "Training response", detail: "light recovery run", impact: 0.16, source: .activity)
                 ],
                 secondaryDrivers: [
-                    .init(id: "caffeine_timing", name: "Caffeine timing", detail: "before noon", impact: 0.11),
-                    .init(id: "screen_exposure", name: "Screen exposure", detail: "moderate evening use", impact: 0.08)
+                    .init(id: "caffeine_timing", name: "Caffeine timing", detail: "before noon", impact: 0.11, source: .routine),
+                    .init(id: "screen_exposure", name: "Screen exposure", detail: "moderate evening use", impact: 0.08, source: .routine)
                 ],
                 presets: [
                     .init(
@@ -675,13 +767,13 @@ struct DemoScenarioProfile {
             return .init(
                 scenario: scenario,
                 primaryDrivers: [
-                    .init(id: "sleep_rebound", name: "Sleep rebound", detail: "longer deep sleep window", impact: 0.28),
-                    .init(id: "load_taper", name: "Load taper", detail: "lighter task density", impact: 0.23),
-                    .init(id: "movement_consistency", name: "Movement consistency", detail: "daily low-intensity sessions", impact: 0.18)
+                    .init(id: "sleep_rebound", name: "Sleep rebound", detail: "longer deep sleep window", impact: 0.28, source: .sleep),
+                    .init(id: "load_taper", name: "Load taper", detail: "lighter task density", impact: 0.23, source: .checkIn),
+                    .init(id: "movement_consistency", name: "Movement consistency", detail: "daily low-intensity sessions", impact: 0.18, source: .activity)
                 ],
                 secondaryDrivers: [
-                    .init(id: "evening_routine", name: "Evening routine", detail: "stable wind-down", impact: 0.12),
-                    .init(id: "reduced_stimulus", name: "Late stimulus control", detail: "minimal late caffeine", impact: 0.09)
+                    .init(id: "evening_routine", name: "Evening routine", detail: "stable wind-down", impact: 0.12, source: .routine),
+                    .init(id: "reduced_stimulus", name: "Late stimulus control", detail: "minimal late caffeine", impact: 0.09, source: .routine)
                 ],
                 presets: [
                     .init(
@@ -728,6 +820,7 @@ struct DemoScenarioProfile {
 struct RegulateLaunchRequest: Equatable {
     let preset: RegulatePresetID
     let startImmediately: Bool
+    let source: String
 }
 
 enum SessionImpactDirection: String, CaseIterable, Codable, Identifiable {
@@ -764,6 +857,28 @@ enum SessionHelpfulness: String, CaseIterable, Codable, Identifiable {
             return "Some"
         case .no:
             return "No"
+        }
+    }
+}
+
+enum SessionCheckInRating: String, CaseIterable, Codable, Identifiable {
+    case helped
+    case didNotHelp = "did_not_help"
+    case mixed
+    case noRating = "no_rating"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .helped:
+            return "Helped"
+        case .didNotHelp:
+            return "Didn't help"
+        case .mixed:
+            return "Mixed"
+        case .noRating:
+            return "No rating"
         }
     }
 }
@@ -812,6 +927,10 @@ struct SessionOutcome: Codable, Equatable {
     let capturedAt: Date
     let feelRating: Int
     let helpfulness: SessionHelpfulness
+    let checkInRating: SessionCheckInRating
+    let note: String?
+    let tag: String?
+    let learningWeight: Double
     let effectMetrics: RegulateEffectMetrics
 
     enum CodingKeys: String, CodingKey {
@@ -820,6 +939,10 @@ struct SessionOutcome: Codable, Equatable {
         case capturedAt
         case feelRating
         case helpfulness
+        case checkInRating
+        case note
+        case tag
+        case learningWeight
         case effectMetrics
     }
 
@@ -829,6 +952,10 @@ struct SessionOutcome: Codable, Equatable {
         capturedAt: Date,
         feelRating: Int,
         helpfulness: SessionHelpfulness,
+        checkInRating: SessionCheckInRating,
+        note: String? = nil,
+        tag: String? = nil,
+        learningWeight: Double = 1.0,
         effectMetrics: RegulateEffectMetrics
     ) {
         self.direction = direction
@@ -836,6 +963,12 @@ struct SessionOutcome: Codable, Equatable {
         self.capturedAt = capturedAt
         self.feelRating = feelRating
         self.helpfulness = helpfulness
+        self.checkInRating = checkInRating
+        let trimmedNote = note?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.note = (trimmedNote?.isEmpty == false) ? trimmedNote : nil
+        let trimmedTag = tag?.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.tag = (trimmedTag?.isEmpty == false) ? trimmedTag : nil
+        self.learningWeight = max(0.2, min(1, learningWeight))
         self.effectMetrics = effectMetrics
     }
 
@@ -846,12 +979,25 @@ struct SessionOutcome: Codable, Equatable {
         capturedAt = try container.decode(Date.self, forKey: .capturedAt)
         feelRating = try container.decodeIfPresent(Int.self, forKey: .feelRating) ?? 3
         helpfulness = try container.decodeIfPresent(SessionHelpfulness.self, forKey: .helpfulness) ?? Self.fallbackHelpfulness(for: direction)
+        checkInRating = try container.decodeIfPresent(SessionCheckInRating.self, forKey: .checkInRating)
+            ?? Self.fallbackCheckInRating(direction: direction, helpfulness: helpfulness)
+        let decodedNote = try container.decodeIfPresent(String.self, forKey: .note)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        note = (decodedNote?.isEmpty == false) ? decodedNote : nil
+        let decodedTag = try container.decodeIfPresent(String.self, forKey: .tag)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        tag = (decodedTag?.isEmpty == false) ? decodedTag : nil
+        let decodedLearningWeight = try container.decodeIfPresent(Double.self, forKey: .learningWeight)
+            ?? (checkInRating == .noRating ? 0.35 : 1.0)
+        learningWeight = max(0.2, min(1, decodedLearningWeight))
         effectMetrics = try container.decodeIfPresent(RegulateEffectMetrics.self, forKey: .effectMetrics) ?? .init(
             heartRateDownshiftBPM: 0,
             hrvShiftMS: 0,
             recoverySlope: .moderate,
             quality: .estimated
         )
+    }
+
+    var isRated: Bool {
+        checkInRating != .noRating
     }
 
     private static func fallbackHelpfulness(for direction: SessionImpactDirection) -> SessionHelpfulness {
@@ -862,6 +1008,27 @@ struct SessionOutcome: Codable, Equatable {
             return .some
         case .worse:
             return .no
+        }
+    }
+
+    private static func fallbackCheckInRating(
+        direction: SessionImpactDirection,
+        helpfulness: SessionHelpfulness
+    ) -> SessionCheckInRating {
+        switch helpfulness {
+        case .yes:
+            return .helped
+        case .no:
+            return .didNotHelp
+        case .some:
+            switch direction {
+            case .better:
+                return .helped
+            case .same:
+                return .mixed
+            case .worse:
+                return .didNotHelp
+            }
         }
     }
 }
@@ -981,12 +1148,82 @@ enum CoreMetric: String, CaseIterable, Identifiable {
     var definition: String {
         switch self {
         case .load:
-            return "How taxed your nervous system is right now."
+            return "A baseline-adjusted allostatic strain score (0-100) inferred from autonomic markers such as HRV suppression and resting heart-rate drift, plus sleep debt and recent physical or cognitive demand. Higher values suggest greater sympathetic load and reduced short-term recovery reserve, especially when elevated across consecutive days."
         case .readiness:
-            return "How prepared your body is for stress and focus."
+            return "A recovery-capacity score (0-100) estimating how prepared your system is for focused work and stress adaptation today. It integrates overnight recovery architecture, autonomic balance, and recent load slope; higher values generally indicate stronger recovery tone and better stress tolerance."
         case .consistency:
-            return "How steady your routines and recovery patterns are."
+            return "A behavioral regularity score (0-100) describing stability of your sleep-wake timing, activity rhythm, and recovery behaviors across recent days. Higher consistency is associated with lower physiological volatility and more predictable readiness outcomes."
         }
+    }
+
+    var scientificContext: String {
+        switch self {
+        case .load:
+            return "Interpret with 24-72h context; one acute spike is less concerning than persistent elevation."
+        case .readiness:
+            return "Most actionable before demanding blocks, training sessions, or cognitively heavy work."
+        case .consistency:
+            return "Best interpreted as a weekly trend rather than a single-day signal."
+        }
+    }
+
+    var inputSignalsSummary: String {
+        switch self {
+        case .load:
+            return "HRV trend, resting HR drift, sleep debt, recent strain."
+        case .readiness:
+            return "Sleep quality, autonomic balance, and prior-day strain trajectory."
+        case .consistency:
+            return "Sleep timing variance, activity regularity, and recovery routine adherence."
+        }
+    }
+
+    var windowSummary: String {
+        switch self {
+        case .load:
+            return "Acute + short rolling context (hours to ~3 days)."
+        case .readiness:
+            return "Overnight state plus recent 1-3 day carryover."
+        case .consistency:
+            return "Rolling multi-day rhythm stability window."
+        }
+    }
+
+    var thresholdBands: [MetricThresholdBand] {
+        switch self {
+        case .load:
+            return [
+                .init(range: 0...33, label: "Managed", interpretation: "Strain is controlled and demand is sustainable."),
+                .init(range: 34...66, label: "Rising", interpretation: "Demand is stacking; pace workload and protect recovery windows."),
+                .init(range: 67...100, label: "Strained", interpretation: "High load state; reduce non-essential demand and downshift early.")
+            ]
+        case .readiness:
+            return [
+                .init(range: 0...33, label: "Recovering", interpretation: "Available capacity is limited; prioritize restoration."),
+                .init(range: 34...66, label: "Building", interpretation: "Capacity is returning; keep demand deliberate and paced."),
+                .init(range: 67...100, label: "Ready", interpretation: "Strong capacity window for focused work and challenge.")
+            ]
+        case .consistency:
+            return [
+                .init(range: 0...33, label: "Variable", interpretation: "Rhythm is irregular and outcomes will be less predictable."),
+                .init(range: 34...66, label: "Stabilizing", interpretation: "Patterns are improving, but stability is still forming."),
+                .init(range: 67...100, label: "Steady", interpretation: "Rhythm is predictable and supports stable daily performance.")
+            ]
+        }
+    }
+}
+
+struct MetricThresholdBand: Identifiable, Hashable {
+    let range: ClosedRange<Int>
+    let label: String
+    let interpretation: String
+
+    var id: String {
+        "\(label)-\(range.lowerBound)-\(range.upperBound)"
+    }
+
+    var rangeLabel: String {
+        "\(range.lowerBound)-\(range.upperBound)"
     }
 }
 
@@ -1070,17 +1307,66 @@ struct TrendPoint: Identifiable, Equatable {
     var id: Int { index }
 }
 
+enum DriverSignalSource: String, Codable, Equatable {
+    case calendar = "Calendar"
+    case callsMetadata = "Calls metadata"
+    case sleep = "Sleep"
+    case activity = "Activity"
+    case routine = "Routine"
+    case checkIn = "Check-in"
+
+    var title: String { rawValue }
+
+    var isMeetingOrCallSignal: Bool {
+        self == .calendar || self == .callsMetadata
+    }
+}
+
 struct DriverImpact: Identifiable, Codable, Equatable {
     let id: String
     let name: String
     let detail: String
     let impact: Double
+    let source: DriverSignalSource
 
-    init(id: String = UUID().uuidString, name: String, detail: String, impact: Double) {
+    enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case detail
+        case impact
+        case source
+    }
+
+    init(
+        id: String = UUID().uuidString,
+        name: String,
+        detail: String,
+        impact: Double,
+        source: DriverSignalSource = .checkIn
+    ) {
         self.id = id
         self.name = name
         self.detail = detail
         self.impact = impact
+        self.source = source
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        detail = try container.decode(String.self, forKey: .detail)
+        impact = try container.decode(Double.self, forKey: .impact)
+        source = try container.decodeIfPresent(DriverSignalSource.self, forKey: .source) ?? .checkIn
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(name, forKey: .name)
+        try container.encode(detail, forKey: .detail)
+        try container.encode(impact, forKey: .impact)
+        try container.encode(source, forKey: .source)
     }
 }
 
@@ -1113,6 +1399,92 @@ struct ExperimentResult: Codable, Equatable {
     let perceivedChange: Int
     let summary: String
     let completedAt: Date
+    let helped: Bool?
+    let decision: ExperimentOutcomeDecision?
+    let beforeMetrics: DemoMetricSnapshot?
+    let afterMetrics: DemoMetricSnapshot?
+    let confidenceBeforePercent: Int?
+    let confidenceAfterPercent: Int?
+}
+
+enum ExperimentOutcomeDecision: String, Codable, CaseIterable, Identifiable {
+    case keep
+    case modify
+    case stop
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .keep:
+            return "Keep"
+        case .modify:
+            return "Modify"
+        case .stop:
+            return "Stop"
+        }
+    }
+}
+
+struct ExperimentEvaluationPreview: Equatable {
+    let beforeMetrics: DemoMetricSnapshot
+    let afterMetrics: DemoMetricSnapshot
+    let confidenceBeforePercent: Int
+    let confidenceAfterPercent: Int
+}
+
+enum ExperimentMissReason: String, Codable, CaseIterable, Identifiable {
+    case lateNight
+    case travel
+    case social
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .lateNight:
+            return "Late night"
+        case .travel:
+            return "Travel"
+        case .social:
+            return "Social"
+        }
+    }
+}
+
+struct ExperimentCheckInRecord: Identifiable, Codable, Equatable {
+    let id: UUID
+    let timestamp: Date
+    let metTarget: Bool
+    let missReason: ExperimentMissReason?
+    let autoFilled: Bool
+    let sleepStartAt: Date?
+    let sleepEndAt: Date?
+
+    init(
+        id: UUID = UUID(),
+        timestamp: Date,
+        metTarget: Bool,
+        missReason: ExperimentMissReason?,
+        autoFilled: Bool,
+        sleepStartAt: Date?,
+        sleepEndAt: Date?
+    ) {
+        self.id = id
+        self.timestamp = timestamp
+        self.metTarget = metTarget
+        self.missReason = missReason
+        self.autoFilled = autoFilled
+        self.sleepStartAt = sleepStartAt
+        self.sleepEndAt = sleepEndAt
+    }
+}
+
+struct ExperimentWakeAnchorAutoFill: Equatable {
+    let suggestedMet: Bool
+    let sleepStartAt: Date
+    let sleepEndAt: Date
+    let varianceMinutes: Int
 }
 
 struct Experiment: Identifiable, Codable, Equatable {
@@ -1129,6 +1501,10 @@ struct Experiment: Identifiable, Codable, Equatable {
     var targetEndDate: Date?
     var checkInDaysCompleted: Int
     var checkInLog: [Date]
+    var baselineMetrics: DemoMetricSnapshot?
+    var baselineConfidencePercent: Int?
+    var checkInRecords: [ExperimentCheckInRecord]
+    var wakeAnchorMinutesFromMidnight: Int?
     var result: ExperimentResult?
 
     enum CodingKeys: String, CodingKey {
@@ -1145,6 +1521,10 @@ struct Experiment: Identifiable, Codable, Equatable {
         case targetEndDate
         case checkInDaysCompleted
         case checkInLog
+        case baselineMetrics
+        case baselineConfidencePercent
+        case checkInRecords
+        case wakeAnchorMinutesFromMidnight
         case result
     }
 
@@ -1162,6 +1542,10 @@ struct Experiment: Identifiable, Codable, Equatable {
         targetEndDate: Date?,
         checkInDaysCompleted: Int,
         checkInLog: [Date] = [],
+        baselineMetrics: DemoMetricSnapshot? = nil,
+        baselineConfidencePercent: Int? = nil,
+        checkInRecords: [ExperimentCheckInRecord] = [],
+        wakeAnchorMinutesFromMidnight: Int? = nil,
         result: ExperimentResult?
     ) {
         self.id = id
@@ -1177,6 +1561,10 @@ struct Experiment: Identifiable, Codable, Equatable {
         self.targetEndDate = targetEndDate
         self.checkInDaysCompleted = checkInDaysCompleted
         self.checkInLog = checkInLog
+        self.baselineMetrics = baselineMetrics
+        self.baselineConfidencePercent = baselineConfidencePercent
+        self.checkInRecords = checkInRecords
+        self.wakeAnchorMinutesFromMidnight = wakeAnchorMinutesFromMidnight
         self.result = result
     }
 
@@ -1195,6 +1583,10 @@ struct Experiment: Identifiable, Codable, Equatable {
         targetEndDate = try container.decodeIfPresent(Date.self, forKey: .targetEndDate)
         checkInDaysCompleted = try container.decodeIfPresent(Int.self, forKey: .checkInDaysCompleted) ?? 0
         checkInLog = try container.decodeIfPresent([Date].self, forKey: .checkInLog) ?? []
+        baselineMetrics = try container.decodeIfPresent(DemoMetricSnapshot.self, forKey: .baselineMetrics)
+        baselineConfidencePercent = try container.decodeIfPresent(Int.self, forKey: .baselineConfidencePercent)
+        checkInRecords = try container.decodeIfPresent([ExperimentCheckInRecord].self, forKey: .checkInRecords) ?? []
+        wakeAnchorMinutesFromMidnight = try container.decodeIfPresent(Int.self, forKey: .wakeAnchorMinutesFromMidnight)
         result = try container.decodeIfPresent(ExperimentResult.self, forKey: .result)
     }
 
@@ -1286,10 +1678,13 @@ final class MindSenseStore: ObservableObject {
     @Published var banner: AppBanner?
     @Published var selectedTab: MainTab = .today
     @Published var regulateLaunchRequest: RegulateLaunchRequest?
+    @Published var todayContextCaptureEpisodeID: UUID?
     @Published var activeRegulateSession: RegulateSessionRecord?
     @Published var regulateSessionHistory: [RegulateSessionRecord] = []
     @Published var experiments: [Experiment] = []
     @Published var demoScenario: DemoScenario = .balancedDay
+    @Published var intentMode: IntentMode = .focus
+    @Published var useMeetingCallSignals = true
     @Published var demoMetrics: DemoMetricSnapshot = DemoScenario.balancedDay.baseMetrics
     @Published var demoEventHistory: [DemoEventRecord] = []
     @Published var demoHealthProfile: DemoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(
@@ -1313,6 +1708,7 @@ final class MindSenseStore: ObservableObject {
     private let primaryImpactFeedback = UIImpactFeedbackGenerator(style: .soft)
     private let selectionFeedback = UISelectionFeedbackGenerator()
     private let notificationFeedback = UINotificationFeedbackGenerator()
+    private lazy var supportsHapticFeedback = CHHapticEngine.capabilitiesForHardware().supportsHaptics
     private static let analyticsTimestampFormatter = ISO8601DateFormatter()
     private static let relativeDateFormatter = RelativeDateTimeFormatter()
 
@@ -1333,6 +1729,26 @@ final class MindSenseStore: ObservableObject {
 
     var scenarioProfile: DemoScenarioProfile {
         DemoScenarioProfile.make(for: demoScenario)
+    }
+
+    var todayMetricCardOrder: [CoreMetric] {
+        intentMode.preferredMetricOrder
+    }
+
+    var orderedSignalFocuses: [SignalFocus] {
+        let preferred = intentMode.preferredSignalFocus
+        return [preferred] + SignalFocus.allCases.filter { $0 != preferred }
+    }
+
+    var intentModeHintLine: String {
+        switch intentMode {
+        case .focus:
+            return "Prioritizing performance windows, protocol ranking, and readiness insights."
+        case .recovery:
+            return "Prioritizing strain control, recovery protocols, and load reduction insights."
+        case .sleep:
+            return "Prioritizing wind-down routines, sleep protocols, and consistency insights."
+        }
     }
 
     var regulatePresetCatalog: [DemoRegulatePreset] {
@@ -1356,6 +1772,7 @@ final class MindSenseStore: ObservableObject {
     private var recommendationContext: RecommendationEngine.Context {
         .init(
             scenario: demoScenario,
+            intentMode: intentMode,
             metrics: demoMetrics,
             baseMetrics: demoScenario.baseMetrics,
             confidenceScore: confidenceScore,
@@ -1385,10 +1802,13 @@ final class MindSenseStore: ObservableObject {
     }
 
     var todayInsightDetail: String {
+        let baseLine: String
         if let delta = latestCheckInDeltaSummary {
-            return delta.explanation
+            baseLine = delta.explanation
+        } else {
+            baseLine = demoScenario.narrative
         }
-        return demoScenario.narrative
+        return "\(baseLine) \(intentMode.todayNarrativeSuffix)"
     }
 
     var demoDataCoverageScore: Double {
@@ -1435,7 +1855,7 @@ final class MindSenseStore: ObservableObject {
     }
 
     var confidenceStatusLine: String {
-        "Confidence \(confidenceLabel) \(confidencePercent)% • coverage \(demoDataCoveragePercent)%"
+        "Recommendation confidence \(confidenceLabel) \(confidencePercent)% • data coverage \(demoDataCoveragePercent)%"
     }
 
     var lastUpdatedLabel: String {
@@ -1451,7 +1871,7 @@ final class MindSenseStore: ObservableObject {
     }
 
     var healthSourceStatusLine: String {
-        "Source: \(demoHealthProfile.sync.sourceLabel) • Last update \(healthLastSyncRelativeLabel) • Data quality \(healthDataQualityScore)"
+        "Source: \(demoHealthProfile.sync.sourceLabel) • Last update \(healthLastSyncRelativeLabel) • Data confidence \(healthDataQualityScore)"
     }
 
     var healthQualityDiagnostics: [(String, Int)] {
@@ -1654,15 +2074,26 @@ final class MindSenseStore: ObservableObject {
         )
     }
 
-    func openRegulatePreset(_ preset: RegulatePresetID, startImmediately: Bool) {
+    func openRegulatePreset(_ preset: RegulatePresetID, startImmediately: Bool, source: String = "mapped_action") {
         selectedTab = .regulate
-        regulateLaunchRequest = .init(preset: preset, startImmediately: startImmediately)
+        regulateLaunchRequest = .init(preset: preset, startImmediately: startImmediately, source: source)
     }
 
     func consumeRegulateLaunchRequest() -> RegulateLaunchRequest? {
         let request = regulateLaunchRequest
         regulateLaunchRequest = nil
         return request
+    }
+
+    func openTodayContextCapture(_ episodeID: UUID) {
+        selectedTab = .today
+        todayContextCaptureEpisodeID = episodeID
+    }
+
+    func consumeTodayContextCaptureEpisodeID() -> UUID? {
+        let id = todayContextCaptureEpisodeID
+        todayContextCaptureEpisodeID = nil
+        return id
     }
 
     func screenMode(for screen: CoreScreenID) -> ScreenMode {
@@ -1679,6 +2110,32 @@ final class MindSenseStore: ObservableObject {
             return
         }
         prepareCoreScreen(screen)
+    }
+
+    func setIntentMode(_ mode: IntentMode, source: String) {
+        guard intentMode != mode else { return }
+        intentMode = mode
+        persistIntentMode()
+        refreshCoreScreensLoadingThenReady()
+        track(
+            event: .settingAutosaved,
+            surface: .today,
+            action: "intent_mode_updated",
+            metadata: ["mode": mode.rawValue, "source": source]
+        )
+    }
+
+    func setUseMeetingCallSignals(_ enabled: Bool, source: String) {
+        guard useMeetingCallSignals != enabled else { return }
+        useMeetingCallSignals = enabled
+        persistUseMeetingCallSignals()
+        refreshCoreScreensLoadingThenReady()
+        track(
+            event: .settingAutosaved,
+            surface: .settings,
+            action: "use_meeting_call_signals",
+            metadata: ["value": "\(enabled)", "source": source]
+        )
     }
 
     func switchDemoScenario(_ scenario: DemoScenario) {
@@ -1852,18 +2309,47 @@ final class MindSenseStore: ObservableObject {
 
     func saveStressEpisodeContext(
         episodeID: UUID,
-        tags: Set<String>,
-        note: String
+        tags: [String],
+        note: String,
+        primaryTag: String? = nil,
+        secondaryTag: String? = nil
     ) {
         guard let index = demoHealthProfile.stressEpisodes.firstIndex(where: { $0.id == episodeID }) else { return }
 
+        let orderedTags = tags
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        var dedupedTags: [String] = []
+        for tag in orderedTags where !dedupedTags.contains(tag) {
+            dedupedTags.append(tag)
+        }
+
+        let cleanedPrimary = primaryTag?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanedSecondary = secondaryTag?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let resolvedPrimary: String? = {
+            if let cleanedPrimary, !cleanedPrimary.isEmpty, dedupedTags.contains(cleanedPrimary) {
+                return cleanedPrimary
+            }
+            return dedupedTags.first
+        }()
+
+        let resolvedSecondary: String? = {
+            guard let cleanedSecondary, !cleanedSecondary.isEmpty else { return nil }
+            guard dedupedTags.contains(cleanedSecondary), cleanedSecondary != resolvedPrimary else { return nil }
+            return cleanedSecondary
+        }()
+
         let cleanedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
-        demoHealthProfile.stressEpisodes[index].userTags = tags.sorted()
+        demoHealthProfile.stressEpisodes[index].userTags = dedupedTags
+        demoHealthProfile.stressEpisodes[index].primaryContextTag = resolvedPrimary
+        demoHealthProfile.stressEpisodes[index].secondaryContextTag = resolvedSecondary
         demoHealthProfile.stressEpisodes[index].userNote = cleanedNote.isEmpty ? nil : cleanedNote
         persistDemoHealthProfile()
 
-        if !tags.isEmpty || !cleanedNote.isEmpty {
-            let tagLine = tags.isEmpty ? "No tags" : tags.sorted().joined(separator: ", ")
+        if !dedupedTags.isEmpty || !cleanedNote.isEmpty {
+            let tagLine = dedupedTags.isEmpty ? "No tags" : dedupedTags.joined(separator: ", ")
             appendDemoEvent(
                 title: "Stress context captured",
                 detail: "Episode labeled with \(tagLine).",
@@ -1873,7 +2359,15 @@ final class MindSenseStore: ObservableObject {
         }
 
         showActionFeedback(.saved, detail: "Stress context saved and applied to attribution.")
-        track(event: .actionCompleted, surface: .today, action: "stress_context_saved")
+        track(
+            event: .actionCompleted,
+            surface: .today,
+            action: "stress_context_saved",
+            metadata: [
+                "tag_count": "\(dedupedTags.count)",
+                "has_secondary_tag": resolvedSecondary == nil ? "false" : "true"
+            ]
+        )
     }
 
     func saveStressEpisodeAttributionFeedback(
@@ -2069,10 +2563,9 @@ final class MindSenseStore: ObservableObject {
     }
 
     func recordRegulateOutcome(
-        direction: SessionImpactDirection,
-        intensity: Int,
-        feelRating: Int,
-        helpfulness: SessionHelpfulness
+        checkInRating: SessionCheckInRating?,
+        outcomeTag: String?,
+        outcomeNote: String?
     ) {
         guard var session = activeRegulateSession else { return }
         if session.state == .inProgress {
@@ -2081,10 +2574,33 @@ final class MindSenseStore: ObservableObject {
         }
         guard session.state == .awaitingCheckIn else { return }
 
-        let bounded = max(1, min(5, intensity))
-        let boundedFeeling = max(1, min(5, feelRating))
+        let normalizedCheckInRating = checkInRating ?? .noRating
+        let mappedOutcome: (
+            direction: SessionImpactDirection,
+            intensity: Int,
+            feelRating: Int,
+            helpfulness: SessionHelpfulness,
+            learningWeight: Double
+        ) = switch normalizedCheckInRating {
+        case .helped:
+            (.better, 4, 4, .yes, 1.0)
+        case .didNotHelp:
+            (.worse, 3, 2, .no, 1.0)
+        case .mixed:
+            (.same, 3, 3, .some, 1.0)
+        case .noRating:
+            (.same, 1, 3, .some, 0.35)
+        }
+
+        let normalizedTag = outcomeTag?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedTag = (normalizedTag?.isEmpty == false) ? normalizedTag : nil
+        let normalizedNote = outcomeNote?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let resolvedNote = (normalizedNote?.isEmpty == false) ? normalizedNote : nil
+
+        let bounded = max(1, min(5, mappedOutcome.intensity))
+        let boundedFeeling = max(1, min(5, mappedOutcome.feelRating))
         let effect = MindSenseDeltaEngine.sessionEffectMetrics(
-            direction: direction,
+            direction: mappedOutcome.direction,
             intensity: bounded,
             preset: session.preset,
             scenario: demoScenario,
@@ -2093,11 +2609,15 @@ final class MindSenseStore: ObservableObject {
         session.state = .completed
         session.completedAt = Date()
         session.outcome = SessionOutcome(
-            direction: direction,
+            direction: mappedOutcome.direction,
             intensity: bounded,
             capturedAt: Date(),
             feelRating: boundedFeeling,
-            helpfulness: helpfulness,
+            helpfulness: mappedOutcome.helpfulness,
+            checkInRating: normalizedCheckInRating,
+            note: resolvedNote,
+            tag: resolvedTag,
+            learningWeight: mappedOutcome.learningWeight,
             effectMetrics: effect
         )
         activeRegulateSession = nil
@@ -2105,34 +2625,111 @@ final class MindSenseStore: ObservableObject {
         regulateSessionHistory = Array(regulateSessionHistory.prefix(50))
         persistActiveRegulateSession()
         persistRegulateSessionHistory()
-        applyMetricDelta(MindSenseDeltaEngine.sessionOutcome(direction: direction, intensity: bounded))
+        applyMetricDelta(MindSenseDeltaEngine.sessionOutcome(direction: mappedOutcome.direction, intensity: bounded))
         let heartShiftLine = effect.heartRateDownshiftBPM >= 0
             ? "HR downshift -\(effect.heartRateDownshiftBPM) bpm"
             : "HR drift +\(abs(effect.heartRateDownshiftBPM)) bpm"
+        let ratingDetail = normalizedCheckInRating == .noRating
+            ? "rating no rating"
+            : "rating \(normalizedCheckInRating.title.lowercased())"
+        var detailComponents = [heartShiftLine, "recovery \(effect.recoverySlope.title)", ratingDetail]
+        if let resolvedTag {
+            detailComponents.append("tag \(resolvedTag.lowercased())")
+        }
         appendDemoEvent(
             title: "\(session.preset.title) outcome saved",
-            detail: "\(heartShiftLine), recovery \(effect.recoverySlope.title), rating \(boundedFeeling)/5.",
+            detail: "\(detailComponents.joined(separator: ", ")).",
             kind: .session
         )
+        let insightTitle: String
+        if normalizedCheckInRating == .noRating {
+            insightTitle = "\(session.preset.title): No rating"
+        } else {
+            insightTitle = "\(session.preset.title): \(mappedOutcome.direction.title) \(bounded)/5"
+        }
+        var insightDetail = "Context \(demoScenario.title). \(heartShiftLine). HRV shift +\(effect.hrvShiftMS) ms."
+        if let resolvedTag {
+            insightDetail += " Tag: \(resolvedTag)."
+        }
+        if let resolvedNote {
+            insightDetail += " Note: \(resolvedNote)"
+        }
         saveInsight(
-            title: "\(session.preset.title): \(direction.title) \(bounded)/5",
-            detail: "Context \(demoScenario.title). \(heartShiftLine). HRV shift +\(effect.hrvShiftMS) ms."
+            title: insightTitle,
+            detail: insightDetail
         )
         bumpDemoDay(by: 1)
+
+        var metadata: [String: String] = [
+            "intensity": "\(bounded)",
+            "preset": session.preset.rawValue,
+            "helpfulness": mappedOutcome.helpfulness.rawValue,
+            "feeling": "\(boundedFeeling)",
+            "check_in_rating": normalizedCheckInRating.rawValue,
+            "learning_weight": String(format: "%.2f", mappedOutcome.learningWeight)
+        ]
+        if let resolvedTag {
+            metadata["tag"] = resolvedTag
+        }
+        if let resolvedNote {
+            metadata["note_length"] = "\(resolvedNote.count)"
+        }
 
         track(
             event: .sessionOutcomeRecorded,
             surface: .regulate,
-            action: "outcome_\(direction.rawValue)",
-            metadata: [
-                "intensity": "\(bounded)",
-                "preset": session.preset.rawValue,
-                "helpfulness": helpfulness.rawValue,
-                "feeling": "\(boundedFeeling)"
-            ]
+            action: "outcome_\(normalizedCheckInRating.rawValue)",
+            metadata: metadata
         )
-        showActionFeedback(.saved, detail: "Session impact applied across Today and Data.")
+        if normalizedCheckInRating == .noRating {
+            showActionFeedback(.saved, detail: "No rating saved. Learning weight reduced for this session.")
+        } else {
+            showActionFeedback(.saved, detail: "Session impact applied across Today and Data.")
+        }
         maybePresentPostActivationPaywall()
+    }
+
+    func wakeAnchorAutoFillSuggestion(for experiment: Experiment) -> ExperimentWakeAnchorAutoFill? {
+        guard experiment.status == .active,
+              experiment.focus == .consistency else { return nil }
+        guard let sleepWindow = latestSleepWindow(),
+              Date().timeIntervalSince(sleepWindow.end) <= (36 * 3_600) else { return nil }
+
+        let anchorMinutes = experiment.wakeAnchorMinutesFromMidnight ?? minutesFromMidnight(for: sleepWindow.end)
+        let wakeMinutes = minutesFromMidnight(for: sleepWindow.end)
+        let variance = circularMinuteDistance(wakeMinutes, anchorMinutes)
+        return .init(
+            suggestedMet: variance <= 30,
+            sleepStartAt: sleepWindow.start,
+            sleepEndAt: sleepWindow.end,
+            varianceMinutes: variance
+        )
+    }
+
+    func experimentEvaluationPreview(for experiment: Experiment) -> ExperimentEvaluationPreview {
+        .init(
+            beforeMetrics: experiment.baselineMetrics ?? demoMetrics,
+            afterMetrics: demoMetrics,
+            confidenceBeforePercent: experiment.baselineConfidencePercent ?? confidencePercent,
+            confidenceAfterPercent: confidencePercent
+        )
+    }
+
+    private func latestSleepWindow() -> (start: Date, end: Date)? {
+        let sleepEnd = demoHealthProfile.sync.lastSleepEndAt ?? demoHealthProfile.sync.lastSleepImportAt
+        let sleepStart = demoHealthProfile.sync.lastSleepStartAt ?? sleepEnd.addingTimeInterval(-28_800)
+        guard sleepStart < sleepEnd else { return nil }
+        return (sleepStart, sleepEnd)
+    }
+
+    private func minutesFromMidnight(for date: Date) -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: date)
+        return (components.hour ?? 0) * 60 + (components.minute ?? 0)
+    }
+
+    private func circularMinuteDistance(_ lhs: Int, _ rhs: Int) -> Int {
+        let raw = abs(lhs - rhs)
+        return min(raw, 1_440 - raw)
     }
 
     func startExperiment(_ id: UUID) {
@@ -2144,6 +2741,10 @@ final class MindSenseStore: ObservableObject {
             experiments[activeIndex].targetEndDate = nil
             experiments[activeIndex].checkInDaysCompleted = 0
             experiments[activeIndex].checkInLog = []
+            experiments[activeIndex].baselineMetrics = nil
+            experiments[activeIndex].baselineConfidencePercent = nil
+            experiments[activeIndex].checkInRecords = []
+            experiments[activeIndex].wakeAnchorMinutesFromMidnight = nil
             experiments[activeIndex].result = nil
         }
 
@@ -2152,6 +2753,12 @@ final class MindSenseStore: ObservableObject {
         experiments[index].targetEndDate = Calendar.current.date(byAdding: .day, value: experiments[index].durationDays - 1, to: Date())
         experiments[index].checkInDaysCompleted = 0
         experiments[index].checkInLog = []
+        experiments[index].baselineMetrics = demoMetrics
+        experiments[index].baselineConfidencePercent = confidencePercent
+        experiments[index].checkInRecords = []
+        experiments[index].wakeAnchorMinutesFromMidnight = experiments[index].focus == .consistency
+            ? minutesFromMidnight(for: latestSleepWindow()?.end ?? Date())
+            : nil
         experiments[index].result = nil
         persistExperiments()
         appendDemoEvent(
@@ -2163,17 +2770,49 @@ final class MindSenseStore: ObservableObject {
         track(event: .experimentStarted, surface: .data, action: "experiment_started", metadata: ["id": id.uuidString])
     }
 
-    func logExperimentDay(_ id: UUID) {
+    func logExperimentDay(
+        _ id: UUID,
+        wakeAnchorMet: Bool? = nil,
+        missReason: ExperimentMissReason? = nil,
+        usedAutoFill: Bool = false
+    ) {
         guard let index = experiments.firstIndex(where: { $0.id == id }) else { return }
         guard experiments[index].status == .active else { return }
+        let effectiveReason = wakeAnchorMet == false ? missReason : nil
+        let sleepWindow = usedAutoFill ? latestSleepWindow() : nil
+
+        experiments[index].checkInRecords.append(
+            .init(
+                timestamp: Date(),
+                metTarget: wakeAnchorMet ?? true,
+                missReason: effectiveReason,
+                autoFilled: usedAutoFill,
+                sleepStartAt: sleepWindow?.start,
+                sleepEndAt: sleepWindow?.end
+            )
+        )
         experiments[index].checkInDaysCompleted = min(experiments[index].durationDays, experiments[index].checkInDaysCompleted + 1)
         experiments[index].checkInLog.append(Date())
         bumpDemoDay(by: 1)
         applyMetricDelta(MindSenseDeltaEngine.experimentCheckIn(focus: experiments[index].focus))
         persistExperiments()
+        let detailLine: String
+        if let wakeAnchorMet {
+            if wakeAnchorMet {
+                detailLine = usedAutoFill
+                    ? "Wake anchor met (auto-filled from sleep timing). Adherence \(experiments[index].adherencePercent)%."
+                    : "Wake anchor met. Adherence \(experiments[index].adherencePercent)%."
+            } else if let effectiveReason {
+                detailLine = "Wake anchor not met (\(effectiveReason.title.lowercased())). Adherence \(experiments[index].adherencePercent)%."
+            } else {
+                detailLine = "Wake anchor not met. Adherence \(experiments[index].adherencePercent)%."
+            }
+        } else {
+            detailLine = "Adherence \(experiments[index].adherencePercent)%."
+        }
         appendDemoEvent(
             title: "\(experiments[index].title) day \(experiments[index].checkInDaysCompleted) logged",
-            detail: "Adherence \(experiments[index].adherencePercent)%.",
+            detail: detailLine,
             kind: .experiment
         )
         if experiments[index].adherencePercent >= 70 {
@@ -2182,13 +2821,37 @@ final class MindSenseStore: ObservableObject {
                 detail: "Consistent logging is increasing your confidence coverage."
             )
         }
-        showActionFeedback(.updated, detail: "Experiment day logged.")
-        track(event: .experimentDayLogged, surface: .data, action: "experiment_day_logged", metadata: ["id": id.uuidString, "days": "\(experiments[index].checkInDaysCompleted)"])
+        let feedback: String
+        if let wakeAnchorMet {
+            feedback = wakeAnchorMet ? "Wake anchor check-in logged." : "Wake anchor miss logged."
+        } else {
+            feedback = "Experiment day logged."
+        }
+        showActionFeedback(.updated, detail: feedback)
+        var metadata: [String: String] = [
+            "id": id.uuidString,
+            "days": "\(experiments[index].checkInDaysCompleted)"
+        ]
+        if let wakeAnchorMet {
+            metadata["wake_anchor_met"] = wakeAnchorMet ? "yes" : "no"
+            metadata["source"] = usedAutoFill ? "auto_fill" : "manual"
+            if let effectiveReason {
+                metadata["reason"] = effectiveReason.rawValue
+            }
+        }
+        track(event: .experimentDayLogged, surface: .data, action: "experiment_day_logged", metadata: metadata)
     }
 
-    func completeExperiment(_ id: UUID, perceivedChange: Int, summary: String) {
+    func completeExperiment(
+        _ id: UUID,
+        perceivedChange: Int,
+        summary: String,
+        helped: Bool,
+        decision: ExperimentOutcomeDecision
+    ) {
         guard let index = experiments.firstIndex(where: { $0.id == id }) else { return }
         guard experiments[index].status == .active else { return }
+        let evaluation = experimentEvaluationPreview(for: experiments[index])
         let perceived = max(-5, min(5, perceivedChange))
         let adherence = Int((Double(min(experiments[index].durationDays, experiments[index].checkInDaysCompleted)) / Double(max(experiments[index].durationDays, 1)) * 100).rounded())
         let generated = MindSenseDeltaEngine.experimentCompletionSummary(
@@ -2204,13 +2867,19 @@ final class MindSenseStore: ObservableObject {
         experiments[index].result = .init(
             perceivedChange: perceived,
             summary: userSummary.isEmpty ? generated : "\(generated) \(userSummary)",
-            completedAt: Date()
+            completedAt: Date(),
+            helped: helped,
+            decision: decision,
+            beforeMetrics: evaluation.beforeMetrics,
+            afterMetrics: evaluation.afterMetrics,
+            confidenceBeforePercent: evaluation.confidenceBeforePercent,
+            confidenceAfterPercent: evaluation.confidenceAfterPercent
         )
         applyMetricDelta(MindSenseDeltaEngine.completedExperiment(focus: experiments[index].focus, perceivedChange: perceived))
         persistExperiments()
         appendDemoEvent(
             title: "\(experiments[index].title) completed",
-            detail: "Result captured with adherence \(adherence)%.",
+            detail: "Result captured with adherence \(adherence)% (\(decision.title.lowercased())).",
             kind: .experiment
         )
         saveInsight(
@@ -2218,7 +2887,16 @@ final class MindSenseStore: ObservableObject {
             detail: experiments[index].result?.summary ?? generated
         )
         showActionFeedback(.saved, detail: "Experiment result saved.")
-        track(event: .experimentCompleted, surface: .data, action: "experiment_completed", metadata: ["id": id.uuidString])
+        track(
+            event: .experimentCompleted,
+            surface: .data,
+            action: "experiment_completed",
+            metadata: [
+                "id": id.uuidString,
+                "helped": helped ? "yes" : "no",
+                "decision": decision.rawValue
+            ]
+        )
     }
 
     func markKPIReviewedNow() {
@@ -2297,6 +2975,8 @@ final class MindSenseStore: ObservableObject {
         regulateSessionHistory = []
         experiments = MindSenseDemoSeedCatalog.defaultExperiments(for: .balancedDay)
         demoScenario = .balancedDay
+        intentMode = .focus
+        useMeetingCallSignals = true
         demoMetrics = DemoScenario.balancedDay.baseMetrics
         demoEventHistory = MindSenseDemoSeedCatalog.seededEvents(for: .balancedDay)
         demoHealthProfile = MindSenseDemoSeedCatalog.seededHealthProfile(for: .balancedDay, demoDay: DemoScenario.balancedDay.defaultDay)
@@ -2431,7 +3111,8 @@ final class MindSenseStore: ObservableObject {
     }
 
     func triggerHaptic(intent: MindSenseHapticIntent) {
-        guard hapticsEnabled else { return }
+        // UIFeedbackGenerator is OS-managed and is suppressed when iOS System Haptics is disabled.
+        guard hapticsEnabled, supportsHapticFeedback else { return }
 
         switch intent {
         case .primary:
@@ -2489,6 +3170,8 @@ final class MindSenseStore: ObservableObject {
             activeRegulateSession = loadActiveRegulateSession()
             regulateSessionHistory = loadRegulateSessionHistory()
             demoScenario = loadDemoScenario()
+            intentMode = loadIntentMode()
+            useMeetingCallSignals = loadUseMeetingCallSignals()
             demoMetrics = loadDemoMetrics(for: demoScenario)
             demoEventHistory = loadDemoEvents()
             demoSavedInsights = loadDemoSavedInsights()
@@ -2514,6 +3197,8 @@ final class MindSenseStore: ObservableObject {
             activeRegulateSession = nil
             regulateSessionHistory = []
             demoScenario = .balancedDay
+            intentMode = .focus
+            useMeetingCallSignals = true
             demoMetrics = DemoScenario.balancedDay.baseMetrics
             demoEventHistory = []
             demoSavedInsights = []
@@ -2583,6 +3268,8 @@ final class MindSenseStore: ObservableObject {
         activeRegulateSession = loadActiveRegulateSession()
         regulateSessionHistory = loadRegulateSessionHistory()
         demoScenario = loadDemoScenario()
+        intentMode = loadIntentMode()
+        useMeetingCallSignals = loadUseMeetingCallSignals()
         demoMetrics = loadDemoMetrics(for: demoScenario)
         demoEventHistory = loadDemoEvents()
         demoSavedInsights = loadDemoSavedInsights()
@@ -2751,6 +3438,22 @@ final class MindSenseStore: ObservableObject {
 
     private func loadAnalyticsEvents() -> [AnalyticsEventRecord] {
         persistence.loadAnalyticsEvents()
+    }
+
+    private func persistIntentMode() {
+        persistence.persistIntentMode(intentMode)
+    }
+
+    private func loadIntentMode() -> IntentMode {
+        persistence.loadIntentMode()
+    }
+
+    private func persistUseMeetingCallSignals() {
+        persistence.persistUseMeetingCallSignals(useMeetingCallSignals)
+    }
+
+    private func loadUseMeetingCallSignals() -> Bool {
+        persistence.loadUseMeetingCallSignals()
     }
 
     private func persistDemoScenario() {
@@ -2942,7 +3645,11 @@ final class MindSenseStore: ObservableObject {
     }
 
     func insightNarrative(for focus: SignalFocus) -> String {
-        scenarioProfile.signalNarratives[focus] ?? focus.coachBody
+        let baseline = scenarioProfile.signalNarratives[focus] ?? focus.coachBody
+        guard let emphasis = intentMode.insightEmphasis(for: focus) else {
+            return baseline
+        }
+        return "\(baseline) \(emphasis)"
     }
 
     func trendPoints(for window: TrendWindow) -> [TrendPoint] {
@@ -3013,11 +3720,14 @@ final class MindSenseStore: ObservableObject {
             )
         }
 
-        let rewardMean = history
-            .compactMap(\.outcome)
+        let outcomes = history.compactMap(\.outcome)
+        let rewardMean = outcomes
             .map(sessionReward)
             .reduce(0, +) / Double(history.count)
-        let confidence = baseline + (rewardMean * 18) + (Double(min(history.count, 8)) * 2.2)
+        let weightedEvidenceCount = outcomes
+            .map(\.learningWeight)
+            .reduce(0, +)
+        let confidence = baseline + (rewardMean * 18) + (min(weightedEvidenceCount, 8) * 2.2)
         return Int(clamp(confidence.rounded(), min: 45, max: 97))
     }
 
@@ -3049,11 +3759,14 @@ final class MindSenseStore: ObservableObject {
         let effectLine: String
         switch experiment.focus {
         case .readiness:
-            effectLine = "Readiness +\(max(1, adherence / 22))"
+            let points = max(1, 1 + (adherence / 40))
+            effectLine = "Expected +\(points) pt readiness / \(experiment.durationDays)d"
         case .load:
-            effectLine = "Stress episode frequency -\(max(4, adherence / 6))%"
+            let reductionPercent = max(1, min(8, 1 + (adherence / 15)))
+            effectLine = "Expected ~\(reductionPercent)% fewer episodes / \(experiment.durationDays)d"
         case .consistency:
-            effectLine = "Consistency +\(max(1, adherence / 24))"
+            let points = max(1, 1 + (adherence / 35))
+            effectLine = "Expected +\(points) pt consistency / \(experiment.durationDays)d"
         }
 
         return "\(effectLine) (\(confidence))"
@@ -3093,7 +3806,14 @@ final class MindSenseStore: ObservableObject {
             stateAdjustment = demoMetrics.consistency < 70 ? 0.16 : 0.06
         }
 
-        return baseScenarioScore + historyAdjustment + stateAdjustment
+        let modeAdjustment: Double = switch (intentMode, preset) {
+        case (.focus, .focusPrep): 0.24
+        case (.recovery, .calmNow): 0.24
+        case (.sleep, .sleepDownshift): 0.24
+        default: 0
+        }
+
+        return baseScenarioScore + historyAdjustment + stateAdjustment + modeAdjustment
     }
 
     private func sessionReward(_ outcome: SessionOutcome) -> Double {
@@ -3110,7 +3830,10 @@ final class MindSenseStore: ObservableObject {
         case .some: 0.14
         case .no: -0.3
         }
-        return directionScore + heartReward + hrvReward + feelingReward + helpfulnessReward
+        let selfReportWeight = outcome.isRated ? 1.0 : 0.0
+        let weightedSelfReport = (feelingReward + helpfulnessReward) * selfReportWeight
+        let rawReward = directionScore + heartReward + hrvReward + weightedSelfReport
+        return rawReward * outcome.learningWeight
     }
 
     private func measurementQuality(for preset: RegulatePresetID) -> RegulateMeasurementQuality {
@@ -3132,8 +3855,13 @@ final class MindSenseStore: ObservableObject {
     }
 
     private func rankedDriversForToday() -> [DriverImpact] {
-        RecommendationEngine.rankDrivers(
-            baseDrivers: scenarioProfile.primaryDrivers + scenarioProfile.secondaryDrivers,
+        let baseDrivers = scenarioProfile.primaryDrivers + scenarioProfile.secondaryDrivers
+        let includedDrivers = useMeetingCallSignals
+            ? baseDrivers
+            : baseDrivers.filter { !$0.source.isMeetingOrCallSignal }
+
+        return RecommendationEngine.rankDrivers(
+            baseDrivers: includedDrivers.isEmpty ? baseDrivers : includedDrivers,
             context: recommendationContext
         )
     }
@@ -3265,6 +3993,11 @@ final class MindSenseStore: ObservableObject {
         let recentCompletedSessions = regulateSessionHistory.filter {
             $0.isCompleted && ($0.completedAt ?? $0.startedAt) >= windowStart
         }
+        let ratedSessionCount = recentCompletedSessions
+            .compactMap(\.outcome)
+            .filter(\.isRated)
+            .count
+        let topProtocolEvidence = topProtocolEvidenceLabel(ratedSessionCount: ratedSessionCount)
 
         let topProtocolLine: String
         if recentCompletedSessions.isEmpty {
@@ -3309,15 +4042,37 @@ final class MindSenseStore: ObservableObject {
         }
         let topTrigger = triggerCounts.max(by: { $0.value < $1.value })?.key ?? "No dominant trigger pattern yet"
 
-        let recoveryWindowLabel = bestRecoveryWindowLabel()
+        let recoveryWindowSummary = bestRecoveryWindowSummary()
         return .init(
             topProtocol: topProtocolLine,
+            topProtocolEvidence: topProtocolEvidence,
             topTrigger: normalizedTriggerLabel(topTrigger),
-            bestRecoveryWindow: recoveryWindowLabel
+            bestRecoveryWindow: recoveryWindowSummary.label,
+            bestRecoveryWindowEvidence: recoveryWindowSummary.evidence,
+            bestRecoveryWindowStart: recoveryWindowSummary.start,
+            bestRecoveryWindowEnd: recoveryWindowSummary.end
         )
     }
 
-    private func bestRecoveryWindowLabel() -> String {
+    private func topProtocolEvidenceLabel(ratedSessionCount: Int) -> String {
+        guard ratedSessionCount > 0 else {
+            return "Low evidence"
+        }
+        let sessionLabel = ratedSessionCount == 1 ? "session" : "sessions"
+        if ratedSessionCount < 3 {
+            return "Low evidence (based on \(ratedSessionCount) \(sessionLabel) rated)"
+        }
+        return "Based on \(ratedSessionCount) \(sessionLabel) rated"
+    }
+
+    private struct RecoveryWindowSummary {
+        let label: String
+        let evidence: String
+        let start: Date?
+        let end: Date?
+    }
+
+    private func bestRecoveryWindowSummary() -> RecoveryWindowSummary {
         struct RecoveryRun {
             var start: Date
             var end: Date
@@ -3330,7 +4085,12 @@ final class MindSenseStore: ObservableObject {
             .filter { $0.state == .recovery }
             .sorted(by: { $0.start < $1.start })
         guard !segments.isEmpty else {
-            return "No clear recovery window yet"
+            return .init(
+                label: "No clear recovery window yet",
+                evidence: "No recovery-state block detected in the last 12h physiology timeline.",
+                start: nil,
+                end: nil
+            )
         }
 
         var runs: [RecoveryRun] = []
@@ -3345,9 +4105,20 @@ final class MindSenseStore: ObservableObject {
         }
 
         guard let best = runs.max(by: { $0.duration < $1.duration }) else {
-            return "No clear recovery window yet"
+            return .init(
+                label: "No clear recovery window yet",
+                evidence: "No recovery-state block detected in the last 12h physiology timeline.",
+                start: nil,
+                end: nil
+            )
         }
-        return "\(best.start.formattedTimeLabel())-\(best.end.formattedTimeLabel())"
+        let runLabel = runs.count == 1 ? "block" : "blocks"
+        return .init(
+            label: "\(best.start.formattedTimeLabel())-\(best.end.formattedTimeLabel())",
+            evidence: "Longest continuous recovery-state block • last 12h physiology timeline (\(runs.count) \(runLabel)).",
+            start: best.start,
+            end: best.end
+        )
     }
 
     private func normalizedTriggerLabel(_ raw: String) -> String {

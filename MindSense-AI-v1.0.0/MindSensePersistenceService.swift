@@ -280,6 +280,28 @@ final class MindSensePersistenceService {
 
     // MARK: - Demo
 
+    func persistIntentMode(_ mode: IntentMode) {
+        defaults.set(mode.rawValue, forKey: "demo.intent_mode.v1")
+    }
+
+    func loadIntentMode() -> IntentMode {
+        guard let raw = defaults.string(forKey: "demo.intent_mode.v1") else {
+            return .focus
+        }
+        return IntentMode(rawValue: raw) ?? .focus
+    }
+
+    func persistUseMeetingCallSignals(_ enabled: Bool) {
+        defaults.set(enabled, forKey: "demo.meeting_call_signals_enabled.v1")
+    }
+
+    func loadUseMeetingCallSignals() -> Bool {
+        if defaults.object(forKey: "demo.meeting_call_signals_enabled.v1") == nil {
+            return true
+        }
+        return defaults.bool(forKey: "demo.meeting_call_signals_enabled.v1")
+    }
+
     func persistDemoScenario(_ scenario: DemoScenario) {
         defaults.set(scenario.rawValue, forKey: "demo.scenario.v1")
     }
@@ -392,6 +414,8 @@ final class MindSensePersistenceService {
     }
 
     func clearDemoState() {
+        defaults.removeObject(forKey: "demo.intent_mode.v1")
+        defaults.removeObject(forKey: "demo.meeting_call_signals_enabled.v1")
         defaults.removeObject(forKey: "demo.scenario.v1")
         defaults.removeObject(forKey: "demo.metrics.v1")
         defaults.removeObject(forKey: "demo.events.v1")

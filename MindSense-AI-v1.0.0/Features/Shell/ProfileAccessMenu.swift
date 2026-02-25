@@ -1,13 +1,29 @@
 import SwiftUI
 
 struct ProfileAccessMenu: View {
+    @State private var showGlossary = false
+
     var body: some View {
-        NavigationLink {
-            SettingsView()
+        Menu {
+            NavigationLink {
+                SettingsView()
+            } label: {
+                Label("Settings", systemImage: "gearshape")
+            }
+
+            Button {
+                showGlossary = true
+            } label: {
+                Label("Glossary", systemImage: "text.book.closed")
+            }
         } label: {
             profileIcon
         }
-        .accessibilityLabel("Open settings")
+        .sheet(isPresented: $showGlossary) {
+            MindSenseGlossarySheet()
+        }
+        .accessibilityLabel("Profile and access")
+        .accessibilityHint("Open settings or glossary.")
     }
 
     private var profileIcon: some View {

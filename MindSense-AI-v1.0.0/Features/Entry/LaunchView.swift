@@ -55,15 +55,27 @@ struct LaunchView: View {
         }
         .onAppear {
             didAppear = true
-
-            guard !reduceMotion else {
-                progressFill = 0.65
-                return
-            }
-            withAnimation(.linear(duration: 0.75).repeatForever(autoreverses: true)) {
-                progressFill = 0.92
-            }
+            applyLoadingProgressMotionPreference()
+        }
+        .onChange(of: reduceMotion) { _, _ in
+            applyLoadingProgressMotionPreference()
         }
         .accessibilityIdentifier("launch_screen_root")
+    }
+
+    private func applyLoadingProgressMotionPreference() {
+        if reduceMotion {
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                progressFill = 0.65
+            }
+            return
+        }
+
+        progressFill = 0.24
+        withAnimation(.linear(duration: 0.75).repeatForever(autoreverses: true)) {
+            progressFill = 0.92
+        }
     }
 }

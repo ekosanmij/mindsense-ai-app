@@ -95,7 +95,7 @@ enum MindSenseDemoSeedCatalog {
                     hypothesis: "Maintaining one wake-time anchor should further improve consistency confidence.",
                     focus: .consistency,
                     nextStep: "What: keep wake time inside a 30-minute range. Time: 7 days.",
-                    estimate: "Expected effect: raise consistency trend confidence over the week.",
+                    estimate: "Expected: +1 consistency point over 7 days (low confidence).",
                     rationale: "Why: stable routines compound quickly in a balanced baseline.",
                     status: .planned,
                     startedAt: nil,

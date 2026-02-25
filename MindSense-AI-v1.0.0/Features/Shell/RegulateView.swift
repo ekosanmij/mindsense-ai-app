@@ -1,18 +1,28 @@
 import SwiftUI
 import Combine
+import AVFoundation
 
 struct RegulateView: View {
     @EnvironmentObject private var store: MindSenseStore
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.mindSenseTabBarOverlayClearance) private var tabBarOverlayClearance
     @AppStorage("appReduceMotion") private var appReduceMotion = false
 
     @State private var selectedPresetID: RegulatePresetID?
-    @State private var feelRating = 3.0
-    @State private var helpfulness: SessionHelpfulness = .some
+    @State private var checkInRating: SessionCheckInRating?
+    @State private var selectedOutcomeTag: String?
+    @State private var outcomeNote = ""
     @State private var hapticPacingEnabled = true
+    @State private var audioGuidanceEnabled = false
     @State private var didAppear = false
     @State private var now = Date()
     @State private var showRecordImpactDetails = false
+    @State private var showPredictedFitExplanation = false
+    @State private var showFlowStateExplanation = false
+    @State private var showPostSessionTransition = false
+    @State private var postSessionTransitionSessionID: UUID?
+    @State private var lastGuidedPhaseID: Int?
+    @StateObject private var audioCoach = RegulateAudioCoach()
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -34,6 +44,17 @@ struct RegulateView: View {
             }
         }
 
+        var stickyTitle: String {
+            switch self {
+            case .selectProtocol:
+                return "Select"
+            case .runTimer:
+                return "Run"
+            case .recordImpact:
+                return "Rate impact"
+            }
+        }
+
         var fullTitle: String {
             switch self {
             case .selectProtocol:
@@ -43,6 +64,31 @@ struct RegulateView: View {
             case .recordImpact:
                 return "Record impact"
             }
+        }
+    }
+
+    private struct TimerProtocolPhase: Identifiable {
+        let id: Int
+        let title: String
+        let startSecond: Int
+        let endSecond: Int
+
+        var minuteRangeLabel: String {
+            if startSecond % 60 != 0 || endSecond % 60 != 0 {
+                return "\(clockLabel(for: startSecond))-\(clockLabel(for: endSecond))"
+            }
+            let startMinute = (startSecond / 60) + 1
+            let endMinute = max(startMinute, Int(ceil(Double(endSecond) / 60.0)))
+            if startMinute == endMinute {
+                return "Minute \(startMinute)"
+            }
+            return "Minutes \(startMinute)-\(endMinute)"
+        }
+
+        private func clockLabel(for seconds: Int) -> String {
+            let minutes = seconds / 60
+            let remainder = seconds % 60
+            return String(format: "%d:%02d", minutes, remainder)
         }
     }
 
@@ -93,30 +139,57 @@ struct RegulateView: View {
         return String(format: "%02d:%02d", minutes, seconds)
     }
 
+    private var outcomeTagOptions: [String] {
+        ["Stress load", "Focus drift", "Physical strain", "Sleep debt", "Social load"]
+    }
+
+    private var selectedCheckInRating: SessionCheckInRating {
+        checkInRating ?? .noRating
+    }
+
     private var outcomeDirection: SessionImpactDirection {
-        let score = Int(feelRating.rounded())
-        if helpfulness == .no || score <= 2 {
+        switch selectedCheckInRating {
+        case .helped:
+            return .better
+        case .didNotHelp:
             return .worse
+        case .mixed, .noRating:
+            return .same
         }
-        if helpfulness == .yes && score >= 4 {
-            return .better
-        }
-        if helpfulness == .some && score >= 4 {
-            return .better
-        }
-        return .same
     }
 
     private var outcomeIntensity: Int {
-        let score = Int(feelRating.rounded())
-        let distance = abs(score - 3)
-        switch outcomeDirection {
-        case .better:
-            return max(1, min(5, score))
-        case .same:
-            return max(1, min(5, distance + 1))
-        case .worse:
-            return max(1, min(5, 6 - score))
+        switch selectedCheckInRating {
+        case .helped:
+            return 4
+        case .didNotHelp:
+            return 3
+        case .mixed:
+            return 3
+        case .noRating:
+            return 1
+        }
+    }
+
+    private var outcomeFeeling: Int {
+        switch selectedCheckInRating {
+        case .helped:
+            return 4
+        case .didNotHelp:
+            return 2
+        case .mixed, .noRating:
+            return 3
+        }
+    }
+
+    private var outcomeHelpfulness: SessionHelpfulness {
+        switch selectedCheckInRating {
+        case .helped:
+            return .yes
+        case .didNotHelp:
+            return .no
+        case .mixed, .noRating:
+            return .some
         }
     }
 
@@ -129,6 +202,14 @@ struct RegulateView: View {
         )
     }
 
+    private var activeSessionEpisodeID: UUID? {
+        guard let source = store.activeRegulateSession?.source else { return nil }
+        guard source.hasPrefix("episode:") else { return nil }
+        let payload = String(source.dropFirst("episode:".count))
+        let episodeToken = payload.split(separator: "|", maxSplits: 1).first.map(String.init) ?? payload
+        return UUID(uuidString: episodeToken)
+    }
+
     private var primaryCTAConfig: (label: String, id: String, action: () -> Void, disabled: Bool)? {
         guard let session = store.activeRegulateSession else { return nil }
 
@@ -137,10 +218,10 @@ struct RegulateView: View {
             return nil
         case .awaitingCheckIn:
             return (
-                label: "Save post-session check-in",
+                label: "Save check-in",
                 id: "regulate_outcome_submit_cta",
                 action: submitOutcome,
-                disabled: false
+                disabled: checkInRating == nil
             )
         case .completed, .cancelled:
             return nil
@@ -148,11 +229,25 @@ struct RegulateView: View {
     }
 
     private var bottomContentPadding: CGFloat {
-        16
+        MindSenseLayout.pageBottom + MindSenseLayout.tabBarClearance(
+            measuredOverlay: tabBarOverlayClearance,
+            tier: .standard
+        )
     }
 
     private var tabBarCollapseScrollRunway: CGFloat {
         return 180
+    }
+
+    private var hasAnyRegulateHistory: Bool {
+        !store.regulateSessionHistory.isEmpty
+    }
+
+    private var shouldShowExpandedCommandDeck: Bool {
+        if currentStep == .selectProtocol {
+            return !hasAnyRegulateHistory
+        }
+        return true
     }
 
     var body: some View {
@@ -160,14 +255,14 @@ struct RegulateView: View {
             ScrollView {
                 ScreenStateContainer(state: resolvedState, retryAction: { store.retryCoreScreen(.regulate) }) {
                     VStack(spacing: MindSenseRhythm.section) {
-                        commandDeck
-                            .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
-                        stepProgressBlock
-                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                        if shouldShowExpandedCommandDeck {
+                            commandDeck
+                                .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
+                        }
                         sessionStatusBlock
-                            .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                         activeStepBlock
-                            .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
                         // Keep a short scroll runway so tab-bar minimize can trigger on shorter layouts.
                         Color.clear
                             .frame(height: tabBarCollapseScrollRunway)
@@ -187,12 +282,16 @@ struct RegulateView: View {
                     ProfileAccessMenu()
                 }
             }
+            .safeAreaInset(edge: .top) {
+                if case .ready = resolvedState {
+                    stickyStepStrip
+                }
+            }
             .safeAreaInset(edge: .bottom) {
                 if case .ready = resolvedState, let primaryCTAConfig {
-                    MindSenseBottomActionDock {
-                        Spacer()
-                            .frame(height: 12)
-
+                    MindSenseDoItNowDock(
+                        subtitle: "Finish the session loop by saving impact."
+                    ) {
                         Button(primaryCTAConfig.label) {
                             guard !primaryCTAConfig.disabled else { return }
                             store.triggerHaptic(intent: .primary)
@@ -216,6 +315,11 @@ struct RegulateView: View {
                     }
                 )
             }
+            .alert("Predicted fit", isPresented: $showPredictedFitExplanation) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("This score estimates how likely a protocol is to help right now, using your recent signals, data coverage, and outcomes from similar sessions.")
+            }
             .onAppear {
                 let firstAppearance = !didAppear
                 if firstAppearance {
@@ -225,22 +329,51 @@ struct RegulateView: View {
                     selectedPresetID = presets.first?.id
                 }
                 consumeLaunchRequestIfNeeded()
+                refreshPostSessionTransitionStateIfNeeded()
                 store.prepareCoreScreen(.regulate)
                 if firstAppearance {
                     store.track(event: .screenView, surface: .regulate)
                 }
             }
             .onReceive(timer) { date in
-                guard store.activeRegulateSession?.isInProgress == true else { return }
-                now = date
-                store.syncActiveRegulateSessionState(now: date)
+                handleTimerTick(date)
             }
             .onChange(of: store.regulateLaunchRequest) { _, _ in
                 consumeLaunchRequestIfNeeded()
             }
+            .onChange(of: store.activeRegulateSession?.id) { _, _ in
+                refreshPostSessionTransitionStateIfNeeded()
+            }
+            .onChange(of: store.activeRegulateSession?.state) { _, _ in
+                refreshPostSessionTransitionStateIfNeeded()
+            }
+            .onChange(of: currentStep) { _, step in
+                if step == .runTimer {
+                    lastGuidedPhaseID = nil
+                    announceCurrentProtocolPhase(force: true)
+                } else {
+                    lastGuidedPhaseID = nil
+                    audioCoach.stop()
+                }
+            }
+            .onChange(of: audioGuidanceEnabled) { _, enabled in
+                if enabled {
+                    announceCurrentProtocolPhase(force: true)
+                } else {
+                    audioCoach.stop()
+                }
+            }
             .onChange(of: store.demoScenario) { _, _ in
                 selectedPresetID = presets.first?.id
                 store.prepareCoreScreen(.regulate)
+            }
+            .onChange(of: store.intentMode) { _, _ in
+                guard store.activeRegulateSession == nil else { return }
+                selectedPresetID = presets.first?.id
+                store.prepareCoreScreen(.regulate)
+            }
+            .onDisappear {
+                audioCoach.stop()
             }
         }
     }
@@ -248,7 +381,7 @@ struct RegulateView: View {
     private var commandDeck: some View {
         MindSenseTabHero(
             label: AppIA.regulate,
-            title: "Step \(currentStep.rawValue + 1): \(currentStep.fullTitle)",
+            title: currentStep.fullTitle,
             detail: commandDetail,
             metric: commandMetric,
             icon: "waveform.path.ecg",
@@ -256,25 +389,25 @@ struct RegulateView: View {
             watermarkTint: MindSensePalette.accent
         ) {
             HStack(spacing: 8) {
-                PillChip(label: "Step \(currentStep.rawValue + 1) of \(RegulateStep.allCases.count)", state: .selected)
+                PillChip(label: store.intentMode.shortTitle, state: .selected)
                 PillChip(label: flowLabel, state: .unselected)
             }
 
-            Text("Select one protocol, run the timer, then record impact.")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            MindSenseSummaryMoreText(
+                summary: "Run one protocol, then rate impact.",
+                detail: "Select one protocol, run the timer, then rate impact. \(store.intentModeHintLine)"
+            )
         }
     }
 
     private var commandDetail: String {
         switch currentStep {
         case .selectProtocol:
-            return "Step 1 of 3: Choose one protocol."
+            return "Choose one protocol matched to your current intent."
         case .runTimer:
-            return "Step 2 of 3: Stay with the timer until completion."
+            return "Stay with the timer until completion."
         case .recordImpact:
-            return "Step 3 of 3: Record impact to close the loop."
+            return "Rate impact to close the loop."
         }
     }
 
@@ -282,113 +415,108 @@ struct RegulateView: View {
         if currentStep == .runTimer {
             return remainingLabel
         }
-        return "\(currentStep.rawValue + 1)/\(RegulateStep.allCases.count)"
-    }
-
-    private var sessionProgressRatio: Double {
-        let totalSteps = Double(max(RegulateStep.allCases.count - 1, 1))
-        return min(1, Double(currentStep.rawValue) / totalSteps)
+        return flowLabel
     }
 
     private var sessionStatusBlock: some View {
         InsetSurface {
-            MindSenseSectionHeader(
+            MindSenseCollapsibleSection(
                 model: .init(
                     title: "Session status",
                     subtitle: "Live state from your current regulate flow.",
                     icon: "heart.text.square"
-                )
-            )
+                ),
+                storageKey: "ui.collapse.regulate.session_status",
+                collapsedSummary: sessionStatusCollapsedSummary
+            ) {
+                HStack(alignment: .top, spacing: 8) {
+                    Text("Load \(store.demoMetrics.load)  •  Readiness \(store.demoMetrics.readiness)  •  \(flowLabel)")
+                        .font(MindSenseTypography.body)
+                        .fixedSize(horizontal: false, vertical: true)
 
-            Text("Load \(store.demoMetrics.load)  •  Readiness \(store.demoMetrics.readiness)  •  Flow \(flowLabel)")
-                .font(MindSenseTypography.body)
-                .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
 
-            if let runningSessionPreset {
-                Text("Active protocol: \(runningSessionPreset.title) • \(runningSessionPreset.durationLabel)")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-            } else {
-                Text("No active session.")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            if let latestEffect = store.latestSessionEffectLine {
-                Text("Last measured effect: \(latestEffect)")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    private var stepProgressBlock: some View {
-        InsetSurface {
-            MindSenseSectionHeader(
-                model: .init(
-                    title: "Progress",
-                    subtitle: "1 Select -> 2 Run -> 3 Record",
-                    icon: "chart.bar.fill"
-                )
-            )
-
-            GeometryReader { proxy in
-                let width = proxy.size.width * max(0.18, sessionProgressRatio)
-                ZStack(alignment: .leading) {
-                    Capsule(style: .continuous)
-                        .fill(MindSenseSurfaceLevel.base.fill)
-                    Capsule(style: .continuous)
-                        .fill(MindSensePalette.signalCoolStrong)
-                        .frame(width: width)
-                }
-            }
-            .frame(height: 8)
-
-            HStack(spacing: 8) {
-                ForEach(RegulateStep.allCases) { step in
-                    stepRow(step)
-                }
-            }
-        }
-    }
-
-    private func stepRow(_ step: RegulateStep) -> some View {
-        let isCurrent = step == currentStep
-        let isComplete = step.rawValue < currentStep.rawValue
-        let isEnabled = step.rawValue <= currentStep.rawValue
-        let tint: Color = isCurrent ? MindSensePalette.signalCoolStrong : (isComplete ? MindSensePalette.success : .secondary)
-
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                ZStack {
-                    Circle()
-                        .stroke(tint.opacity(isEnabled ? 1 : 0.45), lineWidth: 1.5)
-                        .frame(width: 20, height: 20)
-                    if isComplete {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 10, weight: .semibold, design: .rounded))
-                            .foregroundStyle(tint)
-                    } else {
-                        Text("\(step.rawValue + 1)")
-                            .font(MindSenseTypography.micro)
-                            .foregroundStyle(tint)
+                    Button {
+                        showFlowStateExplanation = true
+                        store.triggerHaptic(intent: .selection)
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Flow state definitions")
+                    .accessibilityHint("Shows what Flow ready and Flow running mean.")
+                    .accessibilityIdentifier("regulate_flow_state_info")
+                    .alert("Flow states", isPresented: $showFlowStateExplanation) {
+                        Button("OK", role: .cancel) { }
+                    } message: {
+                        Text("Flow ready: conditions suggest focus will be effective\n\nFlow running: you're in a session")
                     }
                 }
-                Text(step.title)
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(tint)
-            }
 
-            if isCurrent {
-                Text(stepSummary(for: step))
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                if let runningSessionPreset {
+                    Text("Active protocol: \(runningSessionPreset.title) • \(runningSessionPreset.durationLabel)")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No active session.")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                if let latestEffect = store.latestSessionEffectLine {
+                    Text("Last measured effect: \(latestEffect)")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
+    }
+
+    private var stickyStepStrip: some View {
+        HStack(spacing: 8) {
+            stickyStepChip(.selectProtocol)
+            stickyStepArrow
+            stickyStepChip(.runTimer)
+            stickyStepArrow
+            stickyStepChip(.recordImpact)
+        }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .opacity(isEnabled ? 1 : 0.45)
+        .padding(.horizontal, MindSenseLayout.pageHorizontal)
+        .padding(.vertical, 8)
+        .background {
+            Rectangle()
+                .fill(MindSenseSurfaceLevel.base.fill.opacity(0.96))
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(MindSensePalette.strokeSubtle.opacity(0.7))
+                        .frame(height: 1)
+                        .padding(.horizontal, 16)
+                }
+        }
+    }
+
+    private var stickyStepArrow: some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: 10, weight: .semibold, design: .rounded))
+            .foregroundStyle(.secondary)
+            .accessibilityHidden(true)
+    }
+
+    private func stickyStepChip(_ step: RegulateStep) -> some View {
+        PillChip(label: step.stickyTitle, state: stickyChipState(for: step))
+    }
+
+    private func stickyChipState(for step: RegulateStep) -> MindSenseChipState {
+        if step == currentStep {
+            return .selected
+        }
+        if step.rawValue < currentStep.rawValue {
+            return .unselected
+        }
+        return .disabled
     }
 
     @ViewBuilder
@@ -412,7 +540,7 @@ struct RegulateView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Choose protocol",
-                    subtitle: "Pick one protocol, then start it from this section.",
+                    subtitle: "Pick one protocol, then start it from this section. Ranking is tuned for \(store.intentMode.shortTitle.lowercased()) intent.",
                     icon: "list.bullet.rectangle"
                 )
             )
@@ -447,7 +575,11 @@ struct RegulateView: View {
                             HStack(spacing: 8) {
                                 selectionMetaPill(
                                     icon: "waveform.path.ecg",
-                                    text: "Confidence \(store.expectedEffectConfidence(for: preset.id))%"
+                                    text: "Predicted fit \(store.expectedEffectConfidence(for: preset.id))%",
+                                    onTap: {
+                                        showPredictedFitExplanation = true
+                                        store.triggerHaptic(intent: .selection)
+                                    }
                                 )
                                 selectionMetaPill(
                                     icon: "clock.fill",
@@ -483,6 +615,11 @@ struct RegulateView: View {
                 .disabled(store.activeRegulateSession?.isInProgress == true)
             }
 
+            Text("Tap predicted fit to see what it means.")
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             if let activePreset {
                 DisclosureGroup("Protocol details") {
                     VStack(alignment: .leading, spacing: 8) {
@@ -511,7 +648,21 @@ struct RegulateView: View {
         }
     }
 
-    private func selectionMetaPill(icon: String, text: String) -> some View {
+    @ViewBuilder
+    private func selectionMetaPill(icon: String, text: String, onTap: (() -> Void)? = nil) -> some View {
+        if let onTap {
+            Button(action: onTap) {
+                selectionMetaPillContent(icon: icon, text: text)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(text)
+            .accessibilityHint("Shows explanation.")
+        } else {
+            selectionMetaPillContent(icon: icon, text: text)
+        }
+    }
+
+    private func selectionMetaPillContent(icon: String, text: String) -> some View {
         HStack(spacing: 5) {
             Image(systemName: icon)
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
@@ -533,7 +684,11 @@ struct RegulateView: View {
     }
 
     private func runTimerStep(_ runningPreset: DemoRegulatePreset) -> some View {
-        FocusSurface {
+        let protocolPhases = protocolTimeline(for: runningPreset)
+        let activePhase = currentProtocolPhase(in: protocolPhases, preset: runningPreset)
+        let elapsedSeconds = store.activeSessionElapsedSeconds(now: now)
+
+        return FocusSurface {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Run timer",
@@ -568,10 +723,43 @@ struct RegulateView: View {
             .frame(width: 180, height: 180)
             .frame(maxWidth: .infinity, alignment: .center)
 
-            Text("Session progress \(Int((sessionProgress * 100).rounded()))%")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .monospacedDigit()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Step schedule")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                if let activePhase {
+                    Text("\(activePhase.minuteRangeLabel): \(activePhase.title)")
+                        .font(MindSenseTypography.bodyStrong)
+                        .accessibilityIdentifier("regulate_protocol_step_current")
+
+                    if let nextPhase = protocolPhases.first(where: { $0.id == activePhase.id + 1 }) {
+                        Text("Up next \(nextPhase.minuteRangeLabel): \(nextPhase.title)")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(protocolPhases) { phase in
+                        let phaseStatus = protocolPhaseStatus(
+                            phase,
+                            activePhaseID: activePhase?.id,
+                            elapsedSeconds: elapsedSeconds
+                        )
+
+                        HStack(spacing: 8) {
+                            Image(systemName: phaseStatus.symbol)
+                                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                .foregroundStyle(phaseStatus.tint)
+                            Text("\(phase.minuteRangeLabel): \(phase.title)")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(phaseStatus.tint)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
 
             Text("Session: \(runningPreset.title)")
                 .font(MindSenseTypography.bodyStrong)
@@ -584,21 +772,29 @@ struct RegulateView: View {
                 maxValueLines: 2
             )
 
-            DisclosureGroup("Why this works") {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(runningPreset.whyNow)
-                    Text(runningPreset.expectedEffect)
-                    Text("What to think: \(store.todayCognitivePrompt)")
-                }
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .padding(.top, 6)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Why this works")
+                    .font(MindSenseTypography.bodyStrong)
+                MindSenseSummaryMoreText(
+                    summary: runningPreset.whyNow,
+                    detail: "\(runningPreset.expectedEffect)\nWhat to think: \(store.todayCognitivePrompt)"
+                )
             }
-            .font(MindSenseTypography.bodyStrong)
 
-            Toggle("Haptic pacing", isOn: $hapticPacingEnabled)
+            Toggle("Haptic step cues", isOn: $hapticPacingEnabled)
                 .font(MindSenseTypography.caption)
                 .tint(MindSensePalette.accent)
+                .accessibilityIdentifier("regulate_haptic_pacing_toggle")
+
+            Toggle("Audio guidance", isOn: $audioGuidanceEnabled)
+                .font(MindSenseTypography.caption)
+                .tint(MindSensePalette.accent)
+                .accessibilityIdentifier("regulate_audio_guidance_toggle")
+
+            Text("Cues trigger when the protocol moves to the next step.")
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 8) {
                 MindSenseIconBadge(systemName: "heart.text.square", tint: MindSensePalette.signalCool, style: .filled, size: 28)
@@ -630,91 +826,159 @@ struct RegulateView: View {
                 .font(MindSenseTypography.bodyStrong)
                 .accessibilityIdentifier("regulate_active_preset_label")
 
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(spacing: 6) {
-                    MindSenseIconBadge(systemName: "waveform.path.ecg", tint: impactTint, style: .filled, size: 28)
-                    Text("Current impact selection: \(impactStateLine)")
+            if showPostSessionTransition {
+                postSessionTransitionCard(for: runningPreset)
+            }
+
+            recordImpactForm(runningPreset)
+        }
+    }
+
+    private func postSessionTransitionCard(for runningPreset: DemoRegulatePreset) -> some View {
+        InsetSurface {
+            MindSenseSectionHeader(
+                model: .init(
+                    title: "Session complete",
+                    subtitle: "Choose your next action.",
+                    icon: "flag.checkered.2.crossed"
+                )
+            )
+
+            Text("Next step for \(runningPreset.title):")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Button("Start your focus block") {
+                startFocusBlockFromPostSession()
+            }
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 48))
+            .accessibilityIdentifier("regulate_post_session_focus_block_cta")
+
+            Button("Log impact") {
+                startImpactLoggingFromPostSession()
+            }
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+            .accessibilityIdentifier("regulate_post_session_log_impact_cta")
+
+            if let episodeID = activeSessionEpisodeID {
+                Button("Add context") {
+                    openEpisodeContextCapture(episodeID)
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+                .accessibilityIdentifier("regulate_post_session_add_context_cta")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func recordImpactForm(_ runningPreset: DemoRegulatePreset) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                MindSenseIconBadge(systemName: "waveform.path.ecg", tint: impactTint, style: .filled, size: 28)
+                Text("Current impact selection: \(impactStateLine)")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("Helped?")
+                .font(MindSenseTypography.bodyStrong)
+
+            HStack(spacing: 8) {
+                outcomeRatingButton(
+                    .helped,
+                    title: "Yes",
+                    systemImage: "hand.thumbsup.fill",
+                    accessibilityID: "regulate_helped_yes"
+                )
+                outcomeRatingButton(
+                    .didNotHelp,
+                    title: "No",
+                    systemImage: "hand.thumbsdown.fill",
+                    accessibilityID: "regulate_helped_no"
+                )
+            }
+        }
+
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Optional tag")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+
+            let columns = [GridItem(.adaptive(minimum: 118), spacing: 8)]
+            LazyVGrid(columns: columns, alignment: .leading, spacing: 8) {
+                ForEach(outcomeTagOptions, id: \.self) { tag in
+                    outcomeTagButton(tag)
+                }
+            }
+
+            TextField("Optional note (what changed?)", text: $outcomeNote, axis: .vertical)
+                .textInputAutocapitalization(.sentences)
+                .disableAutocorrection(false)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 44)
+                .background(
+                    RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                        .fill(MindSenseSurfaceLevel.base.fill)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                        .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+                )
+                .accessibilityIdentifier("regulate_outcome_note_input")
+        }
+
+        if let metrics = predictedEffectMetrics {
+            InsetSurface {
+                MindSenseSectionHeader(
+                    model: .init(
+                        title: "Measured effect",
+                        subtitle: metrics.quality == .live ? "Live watch-quality estimate" : "Estimated from nearest samples",
+                        icon: "waveform.path.ecg"
+                    )
+                )
+
+                recordImpactDetailRow(label: "HR downshift", value: heartShiftLine(for: metrics))
+                recordImpactDetailRow(label: "HRV shift", value: hrvShiftLine(for: metrics))
+                recordImpactDetailRow(label: "Recovery slope", value: metrics.recoverySlope.title.capitalized)
+            }
+        }
+
+        MindSenseSummaryMoreText(
+            summary: "Pick Yes or No to save.",
+            detail: "Pick Yes or No to save, or skip to log No rating with reduced learning weight."
+        )
+
+        HStack {
+            Spacer()
+            Button("Skip rating") {
+                submitNoRatingOutcome()
+            }
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+            .accessibilityIdentifier("regulate_outcome_skip_cta")
+        }
+
+        DisclosureGroup(isExpanded: $showRecordImpactDetails) {
+            VStack(alignment: .leading, spacing: 8) {
+                recordImpactDetailRow(label: "What", value: "Capture immediate outcome")
+                recordImpactDetailRow(label: "Why", value: runningPreset.whyNow)
+                recordImpactDetailRow(label: "Expected effect", value: "Used to tune protocol ranking and confidence.")
+                recordImpactDetailRow(label: "Time", value: "Under 30 sec")
+                recordImpactDetailRow(label: "What to think", value: store.todayCognitivePrompt)
+                Text("Protocol")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .tracking(0.7)
+                ForEach(runningPreset.protocolSteps, id: \.self) { step in
+                    Text("• \(step)")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                 }
-
-                Text("How do you feel?")
-                    .font(MindSenseTypography.bodyStrong)
-
-                HStack(spacing: 8) {
-                    ForEach(1...5, id: \.self) { score in
-                        feelScoreButton(score)
-                    }
-                }
-
-                Text("\(Int(feelRating.rounded()))/5 • \(feelLabel)")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
             }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Did this help?")
-                    .font(MindSenseTypography.bodyStrong)
-
-                MindSenseSegmentedControl(
-                    options: SessionHelpfulness.allCases,
-                    selection: $helpfulness,
-                    title: { $0.title },
-                    onSelectionChanged: { _ in
-                        store.triggerHaptic(intent: .selection)
-                    }
-                )
-            }
-
-            if let metrics = predictedEffectMetrics {
-                InsetSurface {
-                    MindSenseSectionHeader(
-                        model: .init(
-                            title: "Measured effect",
-                            subtitle: metrics.quality == .live ? "Live watch-quality estimate" : "Estimated from nearest samples",
-                            icon: "waveform.path.ecg"
-                        )
-                    )
-
-                    recordImpactDetailRow(label: "HR downshift", value: heartShiftLine(for: metrics))
-                    recordImpactDetailRow(label: "HRV shift", value: hrvShiftLine(for: metrics))
-                    recordImpactDetailRow(label: "Recovery slope", value: metrics.recoverySlope.title.capitalized)
-                }
-            }
-
-            Text("Capture immediate outcome to improve tomorrow's recommendation quality.")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text(store.todayMeasurementPlanLine)
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            DisclosureGroup(isExpanded: $showRecordImpactDetails) {
-                VStack(alignment: .leading, spacing: 8) {
-                    recordImpactDetailRow(label: "What", value: "Capture immediate outcome")
-                    recordImpactDetailRow(label: "Why", value: runningPreset.whyNow)
-                    recordImpactDetailRow(label: "Expected effect", value: "Used to tune protocol ranking and confidence.")
-                    recordImpactDetailRow(label: "Time", value: "Under 30 sec")
-                    recordImpactDetailRow(label: "What to think", value: store.todayCognitivePrompt)
-                    Text("Protocol")
-                        .font(MindSenseTypography.micro)
-                        .foregroundStyle(.secondary)
-                        .tracking(0.7)
-                    ForEach(runningPreset.protocolSteps, id: \.self) { step in
-                        Text("• \(step)")
-                            .font(MindSenseTypography.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.top, 6)
-            } label: {
-                Text("Details")
-                    .font(MindSenseTypography.bodyStrong)
-            }
+            .padding(.top, 6)
+        } label: {
+            Text("Details")
+                .font(MindSenseTypography.bodyStrong)
         }
     }
 
@@ -731,17 +995,22 @@ struct RegulateView: View {
         }
     }
 
-    private func feelScoreButton(_ score: Int) -> some View {
-        let selected = Int(feelRating.rounded()) == score
+    private func outcomeRatingButton(
+        _ rating: SessionCheckInRating,
+        title: String,
+        systemImage: String,
+        accessibilityID: String
+    ) -> some View {
+        let selected = checkInRating == rating
         return Button {
-            feelRating = Double(score)
+            checkInRating = rating
             store.triggerHaptic(intent: .selection)
         } label: {
-            Text("\(score)")
-                .font(MindSenseTypography.caption)
+            Label(title, systemImage: systemImage)
+                .font(MindSenseTypography.bodyStrong)
                 .foregroundStyle(selected ? MindSensePalette.signalCoolStrong : .secondary)
-                .frame(maxWidth: .infinity)
-                .frame(minHeight: 36)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .frame(minHeight: 44)
                 .background(
                     RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                         .fill(selected ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
@@ -752,28 +1021,217 @@ struct RegulateView: View {
                 )
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("regulate_feel_\(score)")
+        .accessibilityIdentifier(accessibilityID)
+    }
+
+    private func outcomeTagButton(_ tag: String) -> some View {
+        let isSelected = selectedOutcomeTag == tag
+        return Button {
+            selectedOutcomeTag = isSelected ? nil : tag
+            store.triggerHaptic(intent: .selection)
+        } label: {
+            PillChip(label: tag, state: isSelected ? .selected : .unselected)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(minHeight: 36)
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var sessionStatusCollapsedSummary: String {
+        if let runningSessionPreset {
+            return "\(flowLabel) • \(runningSessionPreset.title) • \(remainingLabel)"
+        }
+        return "Load \(store.demoMetrics.load) • Readiness \(store.demoMetrics.readiness) • \(flowLabel)"
     }
 
     private var flowLabel: String {
         switch currentStep {
         case .selectProtocol:
-            return "Ready"
+            return "Flow ready"
         case .runTimer:
-            return "Running"
+            return "Flow running"
         case .recordImpact:
-            return "Review"
+            return "Flow check-in"
         }
     }
 
-    private func stepSummary(for step: RegulateStep) -> String {
-        switch step {
-        case .selectProtocol:
-            return "Pick one protocol."
-        case .runTimer:
-            return "Complete the timer."
-        case .recordImpact:
-            return "Log feeling, helpfulness, and measured effect."
+    private func protocolTimeline(for preset: DemoRegulatePreset) -> [TimerProtocolPhase] {
+        let rawSteps: [String]
+        if preset.protocolSteps.isEmpty {
+            rawSteps = ["\(preset.durationMinutes)m guided protocol"]
+        } else {
+            rawSteps = preset.protocolSteps
+        }
+
+        let parsedDurations = rawSteps.map(stepDurationSeconds(from:))
+        let knownDuration = parsedDurations.compactMap { $0 }.reduce(0, +)
+        let unknownIndexes = parsedDurations.indices.filter { parsedDurations[$0] == nil }
+        let remainingDuration = max(preset.durationSeconds - knownDuration, 0)
+
+        let fallbackSeconds = unknownIndexes.isEmpty ? 0 : (remainingDuration / unknownIndexes.count)
+        var fallbackRemainder = unknownIndexes.isEmpty ? 0 : (remainingDuration % unknownIndexes.count)
+        var durations = Array(repeating: 1, count: rawSteps.count)
+
+        for index in rawSteps.indices {
+            if let parsed = parsedDurations[index] {
+                durations[index] = max(1, parsed)
+            } else {
+                let bonus = fallbackRemainder > 0 ? 1 : 0
+                durations[index] = max(1, fallbackSeconds + bonus)
+                if fallbackRemainder > 0 {
+                    fallbackRemainder -= 1
+                }
+            }
+        }
+
+        let targetDuration = max(preset.durationSeconds, durations.count)
+        let currentDuration = durations.reduce(0, +)
+        if currentDuration < targetDuration {
+            durations[durations.count - 1] += targetDuration - currentDuration
+        } else if currentDuration > targetDuration {
+            var overflow = currentDuration - targetDuration
+            for index in durations.indices.reversed() {
+                guard overflow > 0 else { break }
+                let removable = durations[index] - 1
+                guard removable > 0 else { continue }
+                let adjustment = min(removable, overflow)
+                durations[index] -= adjustment
+                overflow -= adjustment
+            }
+        }
+
+        var cursor = 0
+        return rawSteps.enumerated().map { index, step in
+            let end = cursor + durations[index]
+            defer { cursor = end }
+            return TimerProtocolPhase(
+                id: index,
+                title: protocolStepTitle(from: step),
+                startSecond: cursor,
+                endSecond: end
+            )
+        }
+    }
+
+    private func currentProtocolPhase(
+        in phases: [TimerProtocolPhase],
+        preset: DemoRegulatePreset
+    ) -> TimerProtocolPhase? {
+        guard !phases.isEmpty else { return nil }
+        let maxElapsed = max(preset.durationSeconds - 1, 0)
+        let elapsed = min(max(store.activeSessionElapsedSeconds(now: now), 0), maxElapsed)
+        return phases.first(where: { elapsed >= $0.startSecond && elapsed < $0.endSecond }) ?? phases.last
+    }
+
+    private func protocolPhaseStatus(
+        _ phase: TimerProtocolPhase,
+        activePhaseID: Int?,
+        elapsedSeconds: Int
+    ) -> (symbol: String, tint: Color) {
+        if elapsedSeconds >= phase.endSecond {
+            return ("checkmark.circle.fill", MindSensePalette.success)
+        }
+        if phase.id == activePhaseID {
+            return ("play.circle.fill", MindSensePalette.signalCoolStrong)
+        }
+        return ("circle", .secondary)
+    }
+
+    private func stepDurationSeconds(from step: String) -> Int? {
+        let components = step
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .split(maxSplits: 1, whereSeparator: \.isWhitespace)
+        guard let token = components.first else { return nil }
+        return durationTokenToSeconds(String(token))
+    }
+
+    private func durationTokenToSeconds(_ token: String) -> Int? {
+        let normalized = token
+            .lowercased()
+            .trimmingCharacters(in: CharacterSet(charactersIn: ".,;:"))
+        let minuteSuffixes = ["minutes", "minute", "mins", "min", "m"]
+        for suffix in minuteSuffixes {
+            guard normalized.hasSuffix(suffix) else { continue }
+            guard let value = Int(normalized.dropLast(suffix.count)), value > 0 else { return nil }
+            return value * 60
+        }
+
+        let secondSuffixes = ["seconds", "second", "secs", "sec", "s"]
+        for suffix in secondSuffixes {
+            guard normalized.hasSuffix(suffix) else { continue }
+            guard let value = Int(normalized.dropLast(suffix.count)), value > 0 else { return nil }
+            return value
+        }
+        return nil
+    }
+
+    private func protocolStepTitle(from step: String) -> String {
+        let trimmed = step.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return "Guided step" }
+
+        let parts = trimmed.split(maxSplits: 1, whereSeparator: \.isWhitespace)
+        guard let token = parts.first else { return sentenceCase(trimmed) }
+        if durationTokenToSeconds(String(token)) != nil, parts.count > 1 {
+            return sentenceCase(String(parts[1]))
+        }
+        return sentenceCase(trimmed)
+    }
+
+    private func sentenceCase(_ text: String) -> String {
+        guard let first = text.first else { return text }
+        return first.uppercased() + text.dropFirst()
+    }
+
+    private func handleTimerTick(_ date: Date) {
+        now = date
+        guard store.activeRegulateSession != nil else { return }
+
+        if store.activeRegulateSession?.isInProgress == true {
+            store.syncActiveRegulateSessionState(now: date)
+            announceCurrentProtocolPhase()
+        } else {
+            refreshPostSessionTransitionStateIfNeeded()
+        }
+    }
+
+    private func announceCurrentProtocolPhase(force: Bool = false) {
+        guard currentStep == .runTimer, let preset = runningSessionPreset else { return }
+        let phases = protocolTimeline(for: preset)
+        guard let activePhase = currentProtocolPhase(in: phases, preset: preset) else { return }
+
+        if !force, lastGuidedPhaseID == activePhase.id {
+            return
+        }
+
+        let previousPhaseID = lastGuidedPhaseID
+        lastGuidedPhaseID = activePhase.id
+
+        if hapticPacingEnabled, previousPhaseID != activePhase.id {
+            let isFinalPhase = activePhase.id == phases.last?.id
+            store.triggerHaptic(intent: isFinalPhase ? .success : .selection)
+        }
+
+        if audioGuidanceEnabled {
+            let instruction = "\(activePhase.minuteRangeLabel). \(activePhase.title)."
+            audioCoach.speak(instruction)
+        }
+    }
+
+    private func refreshPostSessionTransitionStateIfNeeded() {
+        guard let session = store.activeRegulateSession else {
+            showPostSessionTransition = false
+            postSessionTransitionSessionID = nil
+            return
+        }
+
+        if session.isAwaitingCheckIn, postSessionTransitionSessionID != session.id {
+            postSessionTransitionSessionID = session.id
+            showPostSessionTransition = true
+            return
+        }
+
+        if session.isInProgress {
+            showPostSessionTransition = false
         }
     }
 
@@ -781,7 +1239,7 @@ struct RegulateView: View {
         guard let request = store.consumeRegulateLaunchRequest() else { return }
         selectedPresetID = request.preset
         if request.startImmediately {
-            startPreset(request.preset, source: "today_mapped_cta")
+            startPreset(request.preset, source: request.source)
         }
     }
 
@@ -797,9 +1255,9 @@ struct RegulateView: View {
         }
 
         selectedPresetID = presetID
-        feelRating = 3
-        helpfulness = .some
-        showRecordImpactDetails = false
+        resetOutcomeDraft()
+        lastGuidedPhaseID = nil
+        audioCoach.stop()
         store.track(event: .primaryCTATapped, surface: .regulate, action: "start_\(presetID.rawValue)")
         _ = store.beginRegulateSession(preset: presetID, source: source)
         store.showActionFeedback(.applied, detail: "\(preset.title) started.")
@@ -808,19 +1266,64 @@ struct RegulateView: View {
 
     private func submitOutcome() {
         guard store.activeRegulateSession != nil else { return }
-        let intensity = outcomeIntensity
-        let feeling = Int(feelRating.rounded())
+        guard checkInRating != nil else { return }
         store.recordRegulateOutcome(
-            direction: outcomeDirection,
-            intensity: intensity,
-            feelRating: feeling,
-            helpfulness: helpfulness
+            checkInRating: checkInRating,
+            outcomeTag: selectedOutcomeTag,
+            outcomeNote: outcomeNote
         )
         store.track(event: .actionCompleted, surface: .regulate, action: "post_session_check_in_saved")
         store.triggerHaptic(intent: .success)
-        feelRating = 3
-        helpfulness = .some
+        resetOutcomeDraft()
+    }
+
+    private func submitNoRatingOutcome() {
+        guard store.activeRegulateSession != nil else { return }
+        store.recordRegulateOutcome(
+            checkInRating: .noRating,
+            outcomeTag: selectedOutcomeTag,
+            outcomeNote: outcomeNote
+        )
+        store.track(event: .actionCompleted, surface: .regulate, action: "post_session_check_in_skipped")
+        store.triggerHaptic(intent: .selection)
+        resetOutcomeDraft()
+    }
+
+    private func resetOutcomeDraft() {
+        checkInRating = nil
+        selectedOutcomeTag = nil
+        outcomeNote = ""
         showRecordImpactDetails = false
+        showPostSessionTransition = false
+        postSessionTransitionSessionID = nil
+    }
+
+    private func startImpactLoggingFromPostSession() {
+        showPostSessionTransition = false
+        store.track(event: .secondaryActionTapped, surface: .regulate, action: "post_session_log_impact")
+        store.triggerHaptic(intent: .selection)
+    }
+
+    private func startFocusBlockFromPostSession() {
+        if store.intentMode != .focus {
+            store.setIntentMode(.focus, source: "regulate_post_session_focus_block")
+        }
+        store.selectedTab = .data
+        store.showActionFeedback(.updated, detail: "Plan workspace opened for your focus block.")
+        store.track(event: .secondaryActionTapped, surface: .regulate, action: "post_session_start_focus_block")
+        store.triggerHaptic(intent: .primary)
+    }
+
+    private func openEpisodeContextCapture(_ episodeID: UUID) {
+        store.openTodayContextCapture(episodeID)
+        store.showActionFeedback(.updated, detail: "Opened episode context capture.")
+        store.track(
+            event: .secondaryActionTapped,
+            surface: .regulate,
+            action: "post_session_add_context",
+            metadata: ["episode_id": episodeID.uuidString]
+        )
+        store.triggerHaptic(intent: .primary)
     }
 
     private var impactTint: Color {
@@ -835,7 +1338,20 @@ struct RegulateView: View {
     }
 
     private var impactStateLine: String {
-        "\(outcomeDirection.title) • feel \(Int(feelRating.rounded()))/5 • help \(helpfulness.title)"
+        let ratingLabel = switch selectedCheckInRating {
+        case .helped:
+            "Helped"
+        case .didNotHelp:
+            "Didn't help"
+        case .mixed:
+            "Mixed"
+        case .noRating:
+            "No rating yet"
+        }
+        if let selectedOutcomeTag {
+            return "\(ratingLabel) • \(selectedOutcomeTag)"
+        }
+        return ratingLabel
     }
 
     private var calmingTrendLabel: String {
@@ -846,16 +1362,6 @@ struct RegulateView: View {
             return "moderate downshift trend"
         }
         return "settling"
-    }
-
-    private var feelLabel: String {
-        switch Int(feelRating.rounded()) {
-        case 1: return "Very strained"
-        case 2: return "Strained"
-        case 3: return "Neutral"
-        case 4: return "Steadier"
-        default: return "Calmer"
-        }
     }
 
     private func heartShiftLine(for metrics: RegulateEffectMetrics) -> String {
@@ -872,5 +1378,32 @@ struct RegulateView: View {
             return "+\(value) ms"
         }
         return "-\(abs(value)) ms"
+    }
+}
+
+@MainActor
+private final class RegulateAudioCoach: ObservableObject {
+    private let synthesizer = AVSpeechSynthesizer()
+
+    func speak(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
+
+        let utterance = AVSpeechUtterance(string: trimmed)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-US")
+        utterance.rate = 0.46
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 0.9
+        synthesizer.speak(utterance)
+    }
+
+    func stop() {
+        if synthesizer.isSpeaking || synthesizer.isPaused {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
     }
 }

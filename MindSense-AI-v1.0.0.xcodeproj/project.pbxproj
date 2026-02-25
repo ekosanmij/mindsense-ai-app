@@ -401,6 +401,8 @@
 				DEVELOPMENT_TEAM = L5L7UTW357;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "MindSense uses Calendar access to create recurring recovery-window blocks you request.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "MindSense uses Calendar access to create recurring recovery-window blocks you request.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,6 +436,8 @@
 				DEVELOPMENT_TEAM = L5L7UTW357;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "MindSense uses Calendar access to create recurring recovery-window blocks you request.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "MindSense uses Calendar access to create recurring recovery-window blocks you request.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

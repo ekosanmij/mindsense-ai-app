@@ -1,5 +1,11 @@
 import SwiftUI
 
+private extension DynamicTypeSize {
+    var mindSenseCardReflowPreferred: Bool {
+        isAccessibilitySize || self >= .xxLarge
+    }
+}
+
 enum MindSenseButtonHierarchy {
     case primary
     case secondary
@@ -80,23 +86,48 @@ struct MindSenseButtonStyle: ButtonStyle {
                     .padding(.horizontal, 16)
                     .background(
                         RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
-                            .fill(MindSenseSurfaceLevel.raised.fill)
+                            .fill(secondaryFill)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
-                            .stroke(MindSensePalette.strokeSubtle.opacity(isEnabled ? 1 : 0.7), lineWidth: 1)
+                            .stroke(secondaryStroke, lineWidth: 1)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
                             .fill(MindSensePalette.shadowDirectional.opacity(isEnabled && isPressed ? 0.06 : 0))
                     )
+                    .shadow(
+                        color: secondaryShadowColor,
+                        radius: isEnabled && !isPressed ? 2 : 0,
+                        x: 0,
+                        y: isEnabled && !isPressed ? 1 : 0
+                    )
 
             case .text:
                 configuration.label
                     .font(MindSenseTypography.bodyStrong)
-                    .foregroundStyle(tint.opacity(isEnabled ? (isPressed ? 0.62 : 1) : 0.45))
+                    .foregroundStyle(textForeground(isPressed: isPressed))
                     .frame(maxWidth: fullWidth ? .infinity : nil)
                     .frame(minHeight: max(40, minHeight - 2))
+                    .padding(.horizontal, fullWidth ? 14 : 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                            .fill(textFill)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                            .stroke(textStroke, lineWidth: 1)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                            .fill(tint.opacity(isEnabled && isPressed ? 0.08 : 0))
+                    )
+                    .shadow(
+                        color: textShadowColor,
+                        radius: isEnabled && !isPressed ? 1.5 : 0,
+                        x: 0,
+                        y: isEnabled && !isPressed ? 1 : 0
+                    )
             }
         }
         .opacity(isPressed && isEnabled ? 0.9 : 1)
@@ -114,6 +145,44 @@ struct MindSenseButtonStyle: ButtonStyle {
 
     private var primaryStroke: Color {
         isEnabled ? MindSensePalette.strokeEdge.opacity(0.6) : MindSensePalette.strokeSubtle.opacity(0.72)
+    }
+
+    private var secondaryFill: Color {
+        isEnabled ? MindSenseSurfaceLevel.raised.fill : MindSenseSurfaceLevel.base.fill
+    }
+
+    private var secondaryStroke: Color {
+        if isEnabled {
+            return tint.opacity(0.22)
+        }
+        return MindSensePalette.strokeSubtle.opacity(0.7)
+    }
+
+    private var secondaryShadowColor: Color {
+        isEnabled ? MindSensePalette.shadowDirectional.opacity(0.16) : .clear
+    }
+
+    private var textFill: Color {
+        if isEnabled {
+            return MindSenseSurfaceLevel.raised.fill
+        }
+        return MindSenseSurfaceLevel.base.fill
+    }
+
+    private var textStroke: Color {
+        if isEnabled {
+            return tint.opacity(0.18)
+        }
+        return MindSensePalette.strokeSubtle.opacity(0.55)
+    }
+
+    private var textShadowColor: Color {
+        isEnabled ? MindSensePalette.shadowDirectional.opacity(0.12) : .clear
+    }
+
+    private func textForeground(isPressed: Bool) -> Color {
+        guard isEnabled else { return tint.opacity(0.45) }
+        return tint.opacity(isPressed ? 0.68 : 1)
     }
 }
 
@@ -227,10 +296,14 @@ struct FocusSurface<Content: View>: View {
 }
 
 struct MindSenseTabHero<Content: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let label: String
     let title: String
     let detail: String
     var metric: String? = nil
+    var metricAction: (() -> Void)? = nil
+    var metricAccessibilityLabel: String? = nil
     var icon: String = "waveform.path.ecg"
     var tone: MindSenseSurfaceTone = .accent
     var watermarkTint: Color? = nil
@@ -242,6 +315,8 @@ struct MindSenseTabHero<Content: View>: View {
         title: String,
         detail: String,
         metric: String? = nil,
+        metricAction: (() -> Void)? = nil,
+        metricAccessibilityLabel: String? = nil,
         icon: String = "waveform.path.ecg",
         tone: MindSenseSurfaceTone = .accent,
         watermarkTint: Color? = nil,
@@ -252,6 +327,8 @@ struct MindSenseTabHero<Content: View>: View {
         self.title = title
         self.detail = detail
         self.metric = metric
+        self.metricAction = metricAction
+        self.metricAccessibilityLabel = metricAccessibilityLabel
         self.icon = icon
         self.tone = tone
         self.watermarkTint = watermarkTint
@@ -262,46 +339,22 @@ struct MindSenseTabHero<Content: View>: View {
     var body: some View {
         FocusSurface {
             VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
-                HStack(alignment: .center, spacing: MindSenseSpacing.sm) {
-                    HStack(spacing: MindSenseSpacing.xs) {
-                        MindSenseIconBadge(systemName: icon, tint: headerTint, style: .filled, size: 30)
-                        Text(label.uppercased())
-                            .font(MindSenseTypography.micro)
-                            .foregroundStyle(headerTint.opacity(0.95))
-                            .tracking(1.35)
-                    }
-                    Spacer()
-                    if let metric, !metric.isEmpty {
-                        Text(metric)
-                            .font(MindSenseTypography.metricCaption)
-                            .padding(.horizontal, 12)
-                            .frame(minHeight: 30)
-                            .foregroundStyle(.secondary)
-                            .background(
-                                Capsule(style: .continuous)
-                                    .fill(MindSenseSurfaceLevel.base.fill)
-                            )
-                            .overlay(
-                                Capsule(style: .continuous)
-                                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-                            )
-                    }
-                }
+                headerRow
 
                 MindSenseSectionDivider(emphasis: 0.43)
 
                 Text(title.mindSenseHeadlineSafe)
                     .font(MindSenseTypography.title)
                     .lineSpacing(1.5)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.92)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
+                    .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.92)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(detail)
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
                     .fixedSize(horizontal: false, vertical: true)
 
                 content
@@ -329,9 +382,82 @@ struct MindSenseTabHero<Content: View>: View {
             return MindSensePalette.signalCoolStrong
         }
     }
+
+    @ViewBuilder
+    private var headerRow: some View {
+        if dynamicTypeSize.mindSenseCardReflowPreferred {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                headerLabelRow
+                if hasMetric {
+                    headerMetricView
+                }
+            }
+        } else {
+            HStack(alignment: .center, spacing: MindSenseSpacing.sm) {
+                headerLabelRow
+                Spacer(minLength: 8)
+                if hasMetric {
+                    headerMetricView
+                }
+            }
+        }
+    }
+
+    private var hasMetric: Bool {
+        guard let metric else { return false }
+        return !metric.isEmpty
+    }
+
+    private var headerLabelRow: some View {
+        HStack(alignment: .center, spacing: MindSenseSpacing.xs) {
+            MindSenseIconBadge(systemName: icon, tint: headerTint, style: .filled, size: 30)
+            Text(label.uppercased())
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(headerTint.opacity(0.95))
+                .tracking(1.35)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    @ViewBuilder
+    private var headerMetricView: some View {
+        if let metric, !metric.isEmpty {
+            if let metricAction {
+                Button(action: metricAction) {
+                    metricPill(metric)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(metricAccessibilityLabel ?? metric)
+                .accessibilityHint("Opens details.")
+            } else {
+                metricPill(metric)
+            }
+        }
+    }
+
+    private func metricPill(_ metric: String) -> some View {
+        Text(metric)
+            .font(MindSenseTypography.metricCaption)
+            .lineLimit(1)
+            .minimumScaleFactor(0.85)
+            .padding(.horizontal, 12)
+            .frame(minHeight: 30)
+            .foregroundStyle(.secondary)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(MindSenseSurfaceLevel.base.fill)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+            )
+    }
 }
 
 struct MindSenseCommandDeck: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let label: String
     let title: String
     let detail: String
@@ -347,14 +473,7 @@ struct MindSenseCommandDeck: View {
             icon: "waveform.path.ecg",
             tone: tone
         ) {
-            HStack(spacing: MindSenseSpacing.xs) {
-                Image(systemName: "brain.head.profile")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(headerTint)
-                Text("Recommended next step")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-            }
+            recommendedStepLabel
         }
     }
 
@@ -368,6 +487,34 @@ struct MindSenseCommandDeck: View {
             return MindSensePalette.signalCool
         case .accent:
             return MindSensePalette.signalCoolStrong
+        }
+    }
+
+    @ViewBuilder
+    private var recommendedStepLabel: some View {
+        if dynamicTypeSize.mindSenseCardReflowPreferred {
+            VStack(alignment: .leading, spacing: 4) {
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(headerTint)
+                    .accessibilityHidden(true)
+                Text("Recommended next step")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+        } else {
+            HStack(spacing: MindSenseSpacing.xs) {
+                Image(systemName: "brain.head.profile")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(headerTint)
+                    .accessibilityHidden(true)
+                Text("Recommended next step")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .combine)
         }
     }
 }
@@ -447,6 +594,8 @@ struct SectionHeaderModel {
 }
 
 struct MindSenseSectionHeader: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let model: SectionHeaderModel
 
     var body: some View {
@@ -466,23 +615,180 @@ struct MindSenseSectionHeader: View {
                 Text(model.title.mindSenseHeadlineSafe)
                     .font(MindSenseTypography.bodyStrong)
                     .tracking(0.15)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.9)
+                    .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
+                    .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 1 : 0.9)
                 if let subtitle = model.subtitle {
                     Text(subtitle)
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                        .lineLimit(dynamicTypeSize.mindSenseCardReflowPreferred ? 4 : 2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+
+                if shouldStackAction, let actionTitle = model.actionTitle, let action = model.action {
+                    Button(actionTitle, action: action)
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                }
             }
-            Spacer(minLength: 8)
-            if let actionTitle = model.actionTitle, let action = model.action {
+            if !shouldStackAction {
+                Spacer(minLength: 8)
+            }
+            if !shouldStackAction, let actionTitle = model.actionTitle, let action = model.action {
                 Button(actionTitle, action: action)
                     .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var shouldStackAction: Bool {
+        dynamicTypeSize.mindSenseCardReflowPreferred && model.actionTitle != nil && model.action != nil
+    }
+}
+
+struct MindSenseCollapsibleSection<Content: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @AppStorage("appReduceMotion") private var appReduceMotion = false
+    @AppStorage private var isExpanded: Bool
+
+    let model: SectionHeaderModel
+    var collapsedSummary: String?
+    private let content: Content
+
+    init(
+        model: SectionHeaderModel,
+        storageKey: String,
+        defaultExpanded: Bool = true,
+        collapsedSummary: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.model = model
+        self.collapsedSummary = collapsedSummary
+        self.content = content()
+        self._isExpanded = AppStorage(wrappedValue: defaultExpanded, storageKey)
+    }
+
+    private var reduceMotion: Bool {
+        appReduceMotion || accessibilityReduceMotion
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.md) {
+            sectionHeaderRow
+
+            if !isExpanded, let collapsedSummary, !collapsedSummary.isEmpty {
+                Text(collapsedSummary)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if isExpanded {
+                content
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var sectionHeaderRow: some View {
+        if dynamicTypeSize.mindSenseCardReflowPreferred {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                MindSenseSectionHeader(model: model)
+
+                HStack(spacing: 0) {
+                    Spacer(minLength: 0)
+                    collapseButton
+                }
+            }
+        } else {
+            HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
+                MindSenseSectionHeader(model: model)
+                collapseButton
+            }
+        }
+    }
+
+    private var collapseButton: some View {
+        Button {
+            if reduceMotion {
+                isExpanded.toggle()
+            } else {
+                withAnimation(MindSenseMotion.selection) {
+                    isExpanded.toggle()
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(isExpanded ? "Hide" : "Show")
+                    .font(MindSenseTypography.micro)
+                Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 10, weight: .semibold, design: .rounded))
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .frame(minHeight: 28)
+            .background(
+                Capsule(style: .continuous)
+                    .fill(MindSenseSurfaceLevel.base.fill)
+            )
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isExpanded ? "Collapse section" : "Expand section")
+    }
+}
+
+struct MindSenseSummaryMoreText: View {
+    @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @AppStorage("appReduceMotion") private var appReduceMotion = false
+
+    let summary: String
+    let detail: String
+    var textStyle: Font = MindSenseTypography.caption
+    var textColor: Color = .secondary
+    @State private var expanded = false
+
+    private var reduceMotion: Bool {
+        appReduceMotion || accessibilityReduceMotion
+    }
+
+    private var hasExpandableDetail: Bool {
+        !detail.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(summary)
+                .font(textStyle)
+                .foregroundStyle(textColor)
+                .lineLimit(1)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if expanded, hasExpandableDetail {
+                Text(detail)
+                    .font(textStyle)
+                    .foregroundStyle(textColor)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            if hasExpandableDetail {
+                Button(expanded ? "Less" : "More") {
+                    if reduceMotion {
+                        expanded.toggle()
+                    } else {
+                        withAnimation(MindSenseMotion.selection) {
+                            expanded.toggle()
+                        }
+                    }
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 32))
+            }
+        }
     }
 }
 
@@ -536,6 +842,32 @@ struct MindSenseBottomActionDock<Content: View>: View {
                         .frame(height: 1)
                         .padding(.horizontal, 16)
                 }
+        }
+    }
+}
+
+struct MindSenseDoItNowDock<Content: View>: View {
+    var title: String = "Do it now"
+    var subtitle: String?
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        MindSenseBottomActionDock {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .tracking(0.8)
+
+                if let subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+
+                content
+            }
         }
     }
 }

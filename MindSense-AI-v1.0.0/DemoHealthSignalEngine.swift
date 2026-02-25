@@ -72,10 +72,53 @@ struct DemoHealthPermissionStatus: Identifiable, Codable, Equatable {
     var id: DemoHealthSignalType { signal }
 }
 
+struct DemoHealthPermissionRemediationGuide: Identifiable, Equatable {
+    let signal: DemoHealthSignalType
+    let title: String
+    let summary: String
+    let checklist: [String]
+    let expectedTimeToPopulate: String
+    let modelUsageNote: String
+
+    var id: DemoHealthSignalType { signal }
+}
+
+extension DemoHealthPermissionStatus {
+    var statusDetail: String? {
+        switch (signal, state) {
+        case (.respiratoryRate, .missing):
+            return "Tap for setup checklist. Optional signal for context only."
+        case (.environmentalAudio, .unsupported):
+            return "Environmental audio is unavailable on your device, OS, or current Health permission model."
+        default:
+            return nil
+        }
+    }
+
+    var remediationGuide: DemoHealthPermissionRemediationGuide? {
+        guard signal == .respiratoryRate, state == .missing else { return nil }
+        return .init(
+            signal: signal,
+            title: "Enable respiratory rate",
+            summary: "Respiratory rate is captured from Apple Watch during sleep sessions.",
+            checklist: [
+                "Requires a paired Apple Watch configured for sleep tracking.",
+                "In Watch app > Sleep, turn on Sleep Tracking.",
+                "In Health app > Sharing > Apps > MindSense, allow Sleep and Respiratory Rate.",
+                "Wear the watch overnight while Sleep Focus is active."
+            ],
+            expectedTimeToPopulate: "Expected time to populate: after the next overnight sleep (typically 1 night, sometimes up to 2).",
+            modelUsageNote: "Respiratory rate is optional. Confidence scoring relies on sleep coverage, heart-rate density, HRV availability, and watch wear continuity."
+        )
+    }
+}
+
 struct DemoHealthSyncSnapshot: Codable, Equatable {
     var sourceLabel: String
     var lastSyncAt: Date
     var lastSleepImportAt: Date
+    var lastSleepStartAt: Date? = nil
+    var lastSleepEndAt: Date? = nil
     var lastHRVSampleAt: Date?
 }
 
@@ -155,6 +198,31 @@ enum StressEpisodeAttributionFeedback: String, Codable, CaseIterable, Identifiab
     }
 }
 
+enum StressEpisodeMovementLevel: String, Codable, Equatable {
+    case low
+    case moderate
+    case high
+
+    var title: String {
+        switch self {
+        case .low:
+            return "Low"
+        case .moderate:
+            return "Moderate"
+        case .high:
+            return "High"
+        }
+    }
+}
+
+struct StressEpisodeEvidence: Codable, Equatable {
+    let heartRateAboveBaselineBPM: Int
+    let elevatedDurationMinutes: Int
+    let hrvShiftMS: Int?
+    let timeOfDayTypicality: Int?
+    let movementLevel: StressEpisodeMovementLevel?
+}
+
 struct StressEpisodeRecord: Identifiable, Codable, Equatable {
     let id: UUID
     let start: Date
@@ -163,7 +231,10 @@ struct StressEpisodeRecord: Identifiable, Codable, Equatable {
     let confidence: Int
     let likelyDriver: StressEpisodeDriver
     let recommendedPreset: RegulatePresetID
+    let evidence: StressEpisodeEvidence?
     var userTags: [String]
+    var primaryContextTag: String? = nil
+    var secondaryContextTag: String? = nil
     var userNote: String?
     var attributionFeedback: StressEpisodeAttributionFeedback? = nil
 
@@ -189,8 +260,11 @@ enum DemoHealthSignalEngine {
     static let contextTags = [
         "Meeting",
         "Caffeine",
+        "Alcohol",
         "Workout",
         "Commute",
+        "Travel",
+        "Illness",
         "Conflict",
         "Noise",
         "Screen overload",
@@ -206,12 +280,15 @@ enum DemoHealthSignalEngine {
         let permissions = defaultPermissions(for: scenario)
         let episodes = seededEpisodes(for: scenario, now: now)
         let timeline = timelineSegments(for: episodes, now: now)
+        let sleepEnd = now.addingTimeInterval(-4_500)
         return DemoHealthProfile(
             isConnected: true,
             sync: .init(
                 sourceLabel: "Apple Watch",
                 lastSyncAt: now.addingTimeInterval(-480),
-                lastSleepImportAt: now.addingTimeInterval(-4_500),
+                lastSleepImportAt: sleepEnd,
+                lastSleepStartAt: sleepEnd.addingTimeInterval(-28_800),
+                lastSleepEndAt: sleepEnd,
                 lastHRVSampleAt: permissions.first(where: { $0.signal == .hrv })?.state == .granted
                     ? now.addingTimeInterval(-2_800)
                     : nil
@@ -264,7 +341,10 @@ enum DemoHealthSignalEngine {
 
         if updateSyncTimestamp {
             profile.sync.lastSyncAt = now
-            profile.sync.lastSleepImportAt = now.addingTimeInterval(-2_400)
+            let sleepEnd = now.addingTimeInterval(-2_400)
+            profile.sync.lastSleepImportAt = sleepEnd
+            profile.sync.lastSleepStartAt = sleepEnd.addingTimeInterval(-27_000)
+            profile.sync.lastSleepEndAt = sleepEnd
             let hrvGranted = profile.permissions.first(where: { $0.signal == .hrv })?.state == .granted
             profile.sync.lastHRVSampleAt = hrvGranted ? now.addingTimeInterval(-1_900) : nil
         }
@@ -297,6 +377,8 @@ enum DemoHealthSignalEngine {
         profile.stressEpisodes = []
         profile.timelineSegments = []
         profile.sync.lastSyncAt = now
+        profile.sync.lastSleepStartAt = nil
+        profile.sync.lastSleepEndAt = nil
         profile.quality.sleepCoverage = 35
         profile.quality.heartRateDensity = 30
         profile.quality.hrvAvailability = 22
@@ -374,7 +456,7 @@ enum DemoHealthSignalEngine {
                 heartRateDensity: 79,
                 hrvAvailability: 86,
                 watchWear: 88,
-                actionHint: "Data quality is strong. Keep overnight wear consistent."
+                actionHint: "Data confidence is strong. Keep overnight wear consistent."
             )
         }
     }
@@ -401,6 +483,13 @@ enum DemoHealthSignalEngine {
                     confidence: 78,
                     likelyDriver: .cognitive,
                     recommendedPreset: .calmNow,
+                    evidence: .init(
+                        heartRateAboveBaselineBPM: 18,
+                        elevatedDurationMinutes: 24,
+                        hrvShiftMS: nil,
+                        timeOfDayTypicality: 82,
+                        movementLevel: .low
+                    ),
                     userTags: ["Meeting"],
                     userNote: "Stacked deadline handoff."
                 ),
@@ -412,6 +501,13 @@ enum DemoHealthSignalEngine {
                     confidence: 70,
                     likelyDriver: .social,
                     recommendedPreset: .calmNow,
+                    evidence: .init(
+                        heartRateAboveBaselineBPM: 14,
+                        elevatedDurationMinutes: 17,
+                        hrvShiftMS: nil,
+                        timeOfDayTypicality: 58,
+                        movementLevel: .moderate
+                    ),
                     userTags: [],
                     userNote: nil
                 ),
@@ -423,6 +519,13 @@ enum DemoHealthSignalEngine {
                     confidence: 76,
                     likelyDriver: .cognitive,
                     recommendedPreset: .focusPrep,
+                    evidence: .init(
+                        heartRateAboveBaselineBPM: 21,
+                        elevatedDurationMinutes: 31,
+                        hrvShiftMS: nil,
+                        timeOfDayTypicality: 87,
+                        movementLevel: .low
+                    ),
                     userTags: [],
                     userNote: nil
                 )
@@ -437,6 +540,13 @@ enum DemoHealthSignalEngine {
                     confidence: 69,
                     likelyDriver: .physical,
                     recommendedPreset: .calmNow,
+                    evidence: .init(
+                        heartRateAboveBaselineBPM: 12,
+                        elevatedDurationMinutes: 16,
+                        hrvShiftMS: -6,
+                        timeOfDayTypicality: 49,
+                        movementLevel: .high
+                    ),
                     userTags: ["Workout"],
                     userNote: "Lunch run."
                 ),
@@ -448,6 +558,13 @@ enum DemoHealthSignalEngine {
                     confidence: 71,
                     likelyDriver: .cognitive,
                     recommendedPreset: .focusPrep,
+                    evidence: .init(
+                        heartRateAboveBaselineBPM: 15,
+                        elevatedDurationMinutes: 22,
+                        hrvShiftMS: -9,
+                        timeOfDayTypicality: 74,
+                        movementLevel: .low
+                    ),
                     userTags: [],
                     userNote: nil
                 )
@@ -462,6 +579,13 @@ enum DemoHealthSignalEngine {
                     confidence: 74,
                     likelyDriver: .environmental,
                     recommendedPreset: .calmNow,
+                    evidence: .init(
+                        heartRateAboveBaselineBPM: 10,
+                        elevatedDurationMinutes: 14,
+                        hrvShiftMS: -4,
+                        timeOfDayTypicality: 63,
+                        movementLevel: .high
+                    ),
                     userTags: ["Commute"],
                     userNote: nil
                 ),
@@ -473,6 +597,13 @@ enum DemoHealthSignalEngine {
                     confidence: 68,
                     likelyDriver: .social,
                     recommendedPreset: .calmNow,
+                    evidence: .init(
+                        heartRateAboveBaselineBPM: 11,
+                        elevatedDurationMinutes: 18,
+                        hrvShiftMS: -5,
+                        timeOfDayTypicality: 56,
+                        movementLevel: .low
+                    ),
                     userTags: [],
                     userNote: nil
                 )
@@ -497,6 +628,32 @@ enum DemoHealthSignalEngine {
         case .recoveryWeek: 70
         }
         let recommendation: RegulatePresetID = scenario == .highStressDay ? .calmNow : .focusPrep
+        let evidence: StressEpisodeEvidence = switch scenario {
+        case .highStressDay:
+            .init(
+                heartRateAboveBaselineBPM: 17,
+                elevatedDurationMinutes: 20,
+                hrvShiftMS: nil,
+                timeOfDayTypicality: 80,
+                movementLevel: .low
+            )
+        case .balancedDay:
+            .init(
+                heartRateAboveBaselineBPM: 13,
+                elevatedDurationMinutes: 18,
+                hrvShiftMS: -7,
+                timeOfDayTypicality: 67,
+                movementLevel: .moderate
+            )
+        case .recoveryWeek:
+            .init(
+                heartRateAboveBaselineBPM: 9,
+                elevatedDurationMinutes: 14,
+                hrvShiftMS: -3,
+                timeOfDayTypicality: 61,
+                movementLevel: .low
+            )
+        }
 
         return .init(
             id: UUID(),
@@ -506,6 +663,7 @@ enum DemoHealthSignalEngine {
             confidence: confidence,
             likelyDriver: driver,
             recommendedPreset: recommendation,
+            evidence: evidence,
             userTags: [],
             userNote: nil
         )
@@ -557,7 +715,7 @@ enum DemoHealthSignalEngine {
         if quality.watchWear < 68 {
             return "Keep your watch on during the day to improve state updates."
         }
-        return "Data quality is strong."
+        return "Data confidence is strong."
     }
 
     private static func overlaps(startA: Date, endA: Date, startB: Date, endB: Date) -> Bool {

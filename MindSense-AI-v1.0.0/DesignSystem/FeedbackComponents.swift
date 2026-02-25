@@ -121,6 +121,19 @@ struct MetricRingView: View {
 
 struct DriverImpactRowView: View {
     let driver: DriverImpact
+    let weightShare: Double?
+    let sourceLine: String
+    let controlLine: String?
+    let microActionTitle: String?
+    let onMicroAction: (() -> Void)?
+
+    private var normalizedWeightShare: Double {
+        max(0, min(weightShare ?? driver.impact, 1))
+    }
+
+    private var weightPercentLabel: String {
+        "\(Int((normalizedWeightShare * 100).rounded()))%"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -131,13 +144,23 @@ struct DriverImpactRowView: View {
                     Text(driver.detail)
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
+                    Text(sourceLine)
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                    if let controlLine {
+                        Text(controlLine)
+                            .font(MindSenseTypography.micro)
+                            .foregroundStyle(MindSensePalette.accent)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 Spacer()
-                PillChip(label: "\(Int(driver.impact * 100))%", state: .unselected)
+                PillChip(label: weightPercentLabel, state: .unselected)
+                    .accessibilityLabel("\(weightPercentLabel) of today's driver weight")
             }
 
             GeometryReader { proxy in
-                let width = proxy.size.width * max(0.04, min(driver.impact, 1))
+                let width = proxy.size.width * max(0.04, normalizedWeightShare)
                 ZStack(alignment: .leading) {
                     Capsule(style: .continuous)
                         .fill(MindSensePalette.surfaceInset)
@@ -147,6 +170,13 @@ struct DriverImpactRowView: View {
                 }
             }
             .frame(height: 12)
+
+            if let microActionTitle, let onMicroAction {
+                Button(microActionTitle) {
+                    onMicroAction()
+                }
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 34))
+            }
         }
         .padding(.vertical, 2)
     }
