@@ -265,6 +265,13 @@ enum MindSenseLayout {
             return max(floatingTabBarExpandedClearance, measuredOverlay + 16)
         }
     }
+
+    static func bottomDockOffset(
+        measuredOverlay: CGFloat,
+        safeAreaInset: CGFloat
+    ) -> CGFloat {
+        max(0, measuredOverlay - safeAreaInset)
+    }
 }
 
 enum MindSenseTabBarClearanceTier {

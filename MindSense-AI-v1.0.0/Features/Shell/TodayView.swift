@@ -45,6 +45,7 @@ struct TodayView: View {
     @State private var contextPrimaryTag: String?
     @State private var contextSecondaryTag: String?
     @State private var contextNote = ""
+    @State private var viewSafeAreaBottomInset: CGFloat = 0
 
     private let checkInDriverOptions = [
         "Meetings",
@@ -160,6 +161,13 @@ struct TodayView: View {
                     measuredOverlay: tabBarOverlayClearance,
                     tier: .standard
                 )
+        )
+    }
+
+    private var stickyDockBottomOffset: CGFloat {
+        MindSenseLayout.bottomDockOffset(
+            measuredOverlay: tabBarOverlayClearance,
+            safeAreaInset: viewSafeAreaBottomInset
         )
     }
 
@@ -322,6 +330,17 @@ struct TodayView: View {
                 }
             }
             .mindSensePageBackground()
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            viewSafeAreaBottomInset = proxy.safeAreaInsets.bottom
+                        }
+                        .onChange(of: proxy.safeAreaInsets.bottom) { _, newValue in
+                            viewSafeAreaBottomInset = newValue
+                        }
+                }
+            }
             .navigationTitle(AppIA.today)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -1442,8 +1461,9 @@ struct TodayView: View {
                 triggerNextBestAction(source: "today_sticky_cta")
             }
             .accessibilityIdentifier("today_primary_cta")
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 42))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 44))
         }
+        .padding(.bottom, stickyDockBottomOffset)
     }
 
     private var driverCollapsedSummary: String {

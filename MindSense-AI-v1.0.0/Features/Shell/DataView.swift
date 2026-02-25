@@ -699,7 +699,10 @@ struct DataView: View {
     }
 
     private var stickyDockBottomOffset: CGFloat {
-        max(0, tabBarOverlayClearance - viewSafeAreaBottomInset)
+        MindSenseLayout.bottomDockOffset(
+            measuredOverlay: tabBarOverlayClearance,
+            safeAreaInset: viewSafeAreaBottomInset
+        )
     }
 
     private var stickyExperimentDockSubtitle: String? {

@@ -45,7 +45,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Manual scan test: user can identify state + next action in under 30 seconds.
 
 ### C-02 Repeated "More/Less" disclosure noise
-- Status: `[~]`
+- Status: `[x]`
 - Source feedback: Repeated "More/Less" controls create an interaction maze.
 - Actionable TODO:
   1. Replace generic disclosure labels with context labels (`Details`, `How this is calculated`, `Why this matters`).
@@ -64,7 +64,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `rg -n "\"More\"|\"Less\"" ...` only returns permitted/internal occurrences.
 
 ### C-03 Navigation vs sticky action conflicts
-- Status: `[ ]`
+- Status: `[x]`
 - Source feedback: Sticky action areas compete with bottom navigation.
 - Actionable TODO:
   1. Audit all `safeAreaInset(edge: .bottom)` call sites against tab bar overlay clearance.
@@ -714,7 +714,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Explicit labels (`Details`, `How this is calculated`).
 
 ### R3 Standardize navigation + safe-area behavior
-- Status: `[ ]`
+- Status: `[x]`
 - Deliverables:
   1. Sticky docks respect tab bar overlay clearance in all states.
   2. No navigation-action control layering ambiguity.

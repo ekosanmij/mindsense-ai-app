@@ -22,6 +22,7 @@ struct RegulateView: View {
     @State private var showPostSessionTransition = false
     @State private var postSessionTransitionSessionID: UUID?
     @State private var lastGuidedPhaseID: Int?
+    @State private var viewSafeAreaBottomInset: CGFloat = 0
     @StateObject private var audioCoach = RegulateAudioCoach()
 
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -235,6 +236,13 @@ struct RegulateView: View {
         )
     }
 
+    private var stickyDockBottomOffset: CGFloat {
+        MindSenseLayout.bottomDockOffset(
+            measuredOverlay: tabBarOverlayClearance,
+            safeAreaInset: viewSafeAreaBottomInset
+        )
+    }
+
     private var tabBarCollapseScrollRunway: CGFloat {
         return 180
     }
@@ -272,6 +280,17 @@ struct RegulateView: View {
                 }
             }
             .mindSensePageBackground()
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            viewSafeAreaBottomInset = proxy.safeAreaInsets.bottom
+                        }
+                        .onChange(of: proxy.safeAreaInsets.bottom) { _, newValue in
+                            viewSafeAreaBottomInset = newValue
+                        }
+                }
+            }
             .navigationTitle(AppIA.regulate)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -301,6 +320,7 @@ struct RegulateView: View {
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
                         .disabled(primaryCTAConfig.disabled)
                     }
+                    .padding(.bottom, stickyDockBottomOffset)
                 }
             }
             .sheet(isPresented: $store.shouldPresentPostActivationPaywall) {
