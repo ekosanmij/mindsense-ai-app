@@ -108,7 +108,7 @@ struct MindSenseButtonStyle: ButtonStyle {
                     .font(MindSenseTypography.bodyStrong)
                     .foregroundStyle(textForeground(isPressed: isPressed))
                     .frame(maxWidth: fullWidth ? .infinity : nil)
-                    .frame(minHeight: max(40, minHeight - 2))
+                    .frame(minHeight: max(44, minHeight - 2))
                     .padding(.horizontal, fullWidth ? 14 : 12)
                     .background(
                         RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
@@ -442,7 +442,7 @@ struct MindSenseTabHero<Content: View>: View {
             .lineLimit(1)
             .minimumScaleFactor(0.85)
             .padding(.horizontal, 12)
-            .frame(minHeight: 30)
+            .frame(minHeight: 44)
             .foregroundStyle(.secondary)
             .background(
                 Capsule(style: .continuous)
@@ -794,7 +794,7 @@ struct MindSenseSummaryDisclosureText: View {
                             .font(.system(size: 10, weight: .semibold, design: .rounded))
                     }
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 32))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 44))
                 .accessibilityLabel(expanded ? expandedLabel : collapsedLabel)
                 .accessibilityHint(expanded ? "Collapses details" : "Expands details")
             }

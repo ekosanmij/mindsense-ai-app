@@ -61,11 +61,18 @@ enum BannerSeverity {
     }
 }
 
+enum BannerPresentation {
+    case compact
+    case full
+}
+
 struct AppBanner: Identifiable, Equatable {
     let id = UUID()
     let title: String
     let detail: String
     let severity: BannerSeverity
+    let presentation: BannerPresentation
+    let autoDismissSeconds: TimeInterval
 }
 
 struct AuthSession: Codable {
@@ -2215,7 +2222,12 @@ final class MindSenseStore: ObservableObject {
     }
 
     func showActionFeedback(_ verb: ActionFeedbackVerb, detail: String) {
-        showBanner(title: verb.title, detail: detail, severity: verb.severity)
+        showBanner(
+            title: verb.title,
+            detail: detail,
+            severity: verb.severity,
+            presentation: .compact
+        )
     }
 
     func resumeWhereLeftOff() {
@@ -3102,13 +3114,37 @@ final class MindSenseStore: ObservableObject {
         triggerHaptic(intent: .success)
     }
 
-    func showBanner(title: String, detail: String, severity: BannerSeverity) {
-        let value = AppBanner(title: title, detail: detail, severity: severity)
+    func showBanner(
+        title: String,
+        detail: String,
+        severity: BannerSeverity,
+        presentation: BannerPresentation? = nil,
+        duration: TimeInterval? = nil
+    ) {
+        let resolvedPresentation = presentation ?? {
+            switch severity {
+            case .warning, .error:
+                return .full
+            case .success, .info:
+                return .compact
+            }
+        }()
+
+        let resolvedDuration = duration ?? (resolvedPresentation == .compact ? 1.8 : 3.0)
+
+        let value = AppBanner(
+            title: title,
+            detail: detail,
+            severity: severity,
+            presentation: resolvedPresentation,
+            autoDismissSeconds: resolvedDuration
+        )
         banner = value
 
         bannerTask?.cancel()
         bannerTask = Task {
-            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            let nanoseconds = UInt64(max(0.5, resolvedDuration) * 1_000_000_000)
+            try? await Task.sleep(nanoseconds: nanoseconds)
             guard !Task.isCancelled else { return }
             await MainActor.run {
                 if self.banner == value {

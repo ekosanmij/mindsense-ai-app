@@ -99,7 +99,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Dynamic Type walkthrough (Large/XL/AX sizes).
 
 ### C-05 Banner/tone intrusiveness in calm flows
-- Status: `[ ]`
+- Status: `[x]`
 - Source feedback: Tall SUCCESS/SYSTEM banners disrupt calm UX and overload top area.
 - Actionable TODO:
   1. Replace persistent state banners with inline status lines where possible.
@@ -738,7 +738,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Minimum horizontal label padding respected.
 
 ### R7 Touch target hardening
-- Status: `[~]`
+- Status: `[x]`
 - Deliverables:
   1. 44x44 hit areas for info icons, pills, chevrons, compact controls.
   2. Minimum 8pt control separation.

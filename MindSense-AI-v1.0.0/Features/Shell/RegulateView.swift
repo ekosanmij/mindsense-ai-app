@@ -647,6 +647,7 @@ struct RegulateView: View {
                 selectionMetaPillContent(icon: icon, text: text)
             }
             .buttonStyle(.plain)
+            .frame(minHeight: 44)
             .accessibilityLabel(text)
             .accessibilityHint("Shows explanation.")
         } else {
@@ -1076,7 +1077,7 @@ struct RegulateView: View {
         } label: {
             PillChip(label: tag, state: isSelected ? .selected : .unselected)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: 36)
+                .frame(minHeight: 44)
         }
         .buttonStyle(.plain)
     }

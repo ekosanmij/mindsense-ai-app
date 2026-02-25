@@ -1044,6 +1044,7 @@ struct DataView: View {
                         store.triggerHaptic(intent: .selection)
                     } label: {
                         PillChip(label: focus.metric.title, state: selectedSignal == focus ? .selected : .unselected)
+                            .frame(minHeight: 44)
                     }
                     .buttonStyle(.plain)
                 }
@@ -1189,13 +1190,13 @@ struct DataView: View {
                     source: "data_whats_working_recovery_window"
                 )
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 42))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
             .accessibilityIdentifier("data_protect_recovery_window_cta")
 
             Button("Remind me when this window starts") {
                 scheduleRecoveryWindowReminder(for: schedule)
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, minHeight: 40))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, minHeight: 44))
             .accessibilityIdentifier("data_recovery_window_reminder_cta")
         }
     }
@@ -1300,6 +1301,7 @@ struct DataView: View {
                         } label: {
                             Label("Export", systemImage: "square.and.arrow.up")
                                 .font(MindSenseTypography.caption)
+                                .frame(minHeight: 44)
                         }
                         .buttonStyle(.plain)
                     }
@@ -1479,7 +1481,7 @@ struct DataView: View {
                     action: "history_edit_later_opened"
                 )
             }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 40))
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
@@ -1886,6 +1888,7 @@ struct DataView: View {
                                 label: reason.title,
                                 state: selectedWakeAnchorMissReason == reason ? .selected : .unselected
                             )
+                            .frame(minHeight: 44)
                         }
                         .buttonStyle(.plain)
                         .accessibilityIdentifier("data_wake_anchor_reason_\(reason.rawValue)")
@@ -2086,7 +2089,7 @@ struct DataView: View {
                     Button(recoveryAnchorTrackedToday ? "Adherence tracked today" : "Track adherence") {
                         trackRecoveryAnchorAdherence()
                     }
-                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 40))
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 44))
                     .disabled(!recoveryAnchorPlanActive || recoveryAnchorTrackedToday)
                 }
             }
@@ -2767,6 +2770,7 @@ private struct TrendFilterSheet: View {
                             ShareLink(item: sharePayload) {
                                 Label("Export chart data", systemImage: "square.and.arrow.up")
                                     .font(MindSenseTypography.caption)
+                                    .frame(minHeight: 44)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .buttonStyle(.plain)

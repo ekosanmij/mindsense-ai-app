@@ -1270,7 +1270,7 @@ struct TodayView: View {
                 Button("Save check-in") {
                     saveCheckIn()
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 40))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
             }
 
             if isLowCoverageRecommendationMode {
@@ -1322,7 +1322,7 @@ struct TodayView: View {
                         } label: {
                             PillChip(label: option, state: selectedCheckInDriver == option ? .selected : .unselected)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .frame(minHeight: 40)
+                                .frame(minHeight: 44)
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint(selectedCheckInDriver == option ? "Double tap to clear." : "Double tap to select.")
@@ -1350,12 +1350,12 @@ struct TodayView: View {
                         Button("Reduce check-ins") {
                             applyCheckInPromptMode(.reduced)
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 38))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
 
                         Button("Only ask on low-confidence days") {
                             applyCheckInPromptMode(.lowConfidenceOnly)
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 38))
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 44))
                     }
                 }
             }
@@ -1542,7 +1542,7 @@ struct TodayView: View {
                                 .font(MindSenseTypography.micro)
                                 .foregroundStyle(selectedTag == nil ? MindSensePalette.signalCoolStrong : .secondary)
                                 .padding(.horizontal, 10)
-                                .frame(minHeight: 30)
+                                .frame(minHeight: 44)
                                 .background(
                                     Capsule(style: .continuous)
                                         .fill(selectedTag == nil ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
@@ -1566,7 +1566,7 @@ struct TodayView: View {
                         .font(MindSenseTypography.micro)
                         .foregroundStyle(selectedTag == tag ? MindSensePalette.signalCoolStrong : .secondary)
                         .padding(.horizontal, 10)
-                        .frame(minHeight: 30)
+                        .frame(minHeight: 44)
                         .background(
                             Capsule(style: .continuous)
                                 .fill(selectedTag == tag ? MindSensePalette.accentMuted : MindSenseSurfaceLevel.base.fill)
@@ -3585,6 +3585,7 @@ struct TodayEpisodeDetailSheet: View {
                                             label: item.label,
                                             state: tags.contains(item.storedTag) ? .selected : .unselected
                                         )
+                                        .frame(minHeight: 44)
                                     }
                                     .buttonStyle(.plain)
                                     .accessibilityHint("Marks this episode as influenced by \(item.storedTag.lowercased()) and saves context.")

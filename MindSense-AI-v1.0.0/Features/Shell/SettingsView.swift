@@ -231,7 +231,7 @@ struct SettingsView: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
-                    .frame(minHeight: 40)
+                    .frame(minHeight: 44)
                 }
                 .buttonStyle(.plain)
             }

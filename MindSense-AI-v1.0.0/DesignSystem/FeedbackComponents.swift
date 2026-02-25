@@ -4,6 +4,18 @@ struct NotificationBannerView: View {
     let banner: AppBanner
 
     var body: some View {
+        Group {
+            if banner.presentation == .compact {
+                compactBanner
+            } else {
+                fullBanner
+            }
+        }
+        .transition(.opacity)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var fullBanner: some View {
         HStack(alignment: .top, spacing: 8) {
             MindSenseIconBadge(systemName: icon, tint: banner.severity.color, style: .filled, size: 24)
             VStack(alignment: .leading, spacing: 4) {
@@ -34,8 +46,29 @@ struct NotificationBannerView: View {
                 .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
         )
         .padding(.horizontal, 12)
-        .transition(.opacity)
-        .accessibilityElement(children: .combine)
+    }
+
+    private var compactBanner: some View {
+        HStack(alignment: .center, spacing: 8) {
+            MindSenseIconBadge(systemName: icon, tint: banner.severity.color, style: .filled, size: 22)
+            Text("\(banner.title): \(banner.detail)")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .padding(.horizontal, 12)
     }
 
     private var severityLabel: String {
@@ -175,7 +208,7 @@ struct DriverImpactRowView: View {
                 Button(microActionTitle) {
                     onMicroAction()
                 }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 34))
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 44))
             }
         }
         .padding(.vertical, 2)
