@@ -184,6 +184,7 @@ enum StressEpisodeDriver: String, Codable, CaseIterable, Identifiable {
 
 enum StressEpisodeAttributionFeedback: String, Codable, CaseIterable, Identifiable {
     case accurate
+    case unsure
     case inaccurate
 
     var id: String { rawValue }
@@ -192,6 +193,8 @@ enum StressEpisodeAttributionFeedback: String, Codable, CaseIterable, Identifiab
         switch self {
         case .accurate:
             return "Accurate"
+        case .unsure:
+            return "Unsure"
         case .inaccurate:
             return "Not accurate"
         }

@@ -311,7 +311,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/TodayView.swift`
 
 ### F-22 Multiple start-entry points risk context drift
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Define one canonical `Start` entry per context.
   2. Ensure start action always carries source metadata for analytics.
@@ -744,7 +744,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Minimum 8pt control separation.
 
 ### R8 Clarify attribution feedback language
-- Status: `[~]`
+- Status: `[x]`
 - Deliverables:
   1. `Not accurate` copy shipped.
   2. Add optional `Unsure` option and selected-state clarity.
@@ -768,7 +768,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Text summary for screen readers and quick scanning.
 
 ### R12 Settings trust-critical ordering
-- Status: `[~]`
+- Status: `[x]`
 - Deliverables:
   1. Real privacy URL shipped.
   2. Elevate trust-critical settings (privacy/export/data).

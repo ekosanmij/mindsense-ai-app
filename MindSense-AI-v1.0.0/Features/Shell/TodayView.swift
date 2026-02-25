@@ -3548,9 +3548,14 @@ struct TodayEpisodeDetailSheet: View {
                             )
                         )
 
-                        HStack(spacing: 10) {
-                            accuracyButton(title: "👍 Looks right", value: .accurate)
-                            accuracyButton(title: "👎 Not accurate", value: .inaccurate)
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 132), spacing: 10)],
+                            alignment: .leading,
+                            spacing: 10
+                        ) {
+                            accuracyButton(title: "Looks right", value: .accurate)
+                            accuracyButton(title: "Unsure", value: .unsure)
+                            accuracyButton(title: "Not accurate", value: .inaccurate)
                         }
 
                         VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
@@ -3828,9 +3833,18 @@ struct TodayEpisodeDetailSheet: View {
             feedback = value
             onSaveFeedback(episode.id, value)
         } label: {
-            Text(title)
-                .font(MindSenseTypography.bodyStrong)
-                .foregroundStyle(selected ? MindSensePalette.onAccent : .primary)
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(MindSenseTypography.bodyStrong)
+                    .foregroundStyle(selected ? MindSensePalette.onAccent : .primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                if selected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundStyle(MindSensePalette.onAccent)
+                        .accessibilityHidden(true)
+                }
+            }
             .frame(maxWidth: .infinity)
             .frame(minHeight: 44)
             .background(
@@ -3843,6 +3857,9 @@ struct TodayEpisodeDetailSheet: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityValue(selected ? "Selected" : "Not selected")
+        .accessibilityHint("Saves attribution feedback.")
     }
 }
 

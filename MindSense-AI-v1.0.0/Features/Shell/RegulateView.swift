@@ -1414,7 +1414,12 @@ struct RegulateView: View {
         resetOutcomeDraft()
         lastGuidedPhaseID = nil
         audioCoach.stop()
-        store.track(event: .primaryCTATapped, surface: .regulate, action: "start_\(presetID.rawValue)")
+        store.track(
+            event: .primaryCTATapped,
+            surface: .regulate,
+            action: "start_\(presetID.rawValue)",
+            metadata: ["source": source]
+        )
         _ = store.beginRegulateSession(preset: presetID, source: source)
         store.showActionFeedback(.applied, detail: "\(preset.title) started.")
         store.triggerHaptic(intent: .success)

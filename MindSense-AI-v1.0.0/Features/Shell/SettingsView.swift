@@ -171,17 +171,17 @@ struct SettingsView: View {
 
     private var settingsList: some View {
         List {
-            profileSection
-                .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
-            accountSection
-                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
             healthDataSection
-                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
+            profileSection
+                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
             notificationSection
-                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
             appearanceSection
-                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
             safetySection
+                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+            accountSection
                 .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
         }
         .listStyle(.plain)
@@ -262,6 +262,27 @@ struct SettingsView: View {
 
     private var healthDataSection: some View {
         Section {
+            settingsRow(title: "Privacy policy", icon: "lock.shield") {
+                guard let url = URL(string: privacyPolicyURLString) else {
+                    store.showBanner(
+                        title: "Privacy policy unavailable",
+                        detail: "The privacy policy link is not configured correctly yet. Please try again later.",
+                        severity: .warning
+                    )
+                    return
+                }
+                openURL(url)
+            }
+            .accessibilityIdentifier("settings_privacy_policy_row")
+            .listRowInsets(settingsRowInsets)
+            .listRowBackground(Color.clear)
+
+            settingsRow(title: "Data export and delete", icon: "tray.and.arrow.down") {
+                store.showBanner(title: "Data controls", detail: "Export and delete workflows can be connected here.", severity: .info)
+            }
+            .listRowInsets(settingsRowInsets)
+            .listRowBackground(Color.clear)
+
             NavigationLink {
                 AppleHealthPermissionsView()
             } label: {
@@ -282,29 +303,8 @@ struct SettingsView: View {
             meetingCallSignalsContextRow
                 .listRowInsets(settingsRowInsets)
                 .listRowBackground(Color.clear)
-
-            settingsRow(title: "Data export and delete", icon: "tray.and.arrow.down") {
-                store.showBanner(title: "Data controls", detail: "Export and delete workflows can be connected here.", severity: .info)
-            }
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-
-            settingsRow(title: "Privacy policy", icon: "lock.shield") {
-                guard let url = URL(string: privacyPolicyURLString) else {
-                    store.showBanner(
-                        title: "Privacy policy unavailable",
-                        detail: "The privacy policy link is not configured correctly yet. Please try again later.",
-                        severity: .warning
-                    )
-                    return
-                }
-                openURL(url)
-            }
-            .accessibilityIdentifier("settings_privacy_policy_row")
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
         } header: {
-            settingsSectionHeader("Health and data", icon: "heart.text.square")
+            settingsSectionHeader("Privacy and data", icon: "heart.text.square")
         }
     }
 
