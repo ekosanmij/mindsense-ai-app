@@ -169,7 +169,7 @@ struct AuthView: View {
             return "Apple sign-in failed. Try again."
         }
 
-        switch appleError.code {
+            switch appleError.code {
         case .canceled:
             return "Apple sign-in canceled."
         case .notHandled:

@@ -743,13 +743,6 @@ struct MindSenseCollapsibleSection<Content: View>: View {
     }
 }
 
-@available(*, unavailable, message: "Use MindSenseSummaryDisclosureText with explicit collapsed/expanded labels.")
-struct MindSenseSummaryMoreText: View {
-    var body: some View {
-        EmptyView()
-    }
-}
-
 struct MindSenseSummaryDisclosureText: View {
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
     @AppStorage("appReduceMotion") private var appReduceMotion = false

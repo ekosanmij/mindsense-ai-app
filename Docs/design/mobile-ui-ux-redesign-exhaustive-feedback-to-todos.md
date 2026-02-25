@@ -442,7 +442,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
 
 ### F-37 Duplicate "More" on estimate/rationale
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Remove duplicate disclosure controls in experiment detail.
   2. Keep one explicit disclosure label for rationale.
@@ -451,7 +451,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem/SurfaceComponents.swift`
 
 ### F-38 Sticky CTA overlap risk with bottom nav
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Reserve bottom inset above tab bar for experiment dock.
   2. Disable sticky dock when insufficient available viewport height.
@@ -470,7 +470,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
 
 ### F-40 Filter pills read as control panel, not narrative
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Move filters behind collapsible row by default.
   2. Display insight summary before filter controls.
@@ -486,7 +486,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
 
 ### F-42 Coverage warning has multiple competing actions
-- Status: `[~]`
+- Status: `[x]`
 - Actionable TODO:
   1. Keep one primary remediation action in coverage warning.
   2. Move secondary/help actions behind details.
@@ -685,7 +685,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/*.swift`
 
 ### DS-08 Disclosure spec ("Show details")
-- Status: `[~]`
+- Status: `[x]`
 - Source detail: one disclosure per module; replace repeated More/Less.
 - Actionable TODO:
   1. Keep `MindSenseSummaryDisclosureText` as standard pattern.
@@ -708,7 +708,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/TodayView.swift`
 
 ### R2 Replace repeated More/Less with single disclosure system
-- Status: `[~]`
+- Status: `[x]`
 - Deliverables:
   1. Complete migration from `MindSenseSummaryMoreText`.
   2. Explicit labels (`Details`, `How this is calculated`).

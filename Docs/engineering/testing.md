@@ -115,6 +115,12 @@ bash Scripts/capture_baselines.sh "iPhone 17" "Artifacts/snapshots-small.xcresul
 bash Scripts/copy_budget_lint.sh
 ```
 
+### Disclosure copy lint
+
+```bash
+bash Scripts/disclosure_copy_lint.sh
+```
+
 ## 6) Result bundles and attachments
 
 UI test snapshots and text reports are stored in `.xcresult` bundles produced by `xcodebuild`.

@@ -79,6 +79,7 @@ Output:
   - Above-the-fold text <= 75 words on `Today`, `Regulate`, and `Data`.
   - Maximum 1 hero block, 1 primary CTA, and 2 supporting cards before first scroll.
   - Validate with `bash Scripts/copy_budget_lint.sh` before release sign-off.
+  - Validate disclosure language with `bash Scripts/disclosure_copy_lint.sh` before release sign-off.
 - Navigation:
   - No duplicate production entrypoints for the same destination.
   - No cyclical flows such as `Settings -> Community -> Profile -> Settings`.

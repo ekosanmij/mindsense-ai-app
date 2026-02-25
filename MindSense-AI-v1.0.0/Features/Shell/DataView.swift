@@ -236,9 +236,12 @@ struct DataView: View {
     @State private var recoveryWindowCalendarDraft: RecoveryWindowCalendarDraft?
     @State private var selectedWakeAnchorMissReason: ExperimentMissReason?
     @State private var selectedHistoryEpisode: StressEpisodeRecord?
+    @State private var availableViewportHeight: CGFloat = 0
+    @State private var viewSafeAreaBottomInset: CGFloat = 0
     @State private var didAppear = false
 
     private let lowCoverageThreshold = 68
+    private let minimumViewportHeightForStickyExperimentDock: CGFloat = 620
 
     private var rawTrendPoints: [TrendPoint] {
         store.trendPoints(for: window)
@@ -349,6 +352,20 @@ struct DataView: View {
         }
 
         return "\(overlaySummary) \(comparisonSummary)"
+    }
+
+    private var trendInsightLeadLine: String {
+        let trimmed = insightNarrative.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return selectedSignal.coachTitle }
+
+        if let periodIndex = trimmed.firstIndex(of: ".") {
+            let firstSentence = String(trimmed[...periodIndex]).trimmingCharacters(in: .whitespacesAndNewlines)
+            if !firstSentence.isEmpty {
+                return firstSentence
+            }
+        }
+
+        return trimmed
     }
 
     private var trendExportPayload: String {
@@ -665,10 +682,24 @@ struct DataView: View {
     }
 
     private var shouldShowStickyExperimentCTA: Bool {
-        if case .ready = resolvedState, submode == .experiments, experimentCTA != nil {
+        if case .ready = resolvedState,
+           submode == .experiments,
+           experimentCTA != nil,
+           hasViewportRoomForStickyDock {
             return true
         }
         return false
+    }
+
+    private var hasViewportRoomForStickyDock: Bool {
+        if availableViewportHeight <= 0 {
+            return true
+        }
+        return availableViewportHeight >= minimumViewportHeightForStickyExperimentDock
+    }
+
+    private var stickyDockBottomOffset: CGFloat {
+        max(0, tabBarOverlayClearance - viewSafeAreaBottomInset)
     }
 
     private var stickyExperimentDockSubtitle: String? {
@@ -694,6 +725,21 @@ struct DataView: View {
                 }
             }
             .mindSensePageBackground()
+            .background {
+                GeometryReader { proxy in
+                    Color.clear
+                        .onAppear {
+                            availableViewportHeight = proxy.size.height
+                            viewSafeAreaBottomInset = proxy.safeAreaInsets.bottom
+                        }
+                        .onChange(of: proxy.size) { _, newValue in
+                            availableViewportHeight = newValue.height
+                        }
+                        .onChange(of: proxy.safeAreaInsets.bottom) { _, newValue in
+                            viewSafeAreaBottomInset = newValue
+                        }
+                }
+            }
             .navigationTitle(AppIA.data)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -716,6 +762,7 @@ struct DataView: View {
                         .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 52))
                         .disabled(experimentCTA.disabled)
                     }
+                    .padding(.bottom, stickyDockBottomOffset)
                 }
             }
             .sheet(isPresented: $showCompletionSheet) {
@@ -1140,6 +1187,11 @@ struct DataView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
+                    Text("Key insight: \(trendInsightLeadLine)")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
                     HStack(spacing: 8) {
                         dataMetaPill("Window \(window.rawValue)")
                         dataMetaPill("Rec. confidence \(store.confidencePercent)%")
@@ -1187,12 +1239,12 @@ struct DataView: View {
                         expandedLabel: "Hide coverage details"
                     )
 
-                    Button("Do this to improve coverage") {
+                    Button("Review coverage steps") {
                         showCoverageDiagnostics = true
-                        store.track(event: .secondaryActionTapped, surface: .data, action: "open_coverage_diagnostics")
+                        store.track(event: .primaryCTATapped, surface: .data, action: "open_coverage_diagnostics")
                         store.triggerHaptic(intent: .selection)
                     }
-                    .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 44))
                 }
             }
 
@@ -1844,13 +1896,27 @@ struct DataView: View {
             wakeAnchorPing(for: selectedExperiment)
         }
 
-        if experimentCTA != nil {
-            MindSenseSummaryDisclosureText(
-                summary: "Use the sticky action below for the next experiment step.",
-                detail: "We only pin a bottom CTA when the selected experiment has one clear next action, which reduces duplicate buttons inside the card stack.",
-                collapsedLabel: "Why the sticky action is shown",
-                expandedLabel: "Hide CTA rationale"
-            )
+        if let experimentCTA {
+            if shouldShowStickyExperimentCTA {
+                Text("Next action is pinned at the bottom to avoid duplicate action buttons in this detail stack.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Button(experimentCTA.label) {
+                    guard !experimentCTA.disabled else { return }
+                    store.triggerHaptic(intent: .primary)
+                    experimentCTA.action()
+                }
+                .accessibilityIdentifier("\(experimentCTA.id)_inline")
+                .buttonStyle(MindSenseButtonStyle(hierarchy: .primary, minHeight: 44))
+                .disabled(experimentCTA.disabled)
+
+                Text("Inline action is shown here because available vertical space is limited.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 

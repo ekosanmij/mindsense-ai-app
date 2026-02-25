@@ -48,6 +48,7 @@ pick_device() {
 }
 
 run_step "contrast-audit" swift "$ROOT_DIR/Scripts/contrast_audit.swift"
+run_step "disclosure-copy-lint" bash "$ROOT_DIR/Scripts/disclosure_copy_lint.sh"
 
 SIM_LIST_PATH="$ARTIFACT_ROOT/simctl-devices.txt"
 set +e
