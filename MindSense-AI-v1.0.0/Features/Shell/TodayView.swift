@@ -18,7 +18,6 @@ struct TodayView: View {
     @AppStorage("todayCheckInReducedLastPromptDayStamp") private var reducedPromptLastShownDayStamp = -1
     @AppStorage("todayCheckInLowConfidenceLastPromptDayStamp") private var lowConfidencePromptLastShownDayStamp = -1
     @AppStorage("todayCheckInLastSavedDayStamp") private var checkInLastSavedDayStamp = -1
-    @AppStorage("notifications.stressNudge") private var stressNudge = true
 
     @State private var loadSlider = 5.0
     @State private var didAppear = false
@@ -36,6 +35,7 @@ struct TodayView: View {
     @State private var selectedCheckInDriver: String?
     @State private var showSignalSourceDetails = false
     @State private var showTimelineDetails = false
+    @State private var timelineDetailEpisodeFilter: TodayTimelineDetailSheet.EpisodeFilter = .all
     @State private var selectedTimelineEpisode: StressEpisodeRecord?
     @State private var intensityInfoEpisode: StressEpisodeRecord?
     @State private var selectedMetricDefinition: CoreMetric?
@@ -199,10 +199,6 @@ struct TodayView: View {
         shouldShowCheckInPrompt && checkInPromptMode == .standard && checkInIgnoreStreak >= 3
     }
 
-    private var effectiveStressNudgeEnabled: Bool {
-        stressNudge && !store.suppressNonEssentialNotificationsForBattery
-    }
-
     private var attributionInboxEpisodes: [StressEpisodeRecord] {
         let now = Date()
         return store.recentStressEpisodes.filter { episode in
@@ -214,14 +210,6 @@ struct TodayView: View {
 
     private var attributionInboxCount: Int {
         attributionInboxEpisodes.count
-    }
-
-    private var recentAttributionPromptEpisode: StressEpisodeRecord? {
-        let now = Date()
-        return attributionInboxEpisodes.first { episode in
-            let age = now.timeIntervalSince(episode.end)
-            return age >= (15 * 60) && age <= (30 * 60)
-        }
     }
 
     private var attributionInboxCountLabel: String {
@@ -309,21 +297,17 @@ struct TodayView: View {
                             .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
                         timelineBlock
                             .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
-                        if attributionInboxCount > 0 {
-                            attributionInboxBlock
-                                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
-                        }
                         if episodeAwaitingContext != nil {
                             contextCaptureBlock
-                                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                         driversBlock
-                            .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
                         statusSnapshotBlock
-                            .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
+                            .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
                         if shouldShowCheckInPrompt {
                             checkInBlock
-                                .mindSenseStaggerEntrance(6, isPresented: didAppear, reduceMotion: reduceMotion)
+                                .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                     }
                     .mindSensePageInsets(bottom: bottomContentPadding)
@@ -393,10 +377,13 @@ struct TodayView: View {
                     actionHint: store.demoHealthProfile.quality.actionHint
                 )
             }
-            .sheet(isPresented: $showTimelineDetails) {
+            .sheet(isPresented: $showTimelineDetails, onDismiss: {
+                timelineDetailEpisodeFilter = .all
+            }) {
                 TodayTimelineDetailSheet(
                     episodes: store.recentStressEpisodes,
                     timelineSegments: store.stressTimelineSegments,
+                    initialEpisodeFilter: timelineDetailEpisodeFilter,
                     onSelectEpisode: { episode in
                         selectedTimelineEpisode = episode
                         store.triggerHaptic(intent: .selection)
@@ -1023,6 +1010,25 @@ struct TodayView: View {
                     }
                 }
 
+                if attributionInboxCount > 0 {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Label(attributionInboxCountLabel, systemImage: "tag")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Spacer(minLength: 8)
+
+                        Button("Review labels") {
+                            openTimelineDetails(
+                                filter: .needsLabel,
+                                source: "today_timeline_attribution_filter"
+                            )
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                    }
+                }
+
             }
         }
     }
@@ -1064,6 +1070,21 @@ struct TodayView: View {
                     Text("\(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
+                    if !episode.hasContext {
+                        Text("Needs label")
+                            .font(MindSenseTypography.micro)
+                            .foregroundStyle(MindSensePalette.warning)
+                            .padding(.horizontal, 8)
+                            .frame(minHeight: 24)
+                            .background(
+                                Capsule(style: .continuous)
+                                    .fill(MindSensePalette.warning.opacity(0.18))
+                            )
+                            .overlay(
+                                Capsule(style: .continuous)
+                                    .stroke(MindSensePalette.warning.opacity(0.45), lineWidth: 1)
+                            )
+                    }
                     EpisodeIntensityBadge(intensity: episode.intensity) {
                         presentIntensityDetails(for: episode, source: "today_timeline_card")
                     }
@@ -1097,13 +1118,6 @@ struct TodayView: View {
                         .font(MindSenseTypography.micro)
                         .foregroundStyle(MindSensePalette.accent)
                 }
-
-                HStack(spacing: 8) {
-                    episodeActionPill(title: "Open episode", systemImage: "chevron.right") {
-                        selectedTimelineEpisode = episode
-                        store.triggerHaptic(intent: .selection)
-                    }
-                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1117,141 +1131,37 @@ struct TodayView: View {
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
         )
-    }
-
-    private func episodeActionPill(
-        title: String,
-        systemImage: String? = nil,
-        emphasized: Bool = false,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            Group {
-                if let systemImage {
-                    Label(title, systemImage: systemImage)
-                } else {
-                    Text(title)
-                }
-            }
-            .font(MindSenseTypography.micro)
-            .foregroundStyle(emphasized ? MindSensePalette.warning : .secondary)
-            .padding(.horizontal, 10)
-            .frame(minHeight: 44)
-            .background(
-                Capsule(style: .continuous)
-                    .fill(MindSenseSurfaceLevel.base.fill)
+        .contentShape(RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous))
+        .onTapGesture {
+            selectedTimelineEpisode = episode
+            store.track(
+                event: .secondaryActionTapped,
+                surface: .today,
+                action: "timeline_episode_opened",
+                metadata: ["episode_id": episode.id.uuidString]
             )
-            .overlay(
-                Capsule(style: .continuous)
-                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-            )
+            store.triggerHaptic(intent: .selection)
         }
-        .buttonStyle(.plain)
+        .accessibilityHint("Opens episode details")
+        .accessibilityAddTraits(.isButton)
     }
 
-    private var attributionInboxBlock: some View {
-        FocusSurface {
-            MindSenseSectionHeader(
-                model: .init(
-                    title: "Attribution inbox",
-                    subtitle: attributionInboxCountLabel,
-                    icon: "tray.full"
-                )
-            )
-
-            if effectiveStressNudgeEnabled, let promptEpisode = recentAttributionPromptEpisode {
-                Text("We detected an activation spike. What was happening?")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(MindSensePalette.warning)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("Detected \(attributionEpisodeAgeLabel(for: promptEpisode)) near \(promptEpisode.end.formattedTimeLabel()).")
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(.secondary)
-            } else if stressNudge, store.isBatteryFriendlyModeActive {
-                Text("Smart stress nudge is paused while Battery Friendly Mode is active in Low Power Mode.")
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            VStack(spacing: 8) {
-                ForEach(attributionInboxEpisodes.prefix(2)) { episode in
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("\(episode.start.formattedTimeLabel())-\(episode.end.formattedTimeLabel())")
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                            Text("\(episode.likelyDriver.title) spike • intensity \(episode.intensity)")
-                                .font(MindSenseTypography.bodyStrong)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text(attributionEpisodeAgeLabel(for: episode))
-                                .font(MindSenseTypography.micro)
-                                .foregroundStyle(.secondary)
-                        }
-
-                        Spacer(minLength: 8)
-
-                        Button("Label now") {
-                            openAttributionInboxEpisode(episode, source: "attribution_inbox_row")
-                        }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, fullWidth: false, minHeight: 38))
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, MindSenseLayout.tileHorizontalInset)
-                    .padding(.vertical, MindSenseLayout.tileVerticalInset)
-                    .background(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                            .fill(MindSenseSurfaceLevel.base.fill)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                            .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-                    )
-                }
-            }
-
-            if attributionInboxCount > 2 {
-                Button("Review all unlabeled episodes") {
-                    showTimelineDetails = true
-                    store.track(
-                        event: .secondaryActionTapped,
-                        surface: .today,
-                        action: "attribution_inbox_review_all",
-                        metadata: ["count": "\(attributionInboxCount)"]
-                    )
-                    store.triggerHaptic(intent: .selection)
-                }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
-            }
-        }
-    }
-
-    private func openAttributionInboxEpisode(_ episode: StressEpisodeRecord, source: String) {
-        focusContextCapture(for: episode)
+    private func openTimelineDetails(
+        filter: TodayTimelineDetailSheet.EpisodeFilter,
+        source: String
+    ) {
+        timelineDetailEpisodeFilter = filter
+        showTimelineDetails = true
         store.track(
             event: .secondaryActionTapped,
             surface: .today,
-            action: "attribution_inbox_label_now",
+            action: "timeline_details_opened",
             metadata: [
                 "source": source,
-                "episode_id": episode.id.uuidString
+                "filter": filter.rawValue
             ]
         )
-    }
-
-    private func attributionEpisodeAgeLabel(for episode: StressEpisodeRecord) -> String {
-        let minutes = max(1, Int(Date().timeIntervalSince(episode.end) / 60))
-        if minutes < 60 {
-            return "\(minutes) min ago"
-        }
-
-        let hours = max(1, minutes / 60)
-        if hours < 24 {
-            return hours == 1 ? "1 hr ago" : "\(hours) hr ago"
-        }
-
-        let days = max(1, hours / 24)
-        return days == 1 ? "1 day ago" : "\(days) days ago"
+        store.triggerHaptic(intent: .selection)
     }
 
     private var episodeAwaitingContext: StressEpisodeRecord? {
@@ -1480,8 +1390,12 @@ struct TodayView: View {
     private var timelineCollapsedSummary: String {
         let segmentCount = store.stressTimelineSegments.count
         let episodeCount = store.recentStressEpisodes.count
+        let unlabeledCount = attributionInboxCount
         if segmentCount == 0 && episodeCount == 0 {
             return "No timeline data yet."
+        }
+        if unlabeledCount > 0 {
+            return "\(episodeCount) recent episodes • \(unlabeledCount) need labels"
         }
         return "\(episodeCount) recent episodes • \(segmentCount) timeline segments"
     }
@@ -3117,22 +3031,62 @@ private struct TodayTimelineDetailSheet: View {
         var id: String { rawValue }
     }
 
+    enum EpisodeFilter: String, CaseIterable, Identifiable {
+        case all = "All"
+        case needsLabel = "Needs label"
+
+        var id: String { rawValue }
+    }
+
     let episodes: [StressEpisodeRecord]
     let timelineSegments: [StressTimelineSegment]
     let onSelectEpisode: (StressEpisodeRecord) -> Void
     let onInspectIntensity: (StressEpisodeRecord) -> Void
 
     @State private var dayFilter: DayFilter = .today
+    @State private var episodeFilter: EpisodeFilter
+
+    init(
+        episodes: [StressEpisodeRecord],
+        timelineSegments: [StressTimelineSegment],
+        initialEpisodeFilter: EpisodeFilter = .all,
+        onSelectEpisode: @escaping (StressEpisodeRecord) -> Void,
+        onInspectIntensity: @escaping (StressEpisodeRecord) -> Void
+    ) {
+        self.episodes = episodes
+        self.timelineSegments = timelineSegments
+        self.onSelectEpisode = onSelectEpisode
+        self.onInspectIntensity = onInspectIntensity
+        _episodeFilter = State(initialValue: initialEpisodeFilter)
+    }
 
     private var filteredEpisodes: [StressEpisodeRecord] {
         let calendar = Calendar.current
-        return episodes.filter { episode in
+        let dayFiltered = episodes.filter { episode in
             switch dayFilter {
             case .today:
                 return calendar.isDateInToday(episode.end)
             case .yesterday:
                 return calendar.isDateInYesterday(episode.end)
             }
+        }
+
+        return dayFiltered.filter { episode in
+            switch episodeFilter {
+            case .all:
+                return true
+            case .needsLabel:
+                return !episode.hasContext
+            }
+        }
+    }
+
+    private var filteredEpisodeEmptyState: String {
+        switch episodeFilter {
+        case .all:
+            return "No episodes detected for \(dayFilter.rawValue.lowercased())."
+        case .needsLabel:
+            return "No unlabeled episodes for \(dayFilter.rawValue.lowercased())."
         }
     }
 
@@ -3181,12 +3135,18 @@ private struct TodayTimelineDetailSheet: View {
                         MindSenseSectionHeader(
                             model: .init(
                                 title: "Detected episodes",
-                                subtitle: "Tap an episode to review trigger context and next action."
+                                subtitle: "Filter episodes, then open one to review trigger context and next action."
                             )
                         )
 
+                        MindSenseSegmentedControl(
+                            options: EpisodeFilter.allCases,
+                            selection: $episodeFilter,
+                            title: { $0.rawValue }
+                        )
+
                         if filteredEpisodes.isEmpty {
-                            Text("No episodes detected for \(dayFilter.rawValue.lowercased()).")
+                            Text(filteredEpisodeEmptyState)
                                 .font(MindSenseTypography.caption)
                                 .foregroundStyle(.secondary)
                         } else {

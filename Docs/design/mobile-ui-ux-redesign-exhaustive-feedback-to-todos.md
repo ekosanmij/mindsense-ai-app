@@ -268,7 +268,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Episode list row has max one inline CTA.
 
 ### F-16 Repetitive duplicated card action structure
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Use a shared condensed episode row component with uniform hierarchy.
   2. Remove duplicate repeated tertiary action clusters.
@@ -285,7 +285,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/TodayView.swift`
 
 ### F-18 Attribution inbox is separate workflow layer
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Integrate attribution-needed state into episode rows via badge.
   2. Keep inbox as filter/view, not separate competing module.
