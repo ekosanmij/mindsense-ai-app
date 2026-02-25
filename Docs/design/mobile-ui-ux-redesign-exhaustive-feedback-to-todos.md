@@ -382,7 +382,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem/FeedbackComponents.swift`
 
 ### F-30 Load/readiness/flow block can be condensed
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Compress run meta block into one line or optional details expansion.
   2. Keep timer + next step as highest priority.
@@ -407,7 +407,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
 
 ### F-33 Session detail cards too dense during execution
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Introduce two-mode run view: `Focus` (default) and `Details`.
   2. Move explanatory cards behind details disclosure.
@@ -750,7 +750,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Add optional `Unsure` option and selected-state clarity.
 
 ### R9 Regulate run focus mode
-- Status: `[ ]`
+- Status: `[x]`
 - Deliverables:
   1. Focus mode default (timer + next step only).
   2. Details behind disclosure.

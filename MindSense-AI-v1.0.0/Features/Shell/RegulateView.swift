@@ -17,6 +17,7 @@ struct RegulateView: View {
     @State private var didAppear = false
     @State private var now = Date()
     @State private var showRecordImpactDetails = false
+    @State private var showRunFocusDetails = false
     @State private var showPredictedFitExplanation = false
     @State private var showFlowStateExplanation = false
     @State private var selectedPresetDetails: DemoRegulatePreset?
@@ -253,10 +254,14 @@ struct RegulateView: View {
     }
 
     private var shouldShowExpandedCommandDeck: Bool {
-        if currentStep == .selectProtocol {
+        switch currentStep {
+        case .selectProtocol:
             return !hasAnyRegulateHistory
+        case .runTimer:
+            return false
+        case .recordImpact:
+            return true
         }
-        return true
     }
 
     var body: some View {
@@ -268,13 +273,13 @@ struct RegulateView: View {
                             commandDeck
                                 .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
-                        if currentStep != .selectProtocol {
+                        if currentStep == .recordImpact {
                             sessionStatusBlock
                                 .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
                         }
                         activeStepBlock
                             .mindSenseStaggerEntrance(
-                                currentStep == .selectProtocol ? 1 : 2,
+                                currentStep == .recordImpact ? 2 : 1,
                                 isPresented: didAppear,
                                 reduceMotion: reduceMotion
                             )
@@ -309,7 +314,7 @@ struct RegulateView: View {
                 }
             }
             .safeAreaInset(edge: .top) {
-                if case .ready = resolvedState, currentStep != .selectProtocol {
+                if case .ready = resolvedState, currentStep == .recordImpact {
                     stickyStepStrip
                 }
             }
@@ -379,9 +384,11 @@ struct RegulateView: View {
             }
             .onChange(of: currentStep) { _, step in
                 if step == .runTimer {
+                    showRunFocusDetails = false
                     lastGuidedPhaseID = nil
                     announceCurrentProtocolPhase(force: true)
                 } else {
+                    showRunFocusDetails = false
                     lastGuidedPhaseID = nil
                     audioCoach.stop()
                 }
@@ -783,71 +790,101 @@ struct RegulateView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+            }
 
-                VStack(alignment: .leading, spacing: 6) {
-                    ForEach(protocolPhases) { phase in
-                        let phaseStatus = protocolPhaseStatus(
-                            phase,
-                            activePhaseID: activePhase?.id,
-                            elapsedSeconds: elapsedSeconds
-                        )
+            DisclosureGroup(isExpanded: $showRunFocusDetails) {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(runMetaLine)
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                        HStack(spacing: 8) {
-                            Image(systemName: phaseStatus.symbol)
-                                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                                .foregroundStyle(phaseStatus.tint)
-                            Text("\(phase.minuteRangeLabel): \(phase.title)")
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(phaseStatus.tint)
-                                .fixedSize(horizontal: false, vertical: true)
+                    if let latestEffect = store.latestSessionEffectLine {
+                        Text("Last measured effect: \(latestEffect)")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Text("Session: \(runningPreset.title)")
+                        .font(MindSenseTypography.bodyStrong)
+
+                    ProtocolTokenStripView(
+                        what: runningPreset.title,
+                        why: runningPreset.whyNow,
+                        expectedEffect: runningPreset.expectedEffect,
+                        time: runningPreset.durationLabel,
+                        maxValueLines: 2
+                    )
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Why this works")
+                            .font(MindSenseTypography.bodyStrong)
+                        Text(runningPreset.whyNow)
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Expected effect: \(runningPreset.expectedEffect)")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("What to think: \(store.todayCognitivePrompt)")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Text("Full step schedule")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        ForEach(protocolPhases) { phase in
+                            let phaseStatus = protocolPhaseStatus(
+                                phase,
+                                activePhaseID: activePhase?.id,
+                                elapsedSeconds: elapsedSeconds
+                            )
+
+                            HStack(spacing: 8) {
+                                Image(systemName: phaseStatus.symbol)
+                                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                    .foregroundStyle(phaseStatus.tint)
+                                Text("\(phase.minuteRangeLabel): \(phase.title)")
+                                    .font(MindSenseTypography.caption)
+                                    .foregroundStyle(phaseStatus.tint)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
+
+                    Toggle("Haptic step cues", isOn: $hapticPacingEnabled)
+                        .font(MindSenseTypography.caption)
+                        .tint(MindSensePalette.accent)
+                        .accessibilityIdentifier("regulate_haptic_pacing_toggle")
+
+                    Toggle("Audio guidance", isOn: $audioGuidanceEnabled)
+                        .font(MindSenseTypography.caption)
+                        .tint(MindSensePalette.accent)
+                        .accessibilityIdentifier("regulate_audio_guidance_toggle")
+
+                    Text("Cues trigger when the protocol moves to the next step.")
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    HStack(spacing: 8) {
+                        MindSenseIconBadge(systemName: "heart.text.square", tint: MindSensePalette.signalCool, style: .filled, size: 28)
+                        Text("Calming trend: \(calmingTrendLabel)")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-            }
-
-            Text("Session: \(runningPreset.title)")
-                .font(MindSenseTypography.bodyStrong)
-
-            ProtocolTokenStripView(
-                what: runningPreset.title,
-                why: runningPreset.whyNow,
-                expectedEffect: runningPreset.expectedEffect,
-                time: runningPreset.durationLabel,
-                maxValueLines: 2
-            )
-
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Why this works")
+                .padding(.top, 6)
+            } label: {
+                Text("Details")
                     .font(MindSenseTypography.bodyStrong)
-                MindSenseSummaryDisclosureText(
-                    summary: runningPreset.whyNow,
-                    detail: "\(runningPreset.expectedEffect)\nWhat to think: \(store.todayCognitivePrompt)",
-                    collapsedLabel: "Run guidance",
-                    expandedLabel: "Hide run guidance"
-                )
-            }
-
-            Toggle("Haptic step cues", isOn: $hapticPacingEnabled)
-                .font(MindSenseTypography.caption)
-                .tint(MindSensePalette.accent)
-                .accessibilityIdentifier("regulate_haptic_pacing_toggle")
-
-            Toggle("Audio guidance", isOn: $audioGuidanceEnabled)
-                .font(MindSenseTypography.caption)
-                .tint(MindSensePalette.accent)
-                .accessibilityIdentifier("regulate_audio_guidance_toggle")
-
-            Text("Cues trigger when the protocol moves to the next step.")
-                .font(MindSenseTypography.micro)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            HStack(spacing: 8) {
-                MindSenseIconBadge(systemName: "heart.text.square", tint: MindSensePalette.signalCool, style: .filled, size: 28)
-                Text("Calming trend: \(calmingTrendLabel)")
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Button("Cancel session") {
@@ -1101,6 +1138,10 @@ struct RegulateView: View {
         case .recordImpact:
             return "Flow check-in"
         }
+    }
+
+    private var runMetaLine: String {
+        "Load \(store.demoMetrics.load) • Readiness \(store.demoMetrics.readiness) • \(flowLabel)"
     }
 
     private func protocolTimeline(for preset: DemoRegulatePreset) -> [TimerProtocolPhase] {
