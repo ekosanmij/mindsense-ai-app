@@ -1114,22 +1114,36 @@ struct MindSenseSegmentedControl<Option: Hashable>: View {
     let options: [Option]
     @Binding var selection: Option
     let title: (Option) -> String
+    var enablesHorizontalScrollFallback: Bool = false
     var onSelectionChanged: ((Option) -> Void)? = nil
 
     private let containerCornerRadius = MindSenseRadius.tile
 
     var body: some View {
-        HStack(spacing: 6) {
-            ForEach(options, id: \.self) { option in
-                segmentButton(for: option)
+        Group {
+            if enablesHorizontalScrollFallback {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(options, id: \.self) { option in
+                            segmentButton(for: option, fillAvailableWidth: false)
+                        }
+                    }
+                    .padding(4)
+                }
+            } else {
+                HStack(spacing: 6) {
+                    ForEach(options, id: \.self) { option in
+                        segmentButton(for: option, fillAvailableWidth: true)
+                    }
+                }
+                .padding(4)
             }
         }
-        .padding(4)
         .background(containerBackground)
         .overlay(containerStroke)
     }
 
-    private func segmentButton(for option: Option) -> some View {
+    private func segmentButton(for option: Option, fillAvailableWidth: Bool) -> some View {
         let isSelected = selection == option
 
         return Button {
@@ -1139,7 +1153,8 @@ struct MindSenseSegmentedControl<Option: Hashable>: View {
         } label: {
             MindSenseSegmentOptionView(
                 text: title(option),
-                isSelected: isSelected
+                isSelected: isSelected,
+                fillAvailableWidth: fillAvailableWidth
             )
         }
         .buttonStyle(.plain)
@@ -1162,6 +1177,7 @@ private struct MindSenseSegmentOptionView: View {
 
     let text: String
     let isSelected: Bool
+    let fillAvailableWidth: Bool
 
     private let cornerRadius = MindSenseRadius.tile - 2
 
@@ -1176,8 +1192,8 @@ private struct MindSenseSegmentOptionView: View {
             .lineLimit(1)
             .minimumScaleFactor(0.82)
             .allowsTightening(true)
-            .padding(.horizontal, 6)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, fillAvailableWidth ? 6 : 12)
+            .frame(maxWidth: fillAvailableWidth ? .infinity : nil)
             .frame(minHeight: 44)
             .background(segmentBackground)
             .overlay(segmentStroke)

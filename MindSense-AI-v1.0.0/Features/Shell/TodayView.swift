@@ -13,7 +13,6 @@ struct TodayView: View {
     @Environment(\.mindSenseTabBarOverlayClearance) private var tabBarOverlayClearance
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage("appReduceMotion") private var appReduceMotion = false
-    @AppStorage("todayShowWhyStatePreference") private var showHeroWhyPreference = false
     @AppStorage("todayCheckInIgnoreStreak") private var checkInIgnoreStreak = 0
     @AppStorage("todayCheckInPromptMode") private var checkInPromptModeRaw = CheckInPromptMode.standard.rawValue
     @AppStorage("todayCheckInReducedLastPromptDayStamp") private var reducedPromptLastShownDayStamp = -1
@@ -24,6 +23,7 @@ struct TodayView: View {
     @State private var loadSlider = 5.0
     @State private var didAppear = false
     @State private var showHeroWhy = false
+    @State private var showHeroStateExplanation = false
     @State private var showActionDetails = false
     @State private var showAllDrivers = false
     @State private var showSecondarySignals = false
@@ -540,19 +540,13 @@ struct TodayView: View {
             .accessibilityIdentifier("today_action_card_why_now")
 
             if showHeroWhy {
-                if shouldUseBulletWhyExplanation {
-                    VStack(alignment: .leading, spacing: 10) {
-                        heroDiagnosticsDetails
-                        heroIntentModeDetails
-                        heroActionContextDetails
-                        heroStateExplanationDetails(useBullets: true)
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 10) {
-                        heroDiagnosticsDetails
-                        heroIntentModeDetails
-                        heroActionContextDetails
-                        heroStateExplanationDetails(useBullets: false)
+                VStack(alignment: .leading, spacing: 10) {
+                    heroDiagnosticsDetails
+                    heroIntentModeDetails
+                    heroActionContextDetails
+                    heroStateDisclosureRow
+                    if showHeroStateExplanation {
+                        heroStateExplanationDetails(useBullets: shouldUseBulletWhyExplanation)
                     }
                 }
             }
@@ -608,6 +602,14 @@ struct TodayView: View {
 
     private var heroIntentModeDetails: some View {
         VStack(alignment: .leading, spacing: 8) {
+            Text("Session emphasis filter")
+                .font(MindSenseTypography.bodyStrong)
+
+            Text("This only changes driver weighting and recommendation framing. Your primary next action remains Start or Continue.")
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
             MindSenseSegmentedControl(
                 options: IntentMode.allCases,
                 selection: intentModeBinding,
@@ -654,7 +656,7 @@ struct TodayView: View {
     @ViewBuilder
     private func heroStateExplanationDetails(useBullets: Bool) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Why this state")
+            Text("Why this state now")
                 .font(MindSenseTypography.bodyStrong)
 
             if useBullets {
@@ -672,6 +674,42 @@ struct TodayView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+
+    private var heroStateDisclosureRow: some View {
+        Button {
+            if reduceMotion {
+                toggleHeroStateExplanation()
+            } else {
+                withAnimation(MindSenseMotion.selection) {
+                    toggleHeroStateExplanation()
+                }
+            }
+            store.triggerHaptic(intent: .selection)
+        } label: {
+            HStack(spacing: MindSenseSpacing.xs) {
+                Text(showHeroStateExplanation ? "Hide why this state" : "Why this state")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                Spacer(minLength: MindSenseSpacing.xs)
+                Image(systemName: showHeroStateExplanation ? "chevron.up" : "chevron.down")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: 44)
+            .padding(.horizontal, 12)
+            .background(
+                RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                    .fill(MindSenseSurfaceLevel.base.fill)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                    .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("today_action_card_why_state")
     }
 
     private var statusSnapshotBlock: some View {
@@ -947,6 +985,11 @@ struct TodayView: View {
                         timelineLegendPill(title: "Activated", state: .activated)
                         timelineLegendPill(title: "Recovery", state: .recovery)
                     }
+
+                    Text("Legend codes: S = Stable, A = Activated, R = Recovery.")
+                        .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 if store.recentStressEpisodes.isEmpty {
@@ -971,12 +1014,12 @@ struct TodayView: View {
                 TimelineStateSegmentCell(
                     state: segment.state,
                     tint: timelineTint(for: segment.state),
-                    height: 20,
+                    height: 24,
                     prefersExpandedLabel: false
                 )
             }
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
         .accessibilityElement(children: .contain)
     }
 
@@ -1987,12 +2030,19 @@ struct TodayView: View {
     }
 
     private func applyHeroWhyExpansionPolicy() {
-        showHeroWhy = showHeroWhyPreference
+        showHeroWhy = false
+        showHeroStateExplanation = false
     }
 
     private func toggleHeroWhy() {
         showHeroWhy.toggle()
-        showHeroWhyPreference = showHeroWhy
+        if !showHeroWhy {
+            showHeroStateExplanation = false
+        }
+    }
+
+    private func toggleHeroStateExplanation() {
+        showHeroStateExplanation.toggle()
     }
 
     private var latestDailyDelta: (load: Int, readiness: Int, consistency: Int)? {
@@ -2051,7 +2101,6 @@ struct TodayView: View {
     private func heroMetricCompactTile(_ card: HeroMetricCard) -> some View {
         let bounded = max(0, min(100, card.value))
         let deltaTone = card.delta.map { deltaTint(metric: card.metric, value: $0) } ?? Color.secondary
-        let metricState = stateLabel(for: card.metric, value: bounded)
 
         return VStack(alignment: .leading, spacing: 6) {
             Text(card.title)
@@ -2075,18 +2124,11 @@ struct TodayView: View {
                     .minimumScaleFactor(0.75)
                     .monospacedDigit()
             }
-
-            Text(metricState)
-                .font(MindSenseTypography.micro)
-                .foregroundStyle(.secondary)
-                .lineLimit(2)
-                .minimumScaleFactor(0.75)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 78 : 72, alignment: .topLeading)
+        .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 70 : 64, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -3298,15 +3340,25 @@ private struct TimelineStateLegendPill: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            TimelineStateSegmentCell(state: state, tint: tint, height: 18, prefersExpandedLabel: false)
-                .frame(width: 34)
-                .accessibilityHidden(true)
+            Circle()
+                .fill(tint)
+                .frame(width: 12, height: 12)
+                .overlay(
+                    Image(systemName: state.timelineSymbolName)
+                        .font(.system(size: 7, weight: .bold, design: .rounded))
+                        .foregroundStyle(MindSensePalette.onAccent)
+                )
             Text(title)
+                .font(MindSenseTypography.caption)
+                .foregroundStyle(.secondary)
+            Text(state.timelineShortCode)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
+                .monospacedDigit()
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 5)
+        .frame(minHeight: 44)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 4)
         .background(
             Capsule(style: .continuous)
                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -3316,7 +3368,7 @@ private struct TimelineStateLegendPill: View {
                 .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
         )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(title) timeline state")
+        .accessibilityLabel("\(title) timeline state, code \(state.timelineShortCode)")
     }
 }
 

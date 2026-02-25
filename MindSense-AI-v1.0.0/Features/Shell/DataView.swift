@@ -208,7 +208,7 @@ struct DataView: View {
     @AppStorage("data.recoveryAnchor.lastTrackedDay") private var recoveryAnchorLastTrackedDay = ""
 
     private enum DataSubmode: String, CaseIterable, Identifiable {
-        case patterns = "Patterns"
+        case patterns = "Trends"
         case plans = "Plans"
         case experiments = "Experiments"
         case history = "History"
@@ -841,7 +841,7 @@ struct DataView: View {
         MindSenseTabHero(
             label: AppIA.data,
             title: "One focus, one workspace.",
-            detail: "Convert \(store.demoScenario.title) patterns into plans, run experiments, and review history.",
+            detail: "Convert \(store.demoScenario.title) trends into plans, run experiments, and review history.",
             metric: submode.rawValue,
             icon: "chart.xyaxis.line",
             tone: .accent,
@@ -851,6 +851,7 @@ struct DataView: View {
                 options: DataSubmode.allCases,
                 selection: $submode,
                 title: { $0.rawValue },
+                enablesHorizontalScrollFallback: true,
                 onSelectionChanged: { mode in
                     store.triggerHaptic(intent: .selection)
                     store.track(
@@ -1158,10 +1159,14 @@ struct DataView: View {
 
                         Spacer(minLength: 8)
 
-                        ShareLink(item: trendExportPayload) {
+                        Button {
+                            showTrendFilterSheet = true
+                            store.triggerHaptic(intent: .selection)
+                        } label: {
                             Label("Export", systemImage: "square.and.arrow.up")
+                                .font(MindSenseTypography.caption)
                         }
-                        .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false, minHeight: 36))
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -2518,7 +2523,7 @@ private struct TrendFilterSheet: View {
                         MindSenseSectionHeader(
                             model: .init(
                                 title: "Trend filters",
-                                subtitle: "Window is secondary to the metric focus in Patterns.",
+                                subtitle: "Window is secondary to the metric focus in Trends.",
                                 icon: "slider.horizontal.3"
                             )
                         )
@@ -2618,9 +2623,10 @@ private struct TrendFilterSheet: View {
 
                             ShareLink(item: sharePayload) {
                                 Label("Export chart data", systemImage: "square.and.arrow.up")
-                                    .frame(maxWidth: .infinity)
+                                    .font(MindSenseTypography.caption)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
                             }
-                            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: 44))
+                            .buttonStyle(.plain)
                         }
                     }
                 }

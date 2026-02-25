@@ -215,7 +215,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Metadata is readable and clearly secondary.
 
 ### F-11 Secondary mode switch interrupts one-next-action model
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Reframe Focus/Recovery/Sleep as secondary filter (not equal-primary action).
   2. Add explanatory label showing what the filter changes.
@@ -225,7 +225,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - User understands primary action independent of filter changes.
 
 ### F-12 KPI cards are over-dense
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Keep only metric value + short label in hero.
   2. Move threshold bands and metric definitions to Details sheet.
@@ -236,7 +236,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - Metric row remains readable at large Dynamic Type sizes.
 
 ### F-13 "Why this state" not truly collapsed
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Collapse by default with one disclosure row.
   2. Expand into structured details section, not mixed bullets in primary card.
@@ -248,7 +248,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B4) Today Timeline
 
 ### F-14 Small timeline pills and semantics ambiguity
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Increase tap area for timeline pills and legend items to 44x44 hit region.
   2. Add non-color cues (labels/icons) for state differentiation.
@@ -417,7 +417,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B8) Data Experiments
 
 ### F-34 Workspace tab truncation (`Experime...`)
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Rename tabs to shorter labels (target: `Trends`, `Experiments`, `History`).
   2. Add segmented control layout fallback for long labels.
@@ -478,7 +478,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
 
 ### F-41 Export action too visually prominent
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Demote export to tertiary action in toolbar/secondary area.
   2. Keep insight narrative visually primary.
