@@ -370,6 +370,42 @@ struct DataView: View {
         return trimmed
     }
 
+    private var trendChartSummaryLine: String {
+        guard let first = trendPoints.first, let last = trendPoints.last else {
+            return "No chart data in the selected window."
+        }
+
+        let startValue = Int(trendMetricValue(for: first).rounded())
+        let endValue = Int(trendMetricValue(for: last).rounded())
+        let direction: String
+        if endValue > startValue {
+            direction = "increased"
+        } else if endValue < startValue {
+            direction = "decreased"
+        } else {
+            direction = "held steady"
+        }
+
+        var fragments = [
+            "\(selectedSignal.metric.title) \(direction) from \(startValue)% to \(endValue)% over \(visibleTrendDayCount) \(visibleTrendDayCount == 1 ? "day" : "days")."
+        ]
+
+        if let comparison = trendComparisonSummary {
+            fragments.append(trendComparisonDetailText(for: comparison) + ".")
+        }
+
+        return fragments.joined(separator: " ")
+    }
+
+    private var visibleTrendDayCount: Int {
+        guard let first = trendPoints.first?.time, let last = trendPoints.last?.time else { return 0 }
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: first)
+        let end = calendar.startOfDay(for: last)
+        let span = calendar.dateComponents([.day], from: start, to: end).day ?? 0
+        return max(1, span + 1)
+    }
+
     private var trendExportPayload: String {
         var lines: [String] = []
         lines.append("MindSense Trend Export")
@@ -1231,6 +1267,11 @@ struct DataView: View {
 
                     Text("X-axis: Date • Y-axis: \(selectedSignal.metric.title) score (%)")
                         .font(MindSenseTypography.micro)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text("Trend summary: \(trendChartSummaryLine)")
+                        .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
@@ -2961,6 +3002,14 @@ private struct DataTrendChart: View {
         var fragments: [String] = [
             "\(selectedSignal.metric.title) \(directionPhrase) from \(startValue) to \(endValue) percent over \(dayCount) \(dayCount == 1 ? "day" : "days")."
         ]
+
+        let values = points.map { metricValue(for: $0) }
+        if let minValue = values.min(), let maxValue = values.max(), !values.isEmpty {
+            let averageValue = values.reduce(0, +) / Double(values.count)
+            fragments.append(
+                "Range \(Int(minValue.rounded())) to \(Int(maxValue.rounded())) percent, average \(Int(averageValue.rounded())) percent."
+            )
+        }
 
         if comparisonPoints != nil {
             fragments.append("Prior window comparison is shown.")

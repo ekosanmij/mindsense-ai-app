@@ -435,6 +435,11 @@ struct TodayView: View {
                 if firstAppearance {
                     didAppear = true
                 }
+                if let banner = store.banner,
+                   banner.severity == .success,
+                   (banner.title == "Setup complete" || banner.title == "Milestone reached") {
+                    store.clearBanner()
+                }
                 applyHeroWhyExpansionPolicy()
                 store.prepareCoreScreen(.today)
                 loadSlider = Double(max(1, min(10, store.demoMetrics.load / 10)))

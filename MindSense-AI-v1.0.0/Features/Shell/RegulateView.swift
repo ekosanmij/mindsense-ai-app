@@ -48,17 +48,6 @@ struct RegulateView: View {
             }
         }
 
-        var stickyTitle: String {
-            switch self {
-            case .selectProtocol:
-                return "Select"
-            case .runTimer:
-                return "Run"
-            case .recordImpact:
-                return "Rate impact"
-            }
-        }
-
         var fullTitle: String {
             switch self {
             case .selectProtocol:
@@ -314,11 +303,6 @@ struct RegulateView: View {
                     ProfileAccessMenu()
                 }
             }
-            .safeAreaInset(edge: .top) {
-                if case .ready = resolvedState, currentStep == .recordImpact {
-                    stickyStepStrip
-                }
-            }
             .safeAreaInset(edge: .bottom) {
                 if case .ready = resolvedState, let primaryCTAConfig {
                     MindSenseDoItNowDock(
@@ -513,50 +497,6 @@ struct RegulateView: View {
                 }
             }
         }
-    }
-
-    private var stickyStepStrip: some View {
-        HStack(spacing: 8) {
-            stickyStepChip(.selectProtocol)
-            stickyStepArrow
-            stickyStepChip(.runTimer)
-            stickyStepArrow
-            stickyStepChip(.recordImpact)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, MindSenseLayout.pageHorizontal)
-        .padding(.vertical, 8)
-        .background {
-            Rectangle()
-                .fill(MindSenseSurfaceLevel.base.fill.opacity(0.96))
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(MindSensePalette.strokeSubtle.opacity(0.7))
-                        .frame(height: 1)
-                        .padding(.horizontal, 16)
-                }
-        }
-    }
-
-    private var stickyStepArrow: some View {
-        Image(systemName: "chevron.right")
-            .font(.system(size: 10, weight: .semibold, design: .rounded))
-            .foregroundStyle(.secondary)
-            .accessibilityHidden(true)
-    }
-
-    private func stickyStepChip(_ step: RegulateStep) -> some View {
-        PillChip(label: step.stickyTitle, state: stickyChipState(for: step))
-    }
-
-    private func stickyChipState(for step: RegulateStep) -> MindSenseChipState {
-        if step == currentStep {
-            return .selected
-        }
-        if step.rawValue < currentStep.rawValue {
-            return .unselected
-        }
-        return .disabled
     }
 
     @ViewBuilder

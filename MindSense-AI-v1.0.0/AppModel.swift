@@ -3084,7 +3084,6 @@ final class MindSenseStore: ObservableObject {
 
         if onboarding.isFullyComplete {
             appState = AppStateResolver.reduce(state: appState, event: .onboardingCompleted)
-            showBanner(title: "Setup complete", detail: "Daily guidance is ready.", severity: .success)
             let completionMS = onboardingCompletionMS()
             track(
                 event: .onboardingCompleted,
@@ -3096,13 +3095,7 @@ final class MindSenseStore: ObservableObject {
             )
             persistence.clearOnboardingTimer()
         } else {
-            let progress = Int(onboardingPercent * 100)
             let stepIndex = OnboardingStep.activationSteps.firstIndex(of: step).map { $0 + 1 } ?? (step.rawValue + 1)
-            showBanner(
-                title: "Milestone reached",
-                detail: "\(progress)% complete.",
-                severity: .success
-            )
             track(event: .onboardingStepCompleted, surface: .onboarding, metadata: ["step": "\(stepIndex)"])
         }
 

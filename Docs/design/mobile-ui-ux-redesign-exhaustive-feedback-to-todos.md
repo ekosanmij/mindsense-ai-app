@@ -195,7 +195,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## B3) Today Top (State + Do this next)
 
 ### F-09 Persistent setup-success banner on Today
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Remove setup-complete banner after first-time completion.
   2. Replace with lightweight inline status only when needed.
@@ -362,7 +362,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
 
 ### F-28 Floating nav icon leaks into content layer
-- Status: `[ ]`
+- Status: `[x]`
 - Actionable TODO:
   1. Remove floating nav-like controls from content stack.
   2. Keep navigation actions in nav bar/tab bar only.
@@ -762,7 +762,7 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   2. Contextual primary action only when recommended.
 
 ### R11 Chart accessibility and clarity
-- Status: `[ ]`
+- Status: `[x]`
 - Deliverables:
   1. Axis labels/units in visible context.
   2. Text summary for screen readers and quick scanning.
