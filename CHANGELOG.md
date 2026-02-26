@@ -24,21 +24,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `SECURITY.md` vulnerability reporting policy.
 - `Docs/engineering/architecture.md` runtime architecture reference.
 - `Docs/engineering/testing.md` test and QA runbook.
-- UI test screenshot exporter `testMarketingWebsiteScreenshotExport()` for website asset refreshes.
-- Rebuilt production website in `Website/` with:
-  - New premium `index.html`, `styles.css`, and `app.js`
-  - Updated legal pages: `Website/privacy.html`, `Website/terms.html`
-  - Refreshed screenshot assets from `Scripts/export_marketing_screenshots.sh`
-- New website as-built doc: `Docs/product/website-marketing-as-built.md`.
-- New website runbook: `Website/README.md`.
 
 ### Changed
 
 - Replaced magic-link auth implementation with `Continue with Apple` session flow.
 - Updated Intro/Auth entry copy and layout to an Apple-first, lower-noise design.
 - Updated documentation set to reflect Apple sign-in behavior and persistence keys.
-- Updated `README.md` repository structure, documentation index, and website screenshot workflow guidance.
 
 ### Removed
-
-- Outdated website as-built doc: `Docs/product/website-marketing-v3-as-built.md`.

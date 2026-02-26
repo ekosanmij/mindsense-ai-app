@@ -349,103 +349,6 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         }
     }
 
-    func testMarketingWebsiteScreenshotExport() throws {
-        let repoRootPath = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .path
-        let defaultOutputPath = "\(repoRootPath)/.tmp/marketing-screenshots/raw"
-        let outputDirectoryPath =
-            ProcessInfo.processInfo.environment["MINDSENSE_MARKETING_SCREENSHOT_DIR"] ??
-            defaultOutputPath
-        let outputDirectoryURL = URL(fileURLWithPath: outputDirectoryPath, isDirectory: true)
-        try FileManager.default.createDirectory(
-            at: outputDirectoryURL,
-            withIntermediateDirectories: true
-        )
-
-        let introApp = launchIntroApp(
-            appearance: .light,
-            reset: true,
-            enableHaptics: false,
-            reduceMotion: true
-        )
-        waitForIntroReady(app: introApp)
-        try writeScreenshot(named: "intro", to: outputDirectoryURL)
-        introApp.terminate()
-
-        let onboardingApp = launchOnboardingApp(
-            appearance: .light,
-            reset: true,
-            enableHaptics: false,
-            reduceMotion: true
-        )
-        waitForOnboardingReady(app: onboardingApp)
-        try writeScreenshot(named: "onboarding", to: outputDirectoryURL)
-        onboardingApp.terminate()
-
-        let app = launchReadyApp(
-            appearance: .light,
-            reset: true,
-            enableHaptics: false,
-            reduceMotion: true
-        )
-
-        waitForTodayReady(app: app)
-        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
-        try writeScreenshot(named: "today", to: outputDirectoryURL)
-
-        tapTab(named: "Regulate", in: app)
-        let regulateStartCTA = firstExistingButton(
-            in: app,
-            identifiers: ["regulate_start_cta", "regulate_primary_cta"],
-            timeout: 5
-        )
-        XCTAssertTrue(
-            regulateStartCTA != nil || app.staticTexts["regulate_session_timer"].exists,
-            "Regulate should show either a start CTA or an active timer."
-        )
-        if regulateStartCTA != nil {
-            try writeScreenshot(named: "regulate_select", to: outputDirectoryURL)
-            regulateStartCTA?.tap()
-        }
-        XCTAssertTrue(app.staticTexts["regulate_session_timer"].waitForExistence(timeout: 5))
-        try writeScreenshot(named: "regulate_run", to: outputDirectoryURL)
-
-        if app.buttons["regulate_complete_now_cta"].waitForExistence(timeout: 1.5) {
-            app.buttons["regulate_complete_now_cta"].tap()
-        }
-        if app.buttons["regulate_outcome_submit_cta"].waitForExistence(timeout: 3) {
-            app.buttons["regulate_outcome_submit_cta"].tap()
-        }
-
-        tapTab(named: "Data", in: app)
-        XCTAssertTrue(app.buttons["Trends"].waitForExistence(timeout: 5))
-        try writeScreenshot(named: "data_trends", to: outputDirectoryURL)
-
-        if app.buttons["Experiments"].waitForExistence(timeout: 2) {
-            app.buttons["Experiments"].tap()
-            RunLoop.current.run(until: Date().addingTimeInterval(0.35))
-            try writeScreenshot(named: "data_experiments", to: outputDirectoryURL)
-        }
-
-        if app.buttons["History"].waitForExistence(timeout: 2) {
-            app.buttons["History"].tap()
-            RunLoop.current.run(until: Date().addingTimeInterval(0.35))
-            try writeScreenshot(named: "data_history", to: outputDirectoryURL)
-        }
-
-        app.buttons["Profile and access"].tap()
-        app.buttons["Settings"].tap()
-        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 4))
-        try writeScreenshot(named: "settings", to: outputDirectoryURL)
-
-        attachTextReport(
-            name: "marketing_screenshot_export",
-            lines: ["output=\(outputDirectoryURL.path)"]
-        )
-    }
-
     func testAccessibilityDynamicTypeScaling() {
         let app = launchReadyApp(
             appearance: .dark,
@@ -755,13 +658,6 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         attachment.name = "snapshot_\(name)"
         attachment.lifetime = .keepAlways
         add(attachment)
-    }
-
-    private func writeScreenshot(named name: String, to directory: URL) throws {
-        RunLoop.current.run(until: Date().addingTimeInterval(0.35))
-        let screenshot = XCUIScreen.main.screenshot()
-        let destination = directory.appendingPathComponent("\(name).png")
-        try screenshot.pngRepresentation.write(to: destination, options: .atomic)
     }
 
     private func attachTextReport(name: String, lines: [String]) {

@@ -24,7 +24,7 @@ struct SettingsView: View {
     private let settingsRowMinHeight: CGFloat = 50
     private let settingsToggleRowMinHeight: CGFloat = 64
     private let settingsIconSize: CGFloat = 16
-    private let privacyPolicyURLString = "https://mindsense-ai-app.vercel.app/privacy"
+    private let privacyPolicyURLString = "https://example.com/privacy"
 
     private var appearanceBinding: Binding<AppearanceMode> {
         Binding {
