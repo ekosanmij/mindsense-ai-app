@@ -343,12 +343,7 @@ enum MindSenseLayout {
         measuredOverlay: CGFloat,
         safeAreaInset: CGFloat
     ) -> CGFloat {
-        guard measuredOverlay > 0 else { return 0 }
-
-        let baseOffset = max(0, measuredOverlay - safeAreaInset)
-        let compactThreshold = floatingTabBarCompactClearance + MindSenseSpacing.xs
-        let visualGap = measuredOverlay <= compactThreshold ? MindSenseSpacing.xs : MindSenseSpacing.xxs
-        return baseOffset + visualGap
+        max(0, measuredOverlay - safeAreaInset)
     }
 }
 
