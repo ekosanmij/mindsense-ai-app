@@ -18,24 +18,24 @@ enum MindSenseToneGuide {
 struct MindSensePalette {
     // Redesign parity tokens (DS-03).
     static let primary = dynamic(
-        light: UIColor(red: 27 / 255, green: 111 / 255, blue: 87 / 255, alpha: 1),
-        dark: UIColor(red: 134 / 255, green: 210 / 255, blue: 186 / 255, alpha: 1)
+        light: UIColor(red: 16 / 255, green: 115 / 255, blue: 94 / 255, alpha: 1),
+        dark: UIColor(red: 142 / 255, green: 224 / 255, blue: 198 / 255, alpha: 1)
     )
     static let primaryTint = dynamic(
-        light: UIColor(red: 237 / 255, green: 243 / 255, blue: 242 / 255, alpha: 1),
-        dark: UIColor(red: 30 / 255, green: 42 / 255, blue: 38 / 255, alpha: 1)
+        light: UIColor(red: 229 / 255, green: 245 / 255, blue: 239 / 255, alpha: 1),
+        dark: UIColor(red: 24 / 255, green: 39 / 255, blue: 35 / 255, alpha: 1)
     )
     static let accentLoad = dynamic(
-        light: UIColor(red: 149 / 255, green: 85 / 255, blue: 31 / 255, alpha: 1),
-        dark: UIColor(red: 236 / 255, green: 184 / 255, blue: 96 / 255, alpha: 1)
+        light: UIColor(red: 152 / 255, green: 94 / 255, blue: 24 / 255, alpha: 1),
+        dark: UIColor(red: 242 / 255, green: 191 / 255, blue: 94 / 255, alpha: 1)
     )
     static let bg = dynamic(
-        light: UIColor(red: 247 / 255, green: 248 / 255, blue: 250 / 255, alpha: 1),
-        dark: UIColor(red: 16 / 255, green: 17 / 255, blue: 19 / 255, alpha: 1)
+        light: UIColor(red: 248 / 255, green: 249 / 255, blue: 247 / 255, alpha: 1),
+        dark: UIColor(red: 12 / 255, green: 14 / 255, blue: 17 / 255, alpha: 1)
     )
     static let card = dynamic(
-        light: UIColor(red: 243 / 255, green: 244 / 255, blue: 246 / 255, alpha: 1),
-        dark: UIColor(red: 36 / 255, green: 38 / 255, blue: 41 / 255, alpha: 1)
+        light: UIColor(red: 240 / 255, green: 243 / 255, blue: 245 / 255, alpha: 1),
+        dark: UIColor(red: 33 / 255, green: 36 / 255, blue: 40 / 255, alpha: 1)
     )
     static let textPrimary = dynamic(
         light: UIColor(red: 17 / 255, green: 17 / 255, blue: 17 / 255, alpha: 1),
@@ -46,34 +46,34 @@ struct MindSensePalette {
         dark: UIColor(red: 189 / 255, green: 198 / 255, blue: 210 / 255, alpha: 1)
     )
     static let border = dynamic(
-        light: UIColor(red: 209 / 255, green: 213 / 255, blue: 219 / 255, alpha: 1),
-        dark: UIColor(red: 84 / 255, green: 90 / 255, blue: 100 / 255, alpha: 1)
+        light: UIColor(red: 199 / 255, green: 205 / 255, blue: 212 / 255, alpha: 1),
+        dark: UIColor(red: 96 / 255, green: 104 / 255, blue: 116 / 255, alpha: 1)
     )
 
     static let signalCool = dynamic(
-        light: UIColor(red: 17 / 255, green: 122 / 255, blue: 105 / 255, alpha: 1),
-        dark: UIColor(red: 134 / 255, green: 210 / 255, blue: 186 / 255, alpha: 1)
+        light: UIColor(red: 12 / 255, green: 127 / 255, blue: 108 / 255, alpha: 1),
+        dark: UIColor(red: 142 / 255, green: 224 / 255, blue: 198 / 255, alpha: 1)
     )
     static let signalCoolStrong = dynamic(
-        light: UIColor(red: 12 / 255, green: 94 / 255, blue: 81 / 255, alpha: 1),
-        dark: UIColor(red: 108 / 255, green: 186 / 255, blue: 162 / 255, alpha: 1)
+        light: UIColor(red: 9 / 255, green: 101 / 255, blue: 85 / 255, alpha: 1),
+        dark: UIColor(red: 116 / 255, green: 198 / 255, blue: 172 / 255, alpha: 1)
     )
     static let signalCoolSoft = dynamic(
-        light: UIColor(red: 223 / 255, green: 241 / 255, blue: 235 / 255, alpha: 1),
-        dark: UIColor(red: 30 / 255, green: 42 / 255, blue: 38 / 255, alpha: 1)
+        light: UIColor(red: 213 / 255, green: 242 / 255, blue: 231 / 255, alpha: 1),
+        dark: UIColor(red: 25 / 255, green: 42 / 255, blue: 37 / 255, alpha: 1)
     )
 
     static let glowWarm = dynamic(
         light: UIColor(red: 19 / 255, green: 130 / 255, blue: 108 / 255, alpha: 1),
-        dark: UIColor(red: 166 / 255, green: 203 / 255, blue: 183 / 255, alpha: 1)
+        dark: UIColor(red: 176 / 255, green: 214 / 255, blue: 196 / 255, alpha: 1)
     )
     static let glowWarmStrong = dynamic(
         light: UIColor(red: 13 / 255, green: 101 / 255, blue: 83 / 255, alpha: 1),
-        dark: UIColor(red: 128 / 255, green: 170 / 255, blue: 149 / 255, alpha: 1)
+        dark: UIColor(red: 140 / 255, green: 182 / 255, blue: 164 / 255, alpha: 1)
     )
     static let glowWarmSoft = dynamic(
-        light: UIColor(red: 226 / 255, green: 242 / 255, blue: 236 / 255, alpha: 1),
-        dark: UIColor(red: 35 / 255, green: 45 / 255, blue: 41 / 255, alpha: 1)
+        light: UIColor(red: 219 / 255, green: 243 / 255, blue: 232 / 255, alpha: 1),
+        dark: UIColor(red: 31 / 255, green: 44 / 255, blue: 39 / 255, alpha: 1)
     )
 
     static let accent = signalCool
@@ -84,17 +84,17 @@ struct MindSensePalette {
         dark: UIColor(red: 16 / 255, green: 24 / 255, blue: 21 / 255, alpha: 1)
     )
     static let accentMuted = dynamic(
-        light: UIColor(red: 235 / 255, green: 247 / 255, blue: 243 / 255, alpha: 1),
-        dark: UIColor(red: 38 / 255, green: 48 / 255, blue: 45 / 255, alpha: 1)
+        light: UIColor(red: 225 / 255, green: 247 / 255, blue: 237 / 255, alpha: 1),
+        dark: UIColor(red: 34 / 255, green: 50 / 255, blue: 45 / 255, alpha: 1)
     )
 
     static let success = dynamic(
         light: UIColor(red: 25 / 255, green: 124 / 255, blue: 84 / 255, alpha: 1),
-        dark: UIColor(red: 112 / 255, green: 224 / 255, blue: 178 / 255, alpha: 1)
+        dark: UIColor(red: 122 / 255, green: 231 / 255, blue: 187 / 255, alpha: 1)
     )
     static let warning = dynamic(
-        light: UIColor(red: 171 / 255, green: 98 / 255, blue: 24 / 255, alpha: 1),
-        dark: UIColor(red: 236 / 255, green: 184 / 255, blue: 96 / 255, alpha: 1)
+        light: UIColor(red: 166 / 255, green: 102 / 255, blue: 22 / 255, alpha: 1),
+        dark: UIColor(red: 242 / 255, green: 191 / 255, blue: 94 / 255, alpha: 1)
     )
     static let critical = dynamic(
         light: UIColor(red: 170 / 255, green: 50 / 255, blue: 58 / 255, alpha: 1),
@@ -102,29 +102,29 @@ struct MindSensePalette {
     )
 
     static let canvasTop = dynamic(
-        light: UIColor(red: 245 / 255, green: 247 / 255, blue: 249 / 255, alpha: 1),
-        dark: UIColor(red: 16 / 255, green: 17 / 255, blue: 19 / 255, alpha: 1)
+        light: UIColor(red: 250 / 255, green: 250 / 255, blue: 247 / 255, alpha: 1),
+        dark: UIColor(red: 12 / 255, green: 14 / 255, blue: 17 / 255, alpha: 1)
     )
     static let canvasBottom = dynamic(
-        light: UIColor(red: 240 / 255, green: 243 / 255, blue: 246 / 255, alpha: 1),
-        dark: UIColor(red: 20 / 255, green: 21 / 255, blue: 24 / 255, alpha: 1)
+        light: UIColor(red: 238 / 255, green: 243 / 255, blue: 245 / 255, alpha: 1),
+        dark: UIColor(red: 16 / 255, green: 18 / 255, blue: 22 / 255, alpha: 1)
     )
 
     static let surfaceBase = dynamic(
-        light: UIColor(red: 237 / 255, green: 241 / 255, blue: 245 / 255, alpha: 1),
-        dark: UIColor(red: 30 / 255, green: 32 / 255, blue: 35 / 255, alpha: 1)
+        light: UIColor(red: 233 / 255, green: 238 / 255, blue: 242 / 255, alpha: 1),
+        dark: UIColor(red: 28 / 255, green: 31 / 255, blue: 35 / 255, alpha: 1)
     )
     static let surfaceRaised = dynamic(
-        light: UIColor(red: 249 / 255, green: 251 / 255, blue: 253 / 255, alpha: 1),
-        dark: UIColor(red: 36 / 255, green: 38 / 255, blue: 41 / 255, alpha: 1)
+        light: UIColor(red: 252 / 255, green: 253 / 255, blue: 254 / 255, alpha: 1),
+        dark: UIColor(red: 36 / 255, green: 40 / 255, blue: 45 / 255, alpha: 1)
     )
     static let surfaceGlass = dynamic(
         light: UIColor(red: 255 / 255, green: 255 / 255, blue: 255 / 255, alpha: 0.64),
-        dark: UIColor(red: 53 / 255, green: 56 / 255, blue: 60 / 255, alpha: 0.44)
+        dark: UIColor(red: 45 / 255, green: 49 / 255, blue: 54 / 255, alpha: 0.36)
     )
     static let surfaceFocus = dynamic(
-        light: UIColor(red: 246 / 255, green: 249 / 255, blue: 252 / 255, alpha: 1),
-        dark: UIColor(red: 42 / 255, green: 44 / 255, blue: 48 / 255, alpha: 1)
+        light: UIColor(red: 244 / 255, green: 248 / 255, blue: 248 / 255, alpha: 1),
+        dark: UIColor(red: 44 / 255, green: 48 / 255, blue: 54 / 255, alpha: 1)
     )
 
     static let surfacePrimary = surfaceRaised
@@ -135,29 +135,29 @@ struct MindSensePalette {
     static let surfaceStandard = surfaceRaised
 
     static let strokeSubtle = dynamic(
-        light: UIColor.black.withAlphaComponent(0.08),
-        dark: UIColor.white.withAlphaComponent(0.1)
+        light: UIColor.black.withAlphaComponent(0.1),
+        dark: UIColor.white.withAlphaComponent(0.11)
     )
     static let strokeStrong = dynamic(
-        light: UIColor.black.withAlphaComponent(0.17),
-        dark: UIColor.white.withAlphaComponent(0.22)
+        light: UIColor.black.withAlphaComponent(0.19),
+        dark: UIColor.white.withAlphaComponent(0.24)
     )
     static let strokeEdge = dynamic(
-        light: UIColor.black.withAlphaComponent(0.12),
-        dark: UIColor.white.withAlphaComponent(0.15)
+        light: UIColor.black.withAlphaComponent(0.14),
+        dark: UIColor.white.withAlphaComponent(0.17)
     )
     static let strokeFocus = dynamic(
         light: UIColor.black.withAlphaComponent(0.16),
-        dark: UIColor.white.withAlphaComponent(0.2)
+        dark: UIColor.white.withAlphaComponent(0.22)
     )
 
     static let shineTop = dynamic(
         light: UIColor.white.withAlphaComponent(0.58),
-        dark: UIColor.white.withAlphaComponent(0.18)
+        dark: UIColor.white.withAlphaComponent(0.14)
     )
     static let shineEdge = dynamic(
         light: UIColor.white.withAlphaComponent(0.38),
-        dark: UIColor.white.withAlphaComponent(0.2)
+        dark: UIColor.white.withAlphaComponent(0.16)
     )
 
     static let shadowAmbient = dynamic(
