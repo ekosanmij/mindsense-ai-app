@@ -30,3 +30,16 @@ mkdir -p "$OUTPUT_DIR"
 cp "$WORK_DIR"/*.png "$OUTPUT_DIR"/
 
 echo "Copied screenshots to: $OUTPUT_DIR"
+
+OPTIMIZED_DIR="$OUTPUT_DIR/optimized"
+mkdir -p "$OPTIMIZED_DIR"
+find "$OPTIMIZED_DIR" -type f -name "*.jpg" -delete
+
+for source in "$OUTPUT_DIR"/*.png; do
+  [ -e "$source" ] || continue
+  base_name="$(basename "$source" .png)"
+  sips -s format jpeg -s formatOptions 76 -Z 990 "$source" --out "$OPTIMIZED_DIR/${base_name}-990.jpg" >/dev/null
+  sips -s format jpeg -s formatOptions 72 -Z 660 "$source" --out "$OPTIMIZED_DIR/${base_name}-660.jpg" >/dev/null
+done
+
+echo "Generated optimized variants in: $OPTIMIZED_DIR"
