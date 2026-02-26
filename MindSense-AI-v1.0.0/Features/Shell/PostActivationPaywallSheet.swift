@@ -18,8 +18,8 @@ struct PostActivationPaywallSheet: View {
                 VStack(spacing: MindSenseSpacing.md) {
                     MindSenseCommandDeck(
                         label: "MindSense Plus",
-                        title: "Continue your momentum with premium intelligence",
-                        detail: "You unlocked your first completed regulate session. Plus extends this into a weekly performance narrative.",
+                        title: "Extend your daily loop with deeper learning",
+                        detail: "You completed your first regulate session. Plus helps you track what works across weeks, not just today.",
                         metric: "7-day trial"
                     )
                     .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
@@ -27,7 +27,7 @@ struct PostActivationPaywallSheet: View {
                     FocusSurface {
                         MindSenseSectionHeader(model: .init(title: "Why this unlock matters"))
 
-                        Text("Your first session proves the behavior is sustainable. Plus turns daily usage into a long-horizon signal system so recommendations improve week over week.")
+                        Text("Your first completed loop shows the habit can fit your day. Plus extends the same Today, Regulate, Data loop with longer history and richer summaries so recommendations improve week over week.")
                             .font(MindSenseTypography.body)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -35,7 +35,7 @@ struct PostActivationPaywallSheet: View {
                     .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
 
                     PrimarySurface {
-                        MindSenseSectionHeader(model: .init(title: "Plus value narrative"))
+                        MindSenseSectionHeader(model: .init(title: "How Plus compounds the loop"))
 
                         benefitRow(
                             title: "Confidence over time",
@@ -48,8 +48,8 @@ struct PostActivationPaywallSheet: View {
                         )
                         MindSenseSectionDivider(emphasis: 0.18)
                         benefitRow(
-                            title: "Executive weekly summaries",
-                            detail: "Weekly habit scorecards convert raw check-ins into a clear performance and risk narrative."
+                            title: "Weekly summaries",
+                            detail: "Weekly scorecards turn raw check-ins into a clear guidance, progress, and risk narrative."
                         )
                     }
                     .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)

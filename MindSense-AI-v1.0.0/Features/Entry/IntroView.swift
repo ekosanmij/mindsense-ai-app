@@ -9,12 +9,18 @@ struct IntroView: View {
     @State private var inlineMessage = ""
     @State private var inlineSeverity: BannerSeverity = .info
     @State private var isSubmitting = false
+    @State private var showGlossary = false
     @Environment(\.verticalSizeClass) private var verticalSizeClass
 
     private let highlights: [(title: String, detail: String, icon: String)] = [
         ("Status in seconds", "Load, Readiness, and Consistency at a glance.", "gauge.with.dots.needle.bottom.50percent"),
         ("One next action", "Get one clear regulate step with duration.", "figure.mind.and.body"),
         ("Why it was chosen", "See recommendation rationale and confidence in context.", "chart.line.uptrend.xyaxis")
+    ]
+    private let dailyLoop: [(title: String, detail: String, icon: String)] = [
+        ("Today", "Understand your current state and the one next action for today's goal.", "sun.max.fill"),
+        ("Regulate", "Run one short protocol, then record whether it helped.", "waveform.path.ecg"),
+        ("Data", "Review patterns and experiments so guidance improves over time.", "chart.xyaxis.line")
     ]
 
     private var reduceMotion: Bool {
@@ -45,9 +51,32 @@ struct IntroView: View {
                 }
                 .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
 
+                InsetSurface {
+                    MindSenseSectionHeader(
+                        model: .init(title: "How MindSense works", subtitle: "One daily loop: Today, Regulate, Data.")
+                    )
+
+                    ForEach(Array(dailyLoop.enumerated()), id: \.element.title) { index, item in
+                        unlockRow(item)
+
+                        if index < dailyLoop.count - 1 {
+                            MindSenseSectionDivider(emphasis: 0.12)
+                        }
+                    }
+
+                    MindSenseSectionDivider(emphasis: 0.12)
+
+                    Button("Open glossary and terms") {
+                        showGlossary = true
+                        store.triggerHaptic(intent: .selection)
+                    }
+                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                }
+                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+
                 if !inlineMessage.isEmpty {
                     InlineStatusView(text: inlineMessage, severity: inlineSeverity)
-                        .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                        .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
                 }
             }
             .mindSensePageInsets()
@@ -55,6 +84,9 @@ struct IntroView: View {
         .mindSensePageBackground()
         .onAppear {
             didAppear = true
+        }
+        .sheet(isPresented: $showGlossary) {
+            MindSenseGlossarySheet()
         }
     }
 
@@ -78,7 +110,7 @@ struct IntroView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Daily nervous-system guidance, simplified",
-                    subtitle: "Sign in with Apple to start."
+                    subtitle: "See your state, do one next step, and learn what works."
                 )
             )
         }

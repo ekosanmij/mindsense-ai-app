@@ -422,8 +422,8 @@ struct RegulateView: View {
             }
 
             MindSenseSummaryDisclosureText(
-                summary: "Run one protocol, then rate impact.",
-                detail: "Select one protocol, run the timer, then rate impact. \(store.intentModeHintLine)",
+                summary: "This is the action step in the daily loop: run one protocol, then rate impact.",
+                detail: "MindSense is optimizing for \(store.intentMode.shortTitle.lowercased()) today. Select one protocol, run the timer, then rate impact so future recommendations improve.",
                 collapsedLabel: "How this flow works",
                 expandedLabel: "Hide flow details"
             )
@@ -433,11 +433,11 @@ struct RegulateView: View {
     private var commandDetail: String {
         switch currentStep {
         case .selectProtocol:
-            return "Choose one protocol matched to your current intent."
+            return "Choose one protocol matched to today's goal."
         case .runTimer:
-            return "Stay with the timer until completion."
+            return "Run the protocol to complete today's action step."
         case .recordImpact:
-            return "Rate impact to close the loop."
+            return "Rate impact to close the loop and improve future recommendations."
         }
     }
 
@@ -481,7 +481,7 @@ struct RegulateView: View {
                     .alert("Flow states", isPresented: $showFlowStateExplanation) {
                         Button("OK", role: .cancel) { }
                     } message: {
-                        Text("Flow ready: conditions suggest focus will be effective\n\nFlow running: you're in a session")
+                        Text("Flow ready: conditions suggest the selected protocol is a good fit right now\n\nFlow running: you're in a session")
                     }
                 }
 
@@ -526,7 +526,7 @@ struct RegulateView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Choose protocol",
-                    subtitle: "Pick one protocol, then start it from this section. Ranking is tuned for \(store.intentMode.shortTitle.lowercased()) intent.",
+                    subtitle: "Pick one protocol, then start it from this section. Ranking is tuned for your \(store.intentMode.shortTitle.lowercased()) goal today.",
                     icon: "list.bullet.rectangle"
                 )
             )

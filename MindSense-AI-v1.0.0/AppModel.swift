@@ -124,13 +124,13 @@ enum OnboardingStep: Int, CaseIterable, Identifiable {
     var benefit: String {
         switch self {
         case .connectHealth:
-            return "Personalized load/readiness data guidance."
+            return "Improves personalized state guidance from Apple Health signals."
         case .notifications:
-            return "Timely downshift nudges and weekly review reminders."
+            return "Timely nudges to stay consistent with your daily loop."
         case .baseline:
-            return "Start 7-14 day calibration for stable trend confidence."
+            return "Start 7-14 day calibration to improve confidence and trend reliability."
         case .firstCheckIn:
-            return "Unlock your daily guidance flow with your first status capture."
+            return "Unlock Today, Regulate, and Data with your first status capture."
         }
     }
 

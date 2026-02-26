@@ -150,6 +150,10 @@ struct TodayView: View {
         }
     }
 
+    private var todayGoalNarrativeLine: String {
+        store.intentMode.todayNarrativeSuffix.replacingOccurrences(of: "Priority: ", with: "")
+    }
+
     private var bottomContentPadding: CGFloat {
         MindSenseLayout.pageBottom + (
             hasUnfinishedRegulateStep
@@ -512,6 +516,18 @@ struct TodayView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxs) {
+                HStack(spacing: MindSenseSpacing.xs) {
+                    PillChip(label: "Today goal", state: .unselected)
+                    PillChip(label: store.intentMode.shortTitle, state: .selected)
+                }
+
+                Text(todayGoalNarrativeLine)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             if hasUnfinishedRegulateStep {
                 Text("Primary action is pinned in the bottom dock.")
                     .font(MindSenseTypography.micro)
@@ -544,7 +560,7 @@ struct TodayView: View {
                 store.triggerHaptic(intent: .selection)
             } label: {
                 HStack(spacing: MindSenseSpacing.xs) {
-                    Text(showHeroWhy ? "Hide details" : "Details")
+                    Text(showHeroWhy ? "Hide details" : "Why + details")
                         .font(MindSenseTypography.caption)
                         .foregroundStyle(.secondary)
                     Spacer(minLength: MindSenseSpacing.xs)
@@ -630,10 +646,10 @@ struct TodayView: View {
 
     private var heroIntentModeDetails: some View {
         VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
-            Text("Session emphasis filter")
+            Text("Today's goal")
                 .font(MindSenseTypography.bodyStrong)
 
-            Text("This only changes driver weighting and recommendation framing. Your primary next action remains Start or Continue.")
+            Text("Choose what to optimize for today. MindSense keeps one primary action and reweights driver ranking, protocol fit, and insight framing around this goal.")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -782,7 +798,7 @@ struct TodayView: View {
             MindSenseCollapsibleSection(
                 model: .init(
                     title: "Top drivers now",
-                    subtitle: "The strongest factors shaping your state now, biased for \(store.intentMode.shortTitle.lowercased()) intent. Percentages show each signal's share of top-driver weight.",
+                    subtitle: "The strongest factors shaping your state now, weighted for your \(store.intentMode.shortTitle.lowercased()) goal. Percentages show each signal's share of top-driver weight.",
                     icon: "bolt.heart"
                 ),
                 storageKey: "ui.collapse.today.top_drivers",
@@ -845,7 +861,7 @@ struct TodayView: View {
                 model: .init(
                     title: "Do this next",
                     subtitle: isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep
-                        ? "Low confidence mode: add a quick check-in before using a precise protocol."
+                        ? "Fallback guidance: add a quick check-in before using a precise protocol."
                         : "Do this now.",
                     icon: "scope"
                 )
@@ -861,7 +877,7 @@ struct TodayView: View {
                             size: MindSenseControlSize.iconBadge
                         )
                         VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
-                            Text("Low confidence mode")
+                            Text("Fallback guidance mode")
                                 .font(MindSenseTypography.bodyStrong)
                             Text("Precise recommendation hidden until coverage improves.")
                                 .font(MindSenseTypography.caption)
@@ -1269,7 +1285,7 @@ struct TodayView: View {
                 model: .init(
                     title: "Quick check-in",
                     subtitle: isLowCoverageRecommendationMode
-                        ? "Low confidence mode: add a quick check-in to compensate for missing coverage."
+                        ? "Fallback guidance: add a quick check-in so MindSense can keep today's loop moving."
                         : "Rate current load in one quick step.",
                     icon: "checkmark.circle"
                 )
@@ -1347,7 +1363,7 @@ struct TodayView: View {
             if checkInJustSaved {
                 Text(
                     isLowCoverageRecommendationMode
-                        ? "Check-in saved. Self-report is now available while sensor coverage is low."
+                        ? "Check-in saved. Fallback guidance is now anchored to your self-report while coverage recovers."
                         : "This improves tomorrow's recommendation."
                 )
                     .font(MindSenseTypography.caption)
@@ -1420,27 +1436,27 @@ struct TodayView: View {
     }
 
     private var lowCoverageSummaryLine: String {
-        "Low confidence mode: \(store.demoDataCoveragePercent)% coverage is too low for a precise recommendation."
+        "Fallback guidance is active: \(store.demoDataCoveragePercent)% coverage is too low for a precise protocol ranking right now."
     }
 
     private var lowCoverageReasonLine: String {
         let reasons = lowCoverageReasons
         guard !reasons.isEmpty else {
-            return "What's missing: recent signal collection is incomplete."
+            return "What's limiting precision: recent signal collection is incomplete."
         }
-        return "What's missing: \(reasons.joined(separator: "; "))."
+        return "What's limiting precision: \(reasons.joined(separator: "; "))."
     }
 
     private var lowCoverageFixLine: String {
         let hint = store.demoHealthProfile.quality.actionHint.trimmingCharacters(in: .whitespacesAndNewlines)
         if hint.isEmpty {
-            return "How to fix it: add a quick check-in now, sync Apple Health, and wear your watch overnight."
+            return "How to improve precision: add a quick check-in now, sync Apple Health, and wear your watch overnight."
         }
-        return "How to fix it: \(hint)"
+        return "How to improve precision: \(hint)"
     }
 
     private var lowCoverageCheckInSummaryLine: String {
-        "Coverage is \(store.demoDataCoveragePercent)%. A quick check-in adds self-report data so today can degrade gracefully."
+        "Coverage is \(store.demoDataCoveragePercent)%. A quick check-in keeps guidance useful while sensor coverage recovers."
     }
 
     private var lowCoverageReasons: [String] {
@@ -1906,14 +1922,14 @@ struct TodayView: View {
 
     private var heroReferenceLabel: String {
         if isLowCoverageRecommendationMode {
-            return "Updated \(store.lastUpdatedLabel). Add a quick check-in to improve guidance while coverage recovers."
+            return "Updated \(store.lastUpdatedLabel). MindSense can keep guiding you with a quick check-in while coverage recovers."
         }
         return "Updated \(store.lastUpdatedLabel)."
     }
 
     private var heroInterpretation: String {
         if isLowCoverageRecommendationMode {
-            return "Low confidence mode is active because signal coverage is limited."
+            return "Coverage is limited, so check-in-first fallback guidance is active."
         }
         if heroDelta.load <= -2 && heroDelta.readiness >= 2 {
             return "Load is easing while readiness is recovering."

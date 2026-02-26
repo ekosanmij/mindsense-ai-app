@@ -49,6 +49,13 @@ struct OnboardingView: View {
 
                         progressHero
 
+                        MindSenseSummaryDisclosureText(
+                            summary: "Daily loop: Today -> Regulate -> Data",
+                            detail: "Today shows your state and one next action. Regulate guides one short protocol and records impact. Data helps you review patterns, run experiments, and improve recommendation confidence over time.",
+                            collapsedLabel: "How MindSense works",
+                            expandedLabel: "Hide loop details"
+                        )
+
                         stepContent(
                             icon: activeStep.icon,
                             title: activeStep.title,
@@ -81,7 +88,7 @@ struct OnboardingView: View {
                             }
                         }
 
-                        Text("Additional permissions can be enabled later in Settings.")
+                        Text("You can start with check-ins now and add permissions later in Settings. MindSense falls back gracefully when coverage is limited.")
                             .font(MindSenseTypography.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -159,8 +166,8 @@ struct OnboardingView: View {
 
             MindSenseSectionHeader(
                 model: .init(
-                    title: "Activate \(AppIA.today) in under 45 seconds",
-                    subtitle: "Two required steps, then optional setup in Settings."
+                    title: "Activate your daily loop in under 45 seconds",
+                    subtitle: "Two required steps to start Today, Regulate, and Data. Optional permissions can be added later."
                 )
             )
         }

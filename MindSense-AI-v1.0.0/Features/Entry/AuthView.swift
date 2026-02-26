@@ -100,8 +100,8 @@ struct AuthView: View {
 
             MindSenseSectionHeader(
                 model: .init(
-                    title: "Your guidance flow is ready",
-                    subtitle: "Continue with Apple to jump right back in."
+                    title: "Your daily loop is ready",
+                    subtitle: "Continue with Apple to return to Today, Regulate, and Data."
                 )
             )
         }

@@ -14,7 +14,7 @@ struct ProfileAccessMenu: View {
             Button {
                 showGlossary = true
             } label: {
-                Label("Glossary", systemImage: "text.book.closed")
+                Label("Glossary and terms", systemImage: "text.book.closed")
             }
         } label: {
             profileIcon
@@ -23,7 +23,7 @@ struct ProfileAccessMenu: View {
             MindSenseGlossarySheet()
         }
         .accessibilityLabel("Profile and access")
-        .accessibilityHint("Open settings or glossary.")
+        .accessibilityHint("Open settings or the glossary of MindSense terms.")
     }
 
     private var profileIcon: some View {

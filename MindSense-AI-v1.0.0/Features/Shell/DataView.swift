@@ -356,6 +356,21 @@ struct DataView: View {
         return "\(overlaySummary) \(comparisonSummary)"
     }
 
+    private var currentGoalNarrativeLine: String {
+        store.intentMode.todayNarrativeSuffix.replacingOccurrences(of: "Priority: ", with: "")
+    }
+
+    private var workspaceNarrativeLine: String {
+        switch submode {
+        case .patterns:
+            return "Trends helps you spot patterns and choose the next action for your \(store.intentMode.shortTitle.lowercased()) goal."
+        case .experiments:
+            return "Experiments helps you test one change and measure whether it improves your \(store.intentMode.shortTitle.lowercased()) goal."
+        case .history:
+            return "History helps you review wins, risks, and context so future recommendations get better."
+        }
+    }
+
     private var trendInsightLeadLine: String {
         let trimmed = insightNarrative.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return selectedSignal.coachTitle }
@@ -1001,8 +1016,8 @@ struct DataView: View {
     private var commandDeck: some View {
         MindSenseTabHero(
             label: AppIA.data,
-            title: "One focus, one workspace.",
-            detail: "Convert \(store.demoScenario.title) trends into one action, run experiments, and review history.",
+            title: "Learn from the loop.",
+            detail: "Trends, experiments, and history help MindSense improve \(store.intentMode.shortTitle.lowercased()) guidance over time.",
             metric: submode.rawValue,
             icon: "chart.xyaxis.line",
             tone: .accent,
@@ -1026,6 +1041,16 @@ struct DataView: View {
                         )
                     }
                 )
+
+                Text("Current goal: \(store.intentMode.shortTitle). \(currentGoalNarrativeLine)")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(workspaceNarrativeLine)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 if submode == .patterns {
                     Button("Start suggested plan") {
@@ -1241,7 +1266,7 @@ struct DataView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Pattern explorer",
-                    subtitle: "Inspect the selected signal across the chosen window.",
+                    subtitle: "Inspect the selected signal across the chosen window, then turn it into one action.",
                     icon: "chart.xyaxis.line",
                     actionTitle: "Filters",
                     action: {
@@ -1356,7 +1381,7 @@ struct DataView: View {
                 MindSenseSectionHeader(
                     model: .init(
                         title: "Pattern insight",
-                        subtitle: "\(selectedSignal.coachTitle) • \(store.intentMode.title)",
+                        subtitle: "\(selectedSignal.coachTitle) • tuned for your \(store.intentMode.shortTitle.lowercased()) goal",
                         icon: "brain.head.profile"
                     )
                 )
@@ -1553,7 +1578,7 @@ struct DataView: View {
             MindSenseSectionHeader(
                 model: .init(
                     title: "Experiments",
-                    subtitle: "Start from one suggested action, then run one focused 7-day experiment.",
+                    subtitle: "Start from one suggested action, then run one focused 7-day experiment for your current goal.",
                     icon: "flask"
                 )
             )
