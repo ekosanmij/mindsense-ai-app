@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MindSense AI | Nervous-System Guidance</title>
+    <meta
+      name="description"
+      content="MindSense AI is a local-first iOS app that turns state signals into one clear next action in under 30 seconds."
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-aura" aria-hidden="true"></div>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="MindSense home">
+        <img src="./assets/brand/logo-lockup-horizontal.svg" alt="MindSense AI" />
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Toggle navigation">Menu</button>
+      <nav class="site-nav">
+        <a href="#product">Product</a>
+        <a href="#surfaces">Surfaces</a>
+        <a href="#investors">Investors</a>
+        <a href="#stakeholders">Stakeholders</a>
+        <a href="#quality">Quality</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero reveal">
+        <div class="hero-copy">
+          <p class="eyebrow">MindSense AI v1.0.0 · iOS</p>
+          <h1>Nervous-system guidance that moves from signal to action in under 30 seconds.</h1>
+          <p>
+            MindSense AI helps users quickly understand current state, run one guided protocol, and learn what works over time. It is local-first, trust-forward, and built with deterministic quality gates.
+          </p>
+          <div class="hero-cta">
+            <a class="btn btn-primary" href="#surfaces">Explore Product Surfaces</a>
+            <a class="btn btn-secondary" href="#investors">Read Investor & Stakeholder Brief</a>
+          </div>
+          <ul class="hero-tags">
+            <li>Local-first architecture</li>
+            <li>Sign in with Apple</li>
+            <li>Deterministic QA runs</li>
+          </ul>
+        </div>
+        <div class="hero-visual">
+          <figure class="phone-card phone-card-main">
+            <img src="./assets/screenshots/today.png" alt="MindSense Today screen" />
+          </figure>
+          <figure class="phone-card phone-card-alt">
+            <img src="./assets/screenshots/data_trends.png" alt="MindSense Data trends screen" />
+          </figure>
+        </div>
+      </section>
+
+      <section id="product" class="section reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Core Product Loop</p>
+          <h2>One daily loop, end to end</h2>
+        </div>
+        <div class="loop-grid">
+          <article>
+            <span>01</span>
+            <h3>Read state quickly</h3>
+            <p>Today shows Load, Readiness, and Consistency plus one best next step.</p>
+          </article>
+          <article>
+            <span>02</span>
+            <h3>Run one protocol</h3>
+            <p>Regulate guides a short intervention with timer pacing and completion capture.</p>
+          </article>
+          <article>
+            <span>03</span>
+            <h3>Capture impact</h3>
+            <p>Users record immediate effect so recommendations can improve with use.</p>
+          </article>
+          <article>
+            <span>04</span>
+            <h3>Learn patterns</h3>
+            <p>Data turns sessions, check-ins, and experiments into trend and decision support.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="surfaces" class="section reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Main Sections</p>
+          <h2>Interactive surface explorer</h2>
+        </div>
+
+        <div class="surface-explorer">
+          <div class="surface-tabs" role="tablist" aria-label="MindSense surface selector">
+            <button class="surface-tab is-active" data-screen="today" role="tab" aria-selected="true">Today</button>
+            <button class="surface-tab" data-screen="regulate" role="tab" aria-selected="false">Regulate</button>
+            <button class="surface-tab" data-screen="data" role="tab" aria-selected="false">Data</button>
+            <button class="surface-tab" data-screen="settings" role="tab" aria-selected="false">Settings</button>
+            <button class="surface-tab" data-screen="onboarding" role="tab" aria-selected="false">Onboarding</button>
+          </div>
+
+          <div class="surface-panel">
+            <figure class="surface-shot">
+              <img id="surface-image" src="./assets/screenshots/today.png" alt="Today screen" />
+            </figure>
+            <div class="surface-detail">
+              <h3 id="surface-title">Today: state + one action</h3>
+              <p id="surface-copy">
+                The Today surface prioritizes one clear action path with confidence context, timeline insights, and a lightweight check-in flow.
+              </p>
+              <ul id="surface-bullets"></ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="screen-grid">
+          <article>
+            <img src="./assets/screenshots/regulate_select.png" alt="Regulate select protocol screen" />
+            <h3>Protocol selection</h3>
+            <p>Ranked presets map directly to intent mode and current model state.</p>
+          </article>
+          <article>
+            <img src="./assets/screenshots/regulate_run.png" alt="Regulate run timer screen" />
+            <h3>Guided timer run</h3>
+            <p>Calm pacing, timer progression, and post-session impact recording in one flow.</p>
+          </article>
+          <article>
+            <img src="./assets/screenshots/data_experiments.png" alt="Data experiments screen" />
+            <h3>Experiment workspace</h3>
+            <p>Runs focused 7-day experiments with clear lifecycle transitions.</p>
+          </article>
+          <article>
+            <img src="./assets/screenshots/data_history.png" alt="Data history screen" />
+            <h3>History and attribution</h3>
+            <p>Recent activity and event context for better model-learning feedback loops.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="investors" class="section split reveal">
+        <article class="panel">
+          <p class="eyebrow">For Investors</p>
+          <h2>Execution-ready product with measurable growth instrumentation</h2>
+          <ul>
+            <li>KPI scorecard tracks activation, D1/D7 retention, session starts, and session completion.</li>
+            <li>Deterministic app loop simplifies onboarding and behavior repeatability.</li>
+            <li>Post-activation paywall surface is implemented and placement-tested in flow.</li>
+            <li>High signal QA posture with snapshot, contrast, dynamic type, and interaction-latency gates.</li>
+          </ul>
+        </article>
+
+        <article id="stakeholders" class="panel">
+          <p class="eyebrow">For Stakeholders</p>
+          <h2>Trust, safety, and operational clarity built into product UX</h2>
+          <ul>
+            <li>Local-first persistence with explicit confidence framing and diagnostics surfaces.</li>
+            <li>Clear escalation copy and crisis resource pathways for high-load contexts.</li>
+            <li>Explainability surfaces show data quality, coverage, and model confidence drivers.</li>
+            <li>Cross-functional alignment support through QA tools and KPI scorecard modules.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section id="quality" class="section reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Quality And Governance</p>
+          <h2>Production discipline, not just prototype polish</h2>
+        </div>
+
+        <div class="metric-grid">
+          <article>
+            <p class="metric" data-count="3">0</p>
+            <h3>Core runtime tabs</h3>
+            <p>Today, Regulate, and Data are optimized as one deterministic daily loop.</p>
+          </article>
+          <article>
+            <p class="metric" data-count="5">0</p>
+            <h3>KPI channels tracked</h3>
+            <p>Activation, D1 retention, D7 retention, starts, and completion.</p>
+          </article>
+          <article>
+            <p class="metric" data-count="4">0</p>
+            <h3>UI quality gates</h3>
+            <p>Contrast, snapshots, dynamic type, and interaction latency/motion.</p>
+          </article>
+          <article>
+            <p class="metric" data-count="100">0</p>
+            <h3>% local-first by default</h3>
+            <p>No cloud dependency is required for current app runtime behavior.</p>
+          </article>
+        </div>
+
+        <div class="cta-band">
+          <h3>Ready for pilot conversations, technical due diligence, and product walkthroughs.</h3>
+          <p>Use this website as the external narrative layer while the app demonstrates depth in-session.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>MindSense AI v1.0.0 · Local-first iOS nervous-system regulation assistant</p>
+      <p id="copyright"></p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

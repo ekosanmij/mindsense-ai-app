@@ -83,8 +83,9 @@ MindSense-AI-v1.0.0/
 │   └── DemoHealthSignalEngine.swift       # Simulated health signal model
 ├── MindSense-AI-v1.0.0Tests/              # Unit tests
 ├── MindSense-AI-v1.0.0UITests/            # UI tests + snapshot coverage
+├── Website/                               # Marketing website (static)
 ├── Scripts/                               # QA and asset generation scripts
-└── Docs/                                  # PRD, design, brand, web blueprint
+└── Docs/                                  # PRD, design, brand, product docs
 ```
 
 ## Prerequisites
@@ -283,10 +284,10 @@ Data is currently local-first and persisted in `UserDefaults` only.
 ## Documentation index
 
 - Product as-built PRD: `Docs/product/prd-as-built.md`
+- Marketing website as-built doc: `Docs/product/marketing-website.md`
 - Brand direction: `Docs/design/brand-direction.md`
 - Design system: `Docs/design/design-system.md`
 - Quality gates: `Docs/quality/quality-gates.md`
-- Website blueprint: `Docs/product/website-implementation-blueprint.md`
 - Logo system: `Docs/brand/logo/readme.md`
 - Runtime architecture guide: `Docs/engineering/architecture.md`
 - Testing and QA runbook: `Docs/engineering/testing.md`
