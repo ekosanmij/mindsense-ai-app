@@ -1,6 +1,6 @@
 # MindSense Marketing Website (As Built)
 
-Version: 2.1
+Version: 2.2
 Date: February 26, 2026
 
 ## Purpose
@@ -13,6 +13,16 @@ Goals of the current site:
 - Provide section-level evidence for investors and stakeholders.
 - Show real product screenshots for each main app section.
 - Keep claims aligned to shipped behavior in the iOS app.
+
+## Style Alignment With App
+
+Website visual tokens are aligned with `MindSensePalette` and design-system conventions in the app:
+
+- Canvas and surface tones mirror `canvasTop/canvasBottom` and `surfaceBase/surfaceRaised`.
+- Accent and CTA tones align with `signalCool`, `signalCoolStrong`, and warm support accents.
+- Radius system matches app intent (`tight`/`medium`/pill behavior) instead of oversized card radii.
+- Typography uses a rounded system stack to reflect in-app `MindSenseTypography` direction.
+- Motion remains calm and short-duration, with reduced-motion fallback.
 
 ## Source Of Truth
 
