@@ -6,33 +6,36 @@
     <title>MindSense AI | Privacy</title>
     <meta
       name="description"
-      content="MindSense AI privacy posture: local-first runtime behavior, transparency framing, and support channels."
+      content="MindSense AI privacy posture summary: local-first implementation, data boundaries, and support channels."
     />
     <link rel="canonical" href="https://mindsense-ai-app.vercel.app/privacy" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
 
     <script>
       document.documentElement.classList.remove("no-js");
       document.documentElement.classList.add("js");
     </script>
+
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    <div class="bg-field" aria-hidden="true">
-      <div class="bg-orb orb-a"></div>
-      <div class="bg-orb orb-b"></div>
-      <div class="bg-grid"></div>
+    <div class="atmosphere" aria-hidden="true">
+      <div class="glow glow-a"></div>
+      <div class="glow glow-b"></div>
+      <div class="noise-grid"></div>
     </div>
 
     <header class="site-header legal-header">
       <a class="brand" href="./index.html#top" aria-label="MindSense home">
-        <img
-          src="./assets/brand/logo-lockup-horizontal.svg"
-          alt="MindSense AI"
-          width="190"
-          height="30"
-        />
+        <img src="./assets/brand/logo-lockup-horizontal.svg" alt="MindSense AI" width="190" height="30" />
       </a>
       <nav class="site-nav" aria-label="Legal navigation">
         <a href="./index.html#overview">Overview</a>
@@ -47,22 +50,29 @@
         <p class="eyebrow">Privacy</p>
         <h1>MindSense privacy posture summary</h1>
         <p>
-          MindSense AI is currently built as a local-first iOS application for its core runtime behavior. This page
-          summarizes implementation posture, not legal advice.
+          MindSense AI is implemented as a local-first iOS app for its core runtime behavior in v1.0.0. This page summarizes implementation posture and does not replace legal advice.
         </p>
 
         <h2>Current implementation posture</h2>
         <ul>
-          <li>Core loop behavior runs locally in the app and persists on device.</li>
-          <li>Guidance is presented with confidence and coverage framing.</li>
-          <li>The product is framed as wellness support, not emergency care.</li>
+          <li>Core product loop state is persisted on-device using local storage.</li>
+          <li>No cloud sync pipeline is implemented in this build.</li>
+          <li>Auth uses Sign in with Apple and local session persistence.</li>
+          <li>Confidence and data-coverage indicators are shown in-product to support interpretation quality.</li>
         </ul>
 
-        <h2>Data and controls</h2>
+        <h2>User controls</h2>
         <ul>
-          <li>Settings includes privacy/data control entry points and policy links.</li>
-          <li>Health and signal preferences are managed from in-app settings surfaces.</li>
-          <li>Safety pathways include crisis support guidance where relevant.</li>
+          <li>Settings includes privacy/data related entry points and policy access.</li>
+          <li>Health diagnostics and source controls are surfaced in-app.</li>
+          <li>Users can sign out and reset core local state from account controls.</li>
+        </ul>
+
+        <h2>Safety and support boundaries</h2>
+        <ul>
+          <li>MindSense is framed as wellness support and not emergency care.</li>
+          <li>Crisis support direction is explicit, including US 988 guidance.</li>
+          <li>For urgent concerns, use local emergency channels immediately.</li>
         </ul>
 
         <h2>Contact</h2>
