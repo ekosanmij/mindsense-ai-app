@@ -453,6 +453,7 @@ section[id] {
 
 .loop-step {
   padding: 16px;
+  cursor: pointer;
   transition: transform 170ms ease, border-color 170ms ease, background 170ms ease;
 }
 
@@ -584,12 +585,14 @@ section[id] {
   gap: 8px;
   overflow-x: auto;
   padding-bottom: 6px;
+  scroll-snap-type: x mandatory;
 }
 
 .filmstrip img {
   border-radius: var(--radius-medium);
   border: 1px solid var(--stroke-subtle);
   box-shadow: var(--shadow-directional);
+  scroll-snap-align: center;
 }
 
 .audience-grid,
@@ -876,6 +879,12 @@ section[id] {
   .legal-header {
     grid-template-columns: auto 1fr auto;
     grid-template-areas: none;
+  }
+
+  .legal-header .brand,
+  .legal-header .site-nav,
+  .legal-header .header-cta {
+    grid-area: auto;
   }
 
   .legal-header .site-nav {

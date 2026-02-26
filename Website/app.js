@@ -121,7 +121,10 @@ const renderLoop = (nextIndex) => {
   loopCopy.textContent = payload.copy;
 
   loopStepNodes.forEach((node, index) => {
-    node.classList.toggle("is-active", index === loopIndex);
+    const active = index === loopIndex;
+    node.classList.toggle("is-active", active);
+    node.setAttribute("tabindex", active ? "0" : "-1");
+    node.setAttribute("aria-pressed", active ? "true" : "false");
   });
 };
 
@@ -130,6 +133,32 @@ if (loopStepNodes.length > 0) {
 
   loopStepNodes.forEach((node, index) => {
     node.addEventListener("click", () => renderLoop(index));
+    node.addEventListener("keydown", (event) => {
+      if (!["ArrowRight", "ArrowLeft", "Home", "End", "Enter", " "].includes(event.key)) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (event.key === "Enter" || event.key === " ") {
+        renderLoop(index);
+        return;
+      }
+
+      let targetIndex = index;
+      if (event.key === "ArrowRight") {
+        targetIndex = (index + 1) % loopStepNodes.length;
+      } else if (event.key === "ArrowLeft") {
+        targetIndex = (index - 1 + loopStepNodes.length) % loopStepNodes.length;
+      } else if (event.key === "Home") {
+        targetIndex = 0;
+      } else if (event.key === "End") {
+        targetIndex = loopStepNodes.length - 1;
+      }
+
+      renderLoop(targetIndex);
+      loopStepNodes[targetIndex]?.focus();
+    });
   });
 
   loopNextButton?.addEventListener("click", () => renderLoop(loopIndex + 1));
