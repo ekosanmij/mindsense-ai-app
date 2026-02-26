@@ -6,9 +6,17 @@
     <title>MindSense AI | Privacy</title>
     <meta
       name="description"
-      content="MindSense AI privacy posture summary: local-first runtime behavior, confidence framing, and safety boundaries."
+      content="MindSense AI privacy posture: local-first runtime behavior, transparency framing, and support channels."
     />
     <link rel="canonical" href="https://mindsense-ai-app.vercel.app/privacy" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+
     <script>
       document.documentElement.classList.remove("no-js");
       document.documentElement.classList.add("js");
@@ -17,45 +25,60 @@
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
-    <div class="app-aura" aria-hidden="true"></div>
 
-    <header class="site-header">
+    <div class="ambient" aria-hidden="true">
+      <div class="ambient-orb ambient-orb-a"></div>
+      <div class="ambient-orb ambient-orb-b"></div>
+      <div class="ambient-orb ambient-orb-c"></div>
+    </div>
+
+    <header class="site-header legal-header">
       <a class="brand" href="./index.html#top" aria-label="MindSense home">
         <img
           src="./assets/brand/logo-lockup-horizontal.svg"
           alt="MindSense AI"
-          width="180"
-          height="28"
+          width="190"
+          height="30"
         />
       </a>
-      <a class="header-cta" href="./index.html#contact">Contact</a>
+      <nav class="site-nav" aria-label="Legal navigation">
+        <a href="./index.html#product">Product</a>
+        <a href="./index.html#evidence">Evidence</a>
+        <a href="./index.html#contact">Contact</a>
+      </nav>
+      <a class="header-cta" href="./index.html#contact">Contact team</a>
     </header>
 
     <main id="main-content" class="legal-main">
       <article class="legal-shell">
         <p class="eyebrow">Privacy</p>
-        <h1>MindSense privacy posture</h1>
+        <h1>MindSense privacy posture summary</h1>
         <p>
-          MindSense AI is designed as a local-first iOS experience for core daily runtime behavior. Product messaging and interaction flows are framed around confidence and data quality context so users can interpret guidance appropriately.
+          MindSense AI is currently built as a local-first iOS application for its core runtime behavior. This page
+          summarizes implementation posture, not legal advice.
         </p>
 
-        <h2>Data handling posture</h2>
+        <h2>Current implementation posture</h2>
         <ul>
-          <li>Core user state, sessions, and app behavior are stored locally by default.</li>
-          <li>Guidance copy is confidence-framed and avoids unsupported certainty claims.</li>
-          <li>Safety messaging is explicit about non-emergency boundaries.</li>
+          <li>Core loop behavior runs locally in the app and persists on device.</li>
+          <li>Guidance is presented with confidence and coverage framing.</li>
+          <li>The product is framed as wellness support, not emergency care.</li>
         </ul>
 
-        <h2>Support and policy requests</h2>
+        <h2>Data and controls</h2>
+        <ul>
+          <li>Settings includes privacy/data control entry points and policy links.</li>
+          <li>Health and signal preferences are managed from in-app settings surfaces.</li>
+          <li>Safety pathways include crisis support guidance where relevant.</li>
+        </ul>
+
+        <h2>Contact</h2>
         <p>
-          For full policy requests, data handling questions, or support, contact
-          <a href="mailto:support@mindsense.ai?subject=MindSense%20Privacy%20Question">support@mindsense.ai</a>.
+          For privacy or data-handling questions, contact
+          <a href="mailto:support@mindsense.ai?subject=MindSense%20Privacy%20Request">support@mindsense.ai</a>.
         </p>
 
-        <p class="legal-note">
-          This summary describes current implementation posture and is not legal advice.
-        </p>
-
+        <p class="legal-note">Last updated: February 26, 2026.</p>
         <a class="back-link" href="./index.html">Return to homepage</a>
       </article>
     </main>

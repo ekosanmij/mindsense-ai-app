@@ -284,8 +284,7 @@ Data is currently local-first and persisted in `UserDefaults` only.
 ## Documentation index
 
 - Product as-built PRD: `Docs/product/prd-as-built.md`
-- Marketing website as-built doc: `Docs/product/marketing-website.md`
-- Marketing website audit and improvement plan: `Docs/product/marketing-website-audit.md`
+- Marketing website as-built doc: `Docs/product/website-marketing-as-built.md`
 - Brand direction: `Docs/design/brand-direction.md`
 - Design system: `Docs/design/design-system.md`
 - Quality gates: `Docs/quality/quality-gates.md`

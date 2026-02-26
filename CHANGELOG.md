@@ -25,8 +25,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `Docs/engineering/architecture.md` runtime architecture reference.
 - `Docs/engineering/testing.md` test and QA runbook.
 - New marketing website at `Website/` with app-aligned styling, animated sections, and stakeholder/investor narratives.
-- Marketing website implementation doc at `Docs/product/marketing-website.md`.
-- Comprehensive marketing website audit and design-improvement plan at `Docs/product/marketing-website-audit.md`.
+- Marketing website implementation doc at `Docs/product/website-marketing-as-built.md`.
 - Deterministic screenshot export utility script: `Scripts/export_marketing_screenshots.sh`.
 - UI test screenshot exporter `testMarketingWebsiteScreenshotExport()` for website asset refreshes.
 
@@ -35,8 +34,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Replaced magic-link auth implementation with `Continue with Apple` session flow.
 - Updated Intro/Auth entry copy and layout to an Apple-first, lower-noise design.
 - Updated documentation set to reflect Apple sign-in behavior and persistence keys.
-- Updated `README.md` repository structure and documentation index to include the new website/docs.
-- Upgraded `Website/index.html`, `Website/styles.css`, and `Website/app.js` with conversion CTAs (waitlist/demo/investor), SEO/social metadata, accessibility improvements, and expanded content sections.
+- Updated `README.md` repository structure and documentation index to include the current website docs.
+- Rebuilt `Website/index.html`, `Website/styles.css`, and `Website/app.js` with audience-specific narratives, richer motion/interaction patterns, and expanded section-by-section screenshot storytelling.
 - Added first-party trust pages: `Website/privacy.html` and `Website/terms.html`.
 - Added responsive optimized screenshot variants under `Website/assets/screenshots/optimized`.
 - Updated `Scripts/export_marketing_screenshots.sh` to auto-generate optimized website image variants.
@@ -44,3 +43,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Removed
 
 - Outdated website blueprint doc: `Docs/product/website-implementation-blueprint.md`.
+- Outdated website docs replaced: `Docs/product/marketing-website.md`, `Docs/product/marketing-website-audit.md`.

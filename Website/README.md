@@ -1,18 +1,19 @@
-# MindSense Marketing Website
+# MindSense Website
 
-This folder contains the production-style marketing site for MindSense AI.
+This folder contains the production marketing website for MindSense AI.
 
-## What is included
+## Files
 
-- `index.html`: single-page marketing narrative with conversion, FAQ, and contact paths
-- `privacy.html` / `terms.html`: first-party trust/legal summary pages linked from footer
-- `styles.css`: app-aligned visual tokens, responsive layout, focus and reduced-motion behavior
-- `app.js`: interactive surface explorer, keyboard tabs, nav state, counters, motion hooks
-- `assets/screenshots/*.png`: real UI screenshots exported from deterministic UI tests
-- `assets/screenshots/optimized/*.jpg`: responsive compressed variants used by website image `srcset`
-- `assets/brand/*.svg`: official logo assets
+- `index.html`: main marketing page with product, audience, evidence, FAQ, and conversion sections
+- `styles.css`: visual system, responsive layout, interaction states, and legal page styling
+- `app.js`: nav state, audience switcher, loop simulator, surface explorer, counter and motion behavior
+- `privacy.html`: privacy posture summary page
+- `terms.html`: terms and usage boundaries summary page
+- `assets/screenshots`: source PNG exports from UI tests
+- `assets/screenshots/optimized`: responsive JPG variants used by `srcset`
+- `assets/brand`: logo assets for web
 
-## Run locally
+## Local preview
 
 From repository root:
 
@@ -25,23 +26,20 @@ Then open `http://localhost:4173`.
 
 ## Refresh screenshots
 
-Run from repository root:
+From repository root:
 
 ```bash
 bash Scripts/export_marketing_screenshots.sh
 ```
 
-Optional arguments:
+Optional:
 
 ```bash
 bash Scripts/export_marketing_screenshots.sh "iPhone 17" "Website/assets/screenshots"
 ```
 
-The script now refreshes both:
+## Notes
 
-- source PNGs in `Website/assets/screenshots`
-- optimized JPG variants in `Website/assets/screenshots/optimized`
-
-## Deployment
-
-Because this site is static HTML/CSS/JS, it can be deployed to any static host (GitHub Pages, Vercel static, Netlify, S3+CloudFront).
+- Screenshots should stay sourced from UI automation, not manual edits.
+- Website claims must remain as-built and aligned to shipped app behavior.
+- If adding new sections, preserve reduced-motion and keyboard accessibility behavior.
