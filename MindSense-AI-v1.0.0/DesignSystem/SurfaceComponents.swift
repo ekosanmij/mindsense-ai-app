@@ -899,9 +899,10 @@ struct MindSenseBottomActionDock<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
-        VStack(spacing: MindSenseSpacing.xs) {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
             content
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MindSenseSpacing.md)
         .padding(.top, MindSenseSpacing.xxxs)
         .padding(.bottom, MindSenseSpacing.xxxs)
@@ -941,6 +942,7 @@ struct MindSenseDoItNowDock<Content: View>: View {
 
                 content
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
