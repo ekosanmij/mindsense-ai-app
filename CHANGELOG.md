@@ -24,11 +24,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - `SECURITY.md` vulnerability reporting policy.
 - `Docs/engineering/architecture.md` runtime architecture reference.
 - `Docs/engineering/testing.md` test and QA runbook.
+- `Website/` static marketing site (premium product page, legal pages, brand assets, and optimized real UI screenshots).
+- `Website/README.md` local preview and website/screenshot maintenance workflow.
+- `Docs/product/website-as-built.md` website IA, interaction model, screenshot mapping, and maintenance documentation.
 
 ### Changed
 
 - Replaced magic-link auth implementation with `Continue with Apple` session flow.
 - Updated Intro/Auth entry copy and layout to an Apple-first, lower-noise design.
 - Updated documentation set to reflect Apple sign-in behavior and persistence keys.
+- Refreshed website screenshot assets from UI-test snapshot exports (small/large captures for `Today`, `Regulate`, `Data`, `Settings`).
+- Updated `MindSenseCoreScreensUITests` snapshot helper to match current core-screen CTA identifiers during screenshot capture.
+- Updated root `README.md` documentation index and repository structure to include the website/docs.
 
 ### Removed

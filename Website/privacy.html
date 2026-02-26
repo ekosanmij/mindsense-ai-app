@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy | MindSense AI (Website + As-Built App Notice)</title>
+  <meta name="description" content="Privacy notice for the MindSense AI marketing website and as-built app data posture summary.">
+  <meta name="theme-color" content="#0b0f14">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=Instrument+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="legal-page">
+  <header class="legal-header">
+    <div class="container legal-header__inner">
+      <a class="legal-header__brand" href="index.html">
+        <img src="assets/brand/logo-icon-light.svg" alt="MindSense icon" width="34" height="34">
+        <strong>MindSense AI</strong>
+      </a>
+      <nav class="legal-header__nav" aria-label="Legal navigation">
+        <a href="index.html">Marketing site</a>
+        <a href="privacy.html" aria-current="page">Privacy</a>
+        <a href="terms.html">Terms</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="legal-main">
+    <div class="container legal-shell">
+      <aside class="legal-aside" aria-label="Privacy summary">
+        <p class="eyebrow">Summary</p>
+        <p>This page covers the static marketing website in this repository and summarizes the app's current (v1.0.0) as-built data posture.</p>
+      </aside>
+
+      <article class="legal-content">
+        <header>
+          <p class="eyebrow">Privacy notice</p>
+          <h1>Privacy</h1>
+          <p>Last updated: February 26, 2026</p>
+        </header>
+
+        <section class="legal-section">
+          <h2>Scope</h2>
+          <p>
+            This notice applies to the static marketing website located under `Website/` in this repository and to the information presented here about the MindSense AI v1.0.0 iOS app.
+            It does not claim to cover any future hosted services, cloud backend, or analytics systems that are not implemented in the current build.
+          </p>
+        </section>
+
+        <section class="legal-section">
+          <h2>Website data collection (as shipped in this repo)</h2>
+          <p>
+            The website in this repository is a static HTML/CSS/JavaScript site and does not include built-in account creation, form submission, cookies for tracking, or analytics scripts by default.
+          </p>
+          <ul>
+            <li>No first-party analytics script is included in the repository website code.</li>
+            <li>No marketing pixels or ad trackers are included in the repository website code.</li>
+            <li>Links to GitHub may result in data collection by GitHub under GitHub's own policies.</li>
+          </ul>
+          <div class="legal-callout">
+            <p>If you deploy this website and add analytics, forms, or third-party widgets, update this page before publishing.</p>
+          </div>
+        </section>
+
+        <section class="legal-section">
+          <h2>MindSense iOS app data posture (v1.0.0 as built)</h2>
+          <p>
+            The repository's as-built documentation and source code show a local-first storage model for MindSense AI v1.0.0. App data is persisted locally using `UserDefaults` and Codable models.
+          </p>
+          <ul>
+            <li>No cloud sync or multi-device account backend is implemented in-app for v1.0.0.</li>
+            <li>Authentication UX is `Sign in with Apple`.</li>
+            <li>Session values are stored locally to support app relaunches.</li>
+            <li>The app currently uses a deterministic demo/local signal model; docs list no real HealthKit ingestion pipeline yet.</li>
+          </ul>
+        </section>
+
+        <section class="legal-section">
+          <h2>Permissions and metadata boundaries</h2>
+          <p>
+            The app's Settings screen includes explicit copy about certain signal boundaries. For example, the meeting/call signals setting states that the app uses calendar busy windows and call-volume metadata for ranking top drivers, and does not use event titles, participant names, contact names, or message content.
+          </p>
+          <p>
+            This website reflects those implemented boundaries and does not expand them into unimplemented data uses.
+          </p>
+        </section>
+
+        <section class="legal-section">
+          <h2>Children, medical, and emergency use</h2>
+          <p>
+            MindSense is described in this repository as wellness support, not as a medical diagnosis or emergency response service. Users should not rely on the app or this website for emergency care.
+          </p>
+        </section>
+
+        <section class="legal-section">
+          <h2>Retention and deletion (repository website)</h2>
+          <p>
+            Because the repository website does not include forms or accounts by default, it does not maintain a user database in the shipped website code. Any logs generated by a hosting provider are controlled by that provider and deployment configuration.
+          </p>
+        </section>
+
+        <section class="legal-section">
+          <h2>Changes to this notice</h2>
+          <p>
+            Update this page whenever the website adds analytics/forms or when the app's data architecture changes (for example, if cloud sync or real health-data ingestion ships). The corresponding source and docs should be updated in the same commit.
+          </p>
+        </section>
+
+        <section class="legal-section">
+          <h2>Contact</h2>
+          <p>
+            For questions about this repository build, use the project's GitHub repository and issue tracker:
+            <a href="https://github.com/ekosanmij/mindsense-ai-app" target="_blank" rel="noreferrer">github.com/ekosanmij/mindsense-ai-app</a>.
+          </p>
+        </section>
+      </article>
+    </div>
+  </main>
+
+  <footer class="legal-footer">
+    <div class="container legal-footer__inner">
+      <span>MindSense AI v1.0.0 · As-built website privacy notice</span>
+      <div class="legal-footer__links" aria-label="Footer links">
+        <a href="index.html">Marketing site</a>
+        <a href="terms.html">Terms</a>
+        <a href="https://github.com/ekosanmij/mindsense-ai-app" target="_blank" rel="noreferrer">GitHub</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

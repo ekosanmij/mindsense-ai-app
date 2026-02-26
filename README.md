@@ -84,6 +84,7 @@ MindSense-AI-v1.0.0/
 ├── MindSense-AI-v1.0.0Tests/              # Unit tests
 ├── MindSense-AI-v1.0.0UITests/            # UI tests + snapshot coverage
 ├── Scripts/                               # QA and asset generation scripts
+├── Website/                               # Static marketing site + legal pages
 └── Docs/                                  # PRD, design, brand, product docs
 ```
 
@@ -283,12 +284,14 @@ Data is currently local-first and persisted in `UserDefaults` only.
 ## Documentation index
 
 - Product as-built PRD: `Docs/product/prd-as-built.md`
+- Website as-built spec + screenshot mapping: `Docs/product/website-as-built.md`
 - Brand direction: `Docs/design/brand-direction.md`
 - Design system: `Docs/design/design-system.md`
 - Quality gates: `Docs/quality/quality-gates.md`
 - Logo system: `Docs/brand/logo/readme.md`
 - Runtime architecture guide: `Docs/engineering/architecture.md`
 - Testing and QA runbook: `Docs/engineering/testing.md`
+- Website local preview/update workflow: `Website/README.md`
 
 ## Contributing
 
@@ -304,3 +307,4 @@ No license file is currently included in this repository. Add one if you plan to
 - Contributor guide: `CONTRIBUTING.md`
 - Security policy: `SECURITY.md`
 - Changelog: `CHANGELOG.md`
+- Marketing website workflow: `Website/README.md`

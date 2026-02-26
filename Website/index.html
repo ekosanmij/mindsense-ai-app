@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MindSense AI v1.0.0 | Local-first Nervous-System Regulation App (As Built)</title>
+  <meta name="description" content="MindSense AI v1.0.0 is a local-first iOS app for nervous-system regulation: understand current state, run one guided protocol, capture outcomes, and review trends and experiments.">
+  <meta name="theme-color" content="#0b0f14">
+  <meta name="color-scheme" content="dark light">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=Instrument+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to content</a>
+
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient__glow ambient__glow--a"></div>
+    <div class="ambient__glow ambient__glow--b"></div>
+    <div class="ambient__grid"></div>
+  </div>
+
+  <header class="site-header" id="top">
+    <div class="container site-header__inner">
+      <a class="brand" href="#top" aria-label="MindSense home">
+        <img src="assets/brand/logo-lockup-horizontal.svg" alt="MindSense" width="180" height="60" loading="eager" decoding="async">
+      </a>
+
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation">
+        <span></span>
+        <span></span>
+      </button>
+
+      <nav class="site-nav" id="site-nav" aria-label="Primary">
+        <a href="#overview">Overview</a>
+        <a href="#core-loop">Core loop</a>
+        <a href="#walkthrough">Walkthrough</a>
+        <a href="#trust">Trust &amp; safety</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/ekosanmij/mindsense-ai-app" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+
+      <div class="site-header__actions">
+        <a class="button button--ghost" href="https://github.com/ekosanmij/mindsense-ai-app/blob/main/README.md" target="_blank" rel="noreferrer">Read docs</a>
+        <a class="button button--solid" href="#contact">Evaluate build</a>
+      </div>
+    </div>
+    <div class="scroll-progress" aria-hidden="true"><span id="scroll-progress-bar"></span></div>
+  </header>
+
+  <main id="main-content">
+    <section class="hero section">
+      <div class="container hero__grid">
+        <div class="hero__content" data-reveal>
+          <p class="eyebrow">As-built product page · MindSense AI v1.0.0</p>
+          <h1>Premium nervous-system regulation UX, grounded in a local-first iOS build.</h1>
+          <p class="hero__lead">
+            MindSense AI helps users understand their current state, run one short guided regulation protocol,
+            capture outcomes, and review trends over time. This page documents the shipped experience as implemented in code,
+            tests, and QA artifacts, without roadmap claims.
+          </p>
+          <div class="hero__cta">
+            <a class="button button--solid button--large" href="#walkthrough">See the app walkthrough</a>
+            <a class="button button--ghost button--large" href="https://github.com/ekosanmij/mindsense-ai-app" target="_blank" rel="noreferrer">Inspect source + tests</a>
+          </div>
+          <div class="hero__boundary" role="note" aria-label="Wellness boundary note">
+            <strong>Wellness support only.</strong>
+            <span>MindSense is not presented here as diagnosis, treatment, or emergency care. The app includes explicit safety/support guidance in settings.</span>
+          </div>
+          <ul class="hero__proof-strip" aria-label="As-built proof highlights">
+            <li><span>Auth</span><strong>Sign in with Apple</strong></li>
+            <li><span>Storage</span><strong>Local-first (UserDefaults + Codable)</strong></li>
+            <li><span>Core tabs</span><strong>Today · Regulate · Data</strong></li>
+            <li><span>Coverage</span><strong>UI tests + snapshot matrix</strong></li>
+          </ul>
+        </div>
+
+        <div class="hero__visual" data-reveal>
+          <div class="hero-device">
+            <div class="hero-device__frame" aria-hidden="true"></div>
+            <div class="hero-device__glass" aria-hidden="true"></div>
+
+            <div class="hero-device__screens" aria-live="polite">
+              <figure class="hero-shot is-active" data-hero-shot="today" id="hero-preview-today" role="tabpanel" aria-labelledby="hero-tab-today">
+                <picture>
+                  <source media="(max-width: 720px)" srcset="assets/optimized/today-small.png">
+                  <img src="assets/optimized/today-large.png" alt="MindSense Today screen showing load, readiness, consistency, drivers, and next action" width="451" height="980" fetchpriority="high" decoding="async">
+                </picture>
+                <figcaption>Today: state snapshot + recommended next action</figcaption>
+              </figure>
+              <figure class="hero-shot" data-hero-shot="regulate" id="hero-preview-regulate" role="tabpanel" aria-labelledby="hero-tab-regulate" aria-hidden="true">
+                <picture>
+                  <source media="(max-width: 720px)" srcset="assets/optimized/regulate-small.png">
+                  <img src="assets/optimized/regulate-large.png" alt="MindSense Regulate screen showing guided protocol flow and completion" width="451" height="980" loading="lazy" decoding="async">
+                </picture>
+                <figcaption>Regulate: guided protocol + outcome capture</figcaption>
+              </figure>
+              <figure class="hero-shot" data-hero-shot="data" id="hero-preview-data" role="tabpanel" aria-labelledby="hero-tab-data" aria-hidden="true">
+                <picture>
+                  <source media="(max-width: 720px)" srcset="assets/optimized/data-small.png">
+                  <img src="assets/optimized/data-large.png" alt="MindSense Data screen with trends, experiments, and history views" width="451" height="980" loading="lazy" decoding="async">
+                </picture>
+                <figcaption>Data: trends, experiments, and history</figcaption>
+              </figure>
+              <figure class="hero-shot" data-hero-shot="settings" id="hero-preview-settings" role="tabpanel" aria-labelledby="hero-tab-settings" aria-hidden="true">
+                <picture>
+                  <source media="(max-width: 720px)" srcset="assets/optimized/settings-small.png">
+                  <img src="assets/optimized/settings-large.png" alt="MindSense Settings screen with privacy, permissions, notifications, and support options" width="451" height="980" loading="lazy" decoding="async">
+                </picture>
+                <figcaption>Settings: privacy controls, permissions, notifications, safety</figcaption>
+              </figure>
+            </div>
+
+            <div class="hero-device__overlay hero-device__overlay--top" aria-hidden="true">
+              <p>Confidence &amp; coverage labels are surfaced in-product.</p>
+            </div>
+            <div class="hero-device__overlay hero-device__overlay--bottom" aria-hidden="true">
+              <p>Deterministic UI test flows seed the screenshots shown here.</p>
+            </div>
+          </div>
+
+          <div class="hero-rail" role="tablist" aria-label="Preview screens">
+            <button type="button" class="hero-rail__button is-active" role="tab" aria-selected="true" aria-controls="hero-preview-today" id="hero-tab-today" data-hero-target="today">
+              <span>Today</span>
+              <small>State snapshot</small>
+            </button>
+            <button type="button" class="hero-rail__button" role="tab" aria-selected="false" aria-controls="hero-preview-regulate" id="hero-tab-regulate" data-hero-target="regulate" tabindex="-1">
+              <span>Regulate</span>
+              <small>Guided protocol</small>
+            </button>
+            <button type="button" class="hero-rail__button" role="tab" aria-selected="false" aria-controls="hero-preview-data" id="hero-tab-data" data-hero-target="data" tabindex="-1">
+              <span>Data</span>
+              <small>Trends &amp; experiments</small>
+            </button>
+            <button type="button" class="hero-rail__button" role="tab" aria-selected="false" aria-controls="hero-preview-settings" id="hero-tab-settings" data-hero-target="settings" tabindex="-1">
+              <span>Settings</span>
+              <small>Privacy &amp; safety</small>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--dense" id="overview">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <p class="eyebrow">Product overview</p>
+          <h2>Built around a repeatable daily loop, not a dashboard maze.</h2>
+          <p>
+            The implemented v1.0.0 experience prioritizes a single next action: understand state, regulate once,
+            and capture what changed. The app then exposes trends and experiment tracking for reflection over time.
+          </p>
+        </div>
+
+        <div class="overview-grid">
+          <article class="card card--panel" data-reveal>
+            <h3>What users get in the shipped build</h3>
+            <ul class="checklist">
+              <li>Current-state snapshot (`Load`, `Readiness`, `Consistency`) on <strong>Today</strong></li>
+              <li>One recommended action and guided protocol flow on <strong>Regulate</strong></li>
+              <li><strong>Trends</strong>, <strong>Experiments</strong>, and <strong>History</strong> views on <strong>Data</strong></li>
+              <li>Outcome logging to improve recommendation confidence over repeated use</li>
+              <li>Settings for permissions, notifications, privacy controls, and safety/support access</li>
+            </ul>
+          </article>
+
+          <article class="card card--panel" data-reveal>
+            <h3>Intentional scope boundaries (v1.0.0)</h3>
+            <ul class="checklist checklist--neutral">
+              <li>No real HealthKit ingestion pipeline yet (demo/local signal model is used)</li>
+              <li>No cloud sync or multi-device backend in-app</li>
+              <li>No StoreKit purchase / receipt flow in-app (paywall UX only)</li>
+              <li>Community and QA surfaces exist in code but are not primary production tabs</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="metrics-grid" aria-label="As-built proof metrics">
+          <article class="metric-card" data-reveal>
+            <p>Primary runtime tabs</p>
+            <h3><span data-count-to="3">3</span></h3>
+            <small>Today · Regulate · Data</small>
+          </article>
+          <article class="metric-card" data-reveal>
+            <p>Onboarding steps</p>
+            <h3><span data-count-to="4">4</span></h3>
+            <small>with 2 required for activation</small>
+          </article>
+          <article class="metric-card" data-reveal>
+            <p>Preset regulation protocols</p>
+            <h3><span data-count-to="3">3</span></h3>
+            <small>Calm now · Focus prep · Sleep downshift</small>
+          </article>
+          <article class="metric-card" data-reveal>
+            <p>Snapshot QA captures per matrix run</p>
+            <h3><span data-count-to="16">16</span></h3>
+            <small>4 screens × light/dark × small/large</small>
+          </article>
+          <article class="metric-card" data-reveal>
+            <p>UI performance budget target</p>
+            <h3>&lt;<span data-count-to="750">750</span>ms</h3>
+            <small>simulator tab + primary action transitions</small>
+          </article>
+          <article class="metric-card" data-reveal>
+            <p>Auth path</p>
+            <h3>1</h3>
+            <small>Sign in with Apple only (as implemented)</small>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="core-loop">
+      <div class="container core-loop">
+        <div class="section-header" data-reveal>
+          <p class="eyebrow">Core loop</p>
+          <h2>Understand → regulate → review → repeat.</h2>
+          <p>
+            MindSense v1.0.0 is designed as a deterministic feedback loop. The app surfaces a current-state model,
+            recommends one action, records the outcome, and then uses repeated local history to improve the next recommendation's confidence.
+          </p>
+        </div>
+
+        <div class="loop-diagram" data-reveal>
+          <ol class="loop-steps">
+            <li>
+              <span class="loop-steps__index">1</span>
+              <h3>Today: read current state</h3>
+              <p>Users see `Load`, `Readiness`, and `Consistency`, plus top drivers and confidence/coverage cues.</p>
+            </li>
+            <li>
+              <span class="loop-steps__index">2</span>
+              <h3>Regulate: run one protocol</h3>
+              <p>Guided sessions focus on a single goal (for example calm, focus prep, or sleep downshift) with a clear completion path.</p>
+            </li>
+            <li>
+              <span class="loop-steps__index">3</span>
+              <h3>Outcome capture</h3>
+              <p>Completion and outcome logging provide local evidence of what changed after a session.</p>
+            </li>
+            <li>
+              <span class="loop-steps__index">4</span>
+              <h3>Data: review trends &amp; experiments</h3>
+              <p>Trend summaries, experiment lifecycle, and history support reflection and iterative behavior tuning.</p>
+            </li>
+          </ol>
+
+          <div class="loop-notes">
+            <article class="card card--glass">
+              <h3>What improves over time</h3>
+              <p>Recommendation confidence and relevance improve through repeated use and outcome capture in local history.</p>
+            </article>
+            <article class="card card--glass">
+              <h3>What stays explicit</h3>
+              <p>Signal coverage and confidence terminology are explained in the product instead of being hidden behind a single score.</p>
+            </article>
+            <article class="card card--glass">
+              <h3>What does not change</h3>
+              <p>MindSense remains wellness support; it does not replace emergency services or licensed clinical care.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section walkthrough" id="walkthrough">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <p class="eyebrow">App walkthrough</p>
+          <h2>Section-by-section product tour with real UI test captures.</h2>
+          <p>
+            Every screenshot below is pulled from the repo's UI-test snapshot workflow and mapped to a real app surface.
+            The copy describes shipped behavior only.
+          </p>
+        </div>
+
+        <div class="screen-tabs" role="tablist" aria-label="App sections" data-reveal>
+          <button type="button" role="tab" class="screen-tabs__button is-active" aria-selected="true" aria-controls="panel-today" id="tab-today">Today</button>
+          <button type="button" role="tab" class="screen-tabs__button" aria-selected="false" aria-controls="panel-regulate" id="tab-regulate" tabindex="-1">Regulate</button>
+          <button type="button" role="tab" class="screen-tabs__button" aria-selected="false" aria-controls="panel-data" id="tab-data" tabindex="-1">Data</button>
+          <button type="button" role="tab" class="screen-tabs__button" aria-selected="false" aria-controls="panel-settings" id="tab-settings" tabindex="-1">Settings</button>
+        </div>
+
+        <article class="screen-panel is-active" id="panel-today" role="tabpanel" aria-labelledby="tab-today" data-reveal>
+          <div class="screen-panel__media">
+            <figure class="device-shot device-shot--primary">
+              <picture>
+                <source media="(max-width: 880px)" srcset="assets/optimized/today-small.png">
+                <img src="assets/optimized/today-large.png" alt="Today screen with metrics hero, next action CTA, top drivers, timeline, and confidence explanations" width="451" height="980" loading="lazy" decoding="async">
+              </picture>
+              <figcaption>Primary `Today` screen capture (large simulator variant).</figcaption>
+            </figure>
+            <figure class="device-shot device-shot--secondary">
+              <img src="assets/optimized/today-small.png" alt="Today screen compact capture for smaller device size" width="349" height="760" loading="lazy" decoding="async">
+              <figcaption>Small-device QA capture.</figcaption>
+            </figure>
+          </div>
+          <div class="screen-panel__content">
+            <header>
+              <p class="eyebrow">Today</p>
+              <h3>Fast state comprehension with explainable context</h3>
+              <p>The `Today` tab is the operational center: users get a current-state snapshot and a single recommended next action before scrolling deeper.</p>
+            </header>
+            <div class="feature-clusters">
+              <section class="feature-cluster">
+                <h4>Hero signal + action hierarchy</h4>
+                <p>Design and QA docs enforce a clear visual sequence: state hero → primary CTA → supporting detail. UI tests explicitly check primary CTA visibility.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Top drivers and confidence details</h4>
+                <p>The app surfaces driver rankings, signal coverage, and confidence terminology so users can understand what contributed to the current recommendation.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Check-in and context capture</h4>
+                <p>Users can log check-ins, attach context tags/notes, and create local evidence that later informs trends, history, and recommendation confidence.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Timeline and episode detail sheets</h4>
+                <p>Implemented timeline and episode details support drill-down without leaving the main daily workflow.</p>
+              </section>
+            </div>
+            <ul class="pill-list" aria-label="Today as-built details">
+              <li>`Load` / `Readiness` / `Consistency` metrics</li>
+              <li>Confidence and coverage explanations</li>
+              <li>Driver ranking + supporting signal detail sheets</li>
+              <li>Daily check-in prompts with accessibility-aware behavior</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="screen-panel" id="panel-regulate" role="tabpanel" aria-labelledby="tab-regulate" hidden data-reveal>
+          <div class="screen-panel__media">
+            <figure class="device-shot device-shot--primary">
+              <picture>
+                <source media="(max-width: 880px)" srcset="assets/optimized/regulate-small.png">
+                <img src="assets/optimized/regulate-large.png" alt="Regulate screen showing protocol recommendation, guided steps, and outcome completion flow" width="451" height="980" loading="lazy" decoding="async">
+              </picture>
+              <figcaption>`Regulate` capture with guided flow and completion CTA.</figcaption>
+            </figure>
+            <figure class="device-shot device-shot--secondary">
+              <img src="assets/optimized/regulate-small.png" alt="Regulate screen compact capture for smaller device" width="349" height="760" loading="lazy" decoding="async">
+              <figcaption>Small-device QA capture.</figcaption>
+            </figure>
+          </div>
+          <div class="screen-panel__content">
+            <header>
+              <p class="eyebrow">Regulate</p>
+              <h3>Guided protocols built for one-session completion</h3>
+              <p>The `Regulate` tab turns a recommendation into a concrete protocol run and then records the outcome in the same flow.</p>
+            </header>
+            <div class="feature-clusters">
+              <section class="feature-cluster">
+                <h4>Preset protocol paths (implemented)</h4>
+                <p>Shipped presets include <em>Calm now</em>, <em>Focus prep</em>, and <em>Sleep downshift</em>, chosen as simple, repeatable regulation goals.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Progress + completion states</h4>
+                <p>The flow includes explicit progress/completion states and a primary CTA path that UI tests use in deterministic loop coverage.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Outcome submission</h4>
+                <p>Post-session outcome capture feeds local history and supports later review in `Data` without requiring cloud sync.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Motion-aware interactions</h4>
+                <p>App-wide reduced-motion settings and accessibility reduce-motion are supported in the product and respected by UI components.</p>
+              </section>
+            </div>
+            <ul class="pill-list" aria-label="Regulate as-built details">
+              <li>Single primary CTA hierarchy</li>
+              <li>Deterministic UI-test completion path</li>
+              <li>Outcome logging after completion</li>
+              <li>Calm, focus, and sleep downshift preset goals</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="screen-panel" id="panel-data" role="tabpanel" aria-labelledby="tab-data" hidden data-reveal>
+          <div class="screen-panel__media">
+            <figure class="device-shot device-shot--primary">
+              <picture>
+                <source media="(max-width: 880px)" srcset="assets/optimized/data-small.png">
+                <img src="assets/optimized/data-large.png" alt="Data screen showing trends, experiments, and history with summaries and controls" width="451" height="980" loading="lazy" decoding="async">
+              </picture>
+              <figcaption>`Data` capture from the large-device snapshot run.</figcaption>
+            </figure>
+            <figure class="device-shot device-shot--secondary">
+              <img src="assets/optimized/data-small.png" alt="Data screen compact capture for smaller device" width="349" height="760" loading="lazy" decoding="async">
+              <figcaption>Small-device QA capture.</figcaption>
+            </figure>
+          </div>
+          <div class="screen-panel__content">
+            <header>
+              <p class="eyebrow">Data</p>
+              <h3>Reflection tools: trends, experiments, and history in one tab</h3>
+              <p>The `Data` tab consolidates review workflows so users can inspect patterns, run small experiments, and revisit prior sessions and outcomes.</p>
+            </header>
+            <div class="feature-clusters">
+              <section class="feature-cluster">
+                <h4>Trends mode</h4>
+                <p>Trend summaries provide a high-level view of changes over time, supporting reflection instead of forcing users to interpret raw event lists only.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Experiments lifecycle</h4>
+                <p>The app implements experiment creation and completion flows, and UI tests cover deterministic experiment lifecycle behavior.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>History mode</h4>
+                <p>History captures prior sessions/check-ins so users can compare what they tried and what outcomes were logged locally.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Evidence for recommendation tuning</h4>
+                <p>Repeated entries in `Data` support the app's stated goal of improving recommendation confidence through use, without claiming clinical prediction accuracy.</p>
+              </section>
+            </div>
+            <ul class="pill-list" aria-label="Data as-built details">
+              <li>`Trends` / `Experiments` / `History` subviews</li>
+              <li>Experiment lifecycle covered in UI tests</li>
+              <li>Local-only persistence in v1.0.0</li>
+              <li>Supports loop review and repetition</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="screen-panel" id="panel-settings" role="tabpanel" aria-labelledby="tab-settings" hidden data-reveal>
+          <div class="screen-panel__media">
+            <figure class="device-shot device-shot--primary">
+              <picture>
+                <source media="(max-width: 880px)" srcset="assets/optimized/settings-small.png">
+                <img src="assets/optimized/settings-large.png" alt="Settings screen with privacy controls, permission status, notifications, and safety support rows" width="451" height="980" loading="lazy" decoding="async">
+              </picture>
+              <figcaption>`Settings` capture showing control clusters and support links.</figcaption>
+            </figure>
+            <figure class="device-shot device-shot--secondary">
+              <img src="assets/optimized/settings-small.png" alt="Settings screen compact capture for smaller device" width="349" height="760" loading="lazy" decoding="async">
+              <figcaption>Small-device QA capture.</figcaption>
+            </figure>
+          </div>
+          <div class="screen-panel__content">
+            <header>
+              <p class="eyebrow">Settings</p>
+              <h3>Privacy, permissions, and safety controls are first-class product surfaces</h3>
+              <p>The `Settings` screen is not an afterthought. It centralizes privacy/data controls, permission visibility, notification tuning, and safety/support access.</p>
+            </header>
+            <div class="feature-clusters">
+              <section class="feature-cluster">
+                <h4>Privacy/data control cluster</h4>
+                <p>Data controls and sign-out are intentionally separated so export/delete/privacy actions remain easy to find. UI tests also check privacy-policy row presence.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Permission status + remediation guidance</h4>
+                <p>Health/permission states are surfaced with remediation support paths, including unsupported cases in the demo signal model.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Meeting/call metadata boundary</h4>
+                <p>A dedicated control explains that only busy windows and call-volume metadata are used for top-driver ranking; no titles, names, or message content are used.</p>
+              </section>
+              <section class="feature-cluster">
+                <h4>Safety and support</h4>
+                <p>The app explicitly states wellness boundaries and includes quick access to support pathways, including a 988 support row in the safety cluster.</p>
+              </section>
+            </div>
+            <ul class="pill-list" aria-label="Settings as-built details">
+              <li>Privacy policy row presence is regression-tested</li>
+              <li>Notifications + quiet hours controls</li>
+              <li>Reduced motion, haptics, appearance preferences</li>
+              <li>Safety/support guidance without replacing emergency care</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section section--dense" id="audiences">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <p class="eyebrow">Who this build is for</p>
+          <h2>Three evaluation paths, one grounded product narrative.</h2>
+          <p>
+            The current repository supports different conversations. Each audience below is mapped to what is actually implemented today,
+            not speculative enterprise packaging.
+          </p>
+        </div>
+
+        <div class="audience-grid">
+          <article class="audience-card" data-reveal>
+            <p class="audience-card__label">Prospective users</p>
+            <h3>Understand the daily experience quickly</h3>
+            <p>Evaluate whether the `Today → Regulate → Data` loop feels useful, calm, and repeatable for daily nervous-system regulation support.</p>
+            <ul>
+              <li>Clear state snapshot with one recommended next action</li>
+              <li>Short guided protocol completion path</li>
+              <li>Trends/experiments/history for reflection</li>
+              <li>Explicit wellness boundaries and safety guidance</li>
+            </ul>
+          </article>
+
+          <article class="audience-card" data-reveal>
+            <p class="audience-card__label">Stakeholders (product, clinical ops, design, QA)</p>
+            <h3>Review implementation quality and risk posture</h3>
+            <p>Inspect architecture, local-first data handling, permissions boundaries, QA gates, and accessibility/testing coverage to assess readiness and constraints.</p>
+            <ul>
+              <li>Source-visible runtime architecture + persistence model</li>
+              <li>Quality gates for contrast, snapshots, dynamic type, latency</li>
+              <li>UI-test snapshot matrix and deterministic launch hooks</li>
+              <li>No hidden claims about cloud sync or HealthKit ingestion</li>
+            </ul>
+          </article>
+
+          <article class="audience-card" data-reveal>
+            <p class="audience-card__label">Investors</p>
+            <h3>Assess product sophistication without inflated traction claims</h3>
+            <p>This build demonstrates product thinking, UX execution, and engineering discipline. It does not present unverified outcome efficacy, scale, or revenue claims.</p>
+            <ul>
+              <li>Premium UX direction with shipped QA process</li>
+              <li>Documented as-built scope and non-goals</li>
+              <li>Runnable app + tests + reproducible screenshot assets</li>
+              <li>Clear path for diligence from code to product behavior</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="trust">
+      <div class="container">
+        <div class="section-header" data-reveal>
+          <p class="eyebrow">Trust, safety, and quality posture</p>
+          <h2>Designed to be inspectable: boundaries, controls, and QA are visible.</h2>
+          <p>
+            MindSense v1.0.0 combines a premium interface with explicit constraints. The product and docs are aligned on wellness boundaries,
+            local-first storage, and testable quality gates.
+          </p>
+        </div>
+
+        <div class="trust-grid">
+          <article class="trust-card" data-reveal>
+            <h3>Wellness boundaries</h3>
+            <p>MindSense is presented as wellness support. Settings copy explicitly notes it does not replace emergency services, and safety/support pathways are surfaced in-product.</p>
+          </article>
+          <article class="trust-card" data-reveal>
+            <h3>Local-first data posture</h3>
+            <p>v1.0.0 persists data locally using `UserDefaults` + Codable models. The as-built docs also state there is no cloud sync or multi-device backend in-app.</p>
+          </article>
+          <article class="trust-card" data-reveal>
+            <h3>Permission and metadata transparency</h3>
+            <p>Settings clarifies meeting/call driver inputs use busy windows and call-volume metadata only, not event titles, participant names, contact names, or message content.</p>
+          </article>
+          <article class="trust-card" data-reveal>
+            <h3>QA and accessibility gates</h3>
+            <p>Documented gates cover contrast, snapshot matrix (small/large × light/dark), accessibility dynamic type, and simulator latency budgets under 750 ms.</p>
+          </article>
+        </div>
+
+        <div class="quality-rail" data-reveal>
+          <div class="quality-rail__copy">
+            <h3>Production-grade engineering signals in the repo</h3>
+            <p>Quality is not implied by visuals alone. The repository includes deterministic UI launch hooks, screenshot scripts, regression tests for key copy/CTA behaviors, and design QA automation scripts.</p>
+          </div>
+          <ul class="quality-rail__list">
+            <li><strong>Contrast audit:</strong> token-level checks for premium pairings</li>
+            <li><strong>Snapshot matrix:</strong> `today`, `regulate`, `data`, `settings` across small/large and light/dark</li>
+            <li><strong>Accessibility:</strong> dynamic type UI validation at `AXXXL`</li>
+            <li><strong>Latency budget:</strong> tab transitions and primary-action confirmations under simulator thresholds</li>
+            <li><strong>Copy/disclosure lint:</strong> text budget + boundary language checks before sign-off</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--dense" id="faq">
+      <div class="container faq-layout">
+        <div class="section-header" data-reveal>
+          <p class="eyebrow">FAQ</p>
+          <h2>Common questions about the current build</h2>
+          <p>Answers below reflect the repository state on February 26, 2026 and intentionally avoid roadmap promises.</p>
+        </div>
+
+        <div class="faq-list" data-reveal>
+          <div class="faq-item">
+            <h3>
+              <button type="button" aria-expanded="true" aria-controls="faq-1" id="faq-button-1">
+                Is MindSense a medical device or a replacement for clinical care?
+              </button>
+            </h3>
+            <div id="faq-1" role="region" aria-labelledby="faq-button-1">
+              <p>No. The app is positioned as wellness support for nervous-system regulation. It includes safety/support guidance and explicitly does not replace emergency services or licensed clinical care.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <h3>
+              <button type="button" aria-expanded="false" aria-controls="faq-2" id="faq-button-2">
+                Does v1.0.0 sync data to the cloud or across devices?
+              </button>
+            </h3>
+            <div id="faq-2" role="region" aria-labelledby="faq-button-2" hidden>
+              <p>No. The current build is local-first and persists data locally using `UserDefaults` + Codable models. The repository docs explicitly list no cloud sync / multi-device backend as a current limitation.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <h3>
+              <button type="button" aria-expanded="false" aria-controls="faq-3" id="faq-button-3">
+                Does the app already ingest real HealthKit data?
+              </button>
+            </h3>
+            <div id="faq-3" role="region" aria-labelledby="faq-button-3" hidden>
+              <p>Not yet. v1.0.0 uses a deterministic demo/local signal model (`DemoHealthSignalEngine`). Permission and signal-quality handling are still surfaced in the UI, but the docs state there is no real HealthKit ingestion pipeline yet.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <h3>
+              <button type="button" aria-expanded="false" aria-controls="faq-4" id="faq-button-4">
+                What authentication methods are implemented?
+              </button>
+            </h3>
+            <div id="faq-4" role="region" aria-labelledby="faq-button-4" hidden>
+              <p>The app implements `Sign in with Apple` as the in-app authentication path. Session values are persisted locally, with a local fallback email pattern when Apple does not return email on later sign-ins.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <h3>
+              <button type="button" aria-expanded="false" aria-controls="faq-5" id="faq-button-5">
+                Are the screenshots on this page concept art?
+              </button>
+            </h3>
+            <div id="faq-5" role="region" aria-labelledby="faq-button-5" hidden>
+              <p>No. They are exported from UI-test snapshot result bundles and remapped into optimized website assets. The maintenance docs in this repo describe the screenshot export workflow and file mapping.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <h3>
+              <button type="button" aria-expanded="false" aria-controls="faq-6" id="faq-button-6">
+                Can this repository be used for diligence or design review?
+              </button>
+            </h3>
+            <div id="faq-6" role="region" aria-labelledby="faq-button-6" hidden>
+              <p>Yes. The repo includes the app source, unit/UI tests, quality-gate scripts, a product as-built PRD, architecture/testing docs, and this website's as-built documentation for cross-checking claims.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section contact" id="contact">
+      <div class="container contact__inner" data-reveal>
+        <div>
+          <p class="eyebrow">Contact / conversion</p>
+          <h2>Evaluate the product directly from code, docs, and QA artifacts.</h2>
+          <p>
+            This repository is the source of truth. Use the links below to review the implementation, run the app in Xcode,
+            inspect quality gates, or start a diligence conversation through GitHub.
+          </p>
+        </div>
+
+        <div class="contact__actions" aria-label="Evaluation actions">
+          <a class="button button--solid button--large" href="https://github.com/ekosanmij/mindsense-ai-app" target="_blank" rel="noreferrer">Open repository</a>
+          <a class="button button--ghost button--large" href="https://github.com/ekosanmij/mindsense-ai-app/issues" target="_blank" rel="noreferrer">Open an issue</a>
+          <a class="button button--ghost button--large" href="https://github.com/ekosanmij/mindsense-ai-app/blob/main/Docs/product/prd-as-built.md" target="_blank" rel="noreferrer">Read as-built PRD</a>
+          <a class="button button--ghost button--large" href="https://github.com/ekosanmij/mindsense-ai-app/blob/main/Docs/product/website-as-built.md" target="_blank" rel="noreferrer">Read website as-built doc</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container site-footer__grid">
+      <div class="site-footer__brand">
+        <img src="assets/brand/logo-icon-light.svg" alt="MindSense icon" width="48" height="48" loading="lazy" decoding="async">
+        <div>
+          <p class="site-footer__title">MindSense AI v1.0.0</p>
+          <p class="site-footer__copy">Static marketing site describing the as-built iOS product as of February 26, 2026.</p>
+        </div>
+      </div>
+      <nav class="site-footer__nav" aria-label="Footer links">
+        <a href="#overview">Overview</a>
+        <a href="#walkthrough">Walkthrough</a>
+        <a href="#trust">Trust &amp; safety</a>
+        <a href="#faq">FAQ</a>
+        <a href="privacy.html">Privacy</a>
+        <a href="terms.html">Terms</a>
+        <a href="https://github.com/ekosanmij/mindsense-ai-app" target="_blank" rel="noreferrer">GitHub</a>
+      </nav>
+    </div>
+  </footer>
+
+  <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top" hidden>Top</button>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
