@@ -896,6 +896,8 @@ struct MindSenseSectionDivider: View {
 }
 
 struct MindSenseBottomActionDock<Content: View>: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.mindSenseTabBarOverlayClearance) private var tabBarOverlayClearance
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -904,18 +906,56 @@ struct MindSenseBottomActionDock<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MindSenseSpacing.md)
-        .padding(.top, MindSenseSpacing.xxxs)
-        .padding(.bottom, MindSenseSpacing.xxxs)
-        .background {
-            Rectangle()
-                .fill(MindSenseSurfaceLevel.base.fill.opacity(0.96))
-                .overlay(alignment: .top) {
-                    Rectangle()
-                        .fill(MindSensePalette.strokeSubtle.opacity(0.7))
-                        .frame(height: 1)
-                        .padding(.horizontal, MindSenseSpacing.md)
-                }
+        .padding(.top, MindSenseSpacing.sm)
+        .padding(.bottom, MindSenseSpacing.sm)
+        .background(dockBackground)
+        .overlay(dockStroke)
+        .overlay(alignment: .topLeading) {
+            Capsule(style: .continuous)
+                .fill(MindSensePalette.accent.opacity(compactTabBarPresentation ? 0.28 : 0.22))
+                .frame(width: compactTabBarPresentation ? 66 : 84, height: 3)
+                .padding(.top, MindSenseSpacing.xs)
+                .padding(.leading, MindSenseSpacing.md)
+                .accessibilityHidden(true)
         }
+        .shadow(
+            color: MindSensePalette.shadowDirectional.opacity(compactTabBarPresentation ? 0.16 : 0.12),
+            radius: compactTabBarPresentation ? 16 : 12,
+            x: 0,
+            y: compactTabBarPresentation ? 6 : 4
+        )
+        .frame(maxWidth: dockMaxWidth, alignment: .leading)
+        .frame(maxWidth: .infinity, alignment: .center)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.top, MindSenseSpacing.xxxs)
+    }
+
+    private var compactTabBarPresentation: Bool {
+        tabBarOverlayClearance <= (MindSenseLayout.floatingTabBarCompactClearance + MindSenseSpacing.xs)
+    }
+
+    private var dockMaxWidth: CGFloat {
+        if dynamicTypeSize.isAccessibilitySize {
+            return .infinity
+        }
+        return compactTabBarPresentation ? 430 : 560
+    }
+
+    private var dockCornerRadius: CGFloat {
+        compactTabBarPresentation ? 18 : 20
+    }
+
+    private var dockBackground: some View {
+        RoundedRectangle(cornerRadius: dockCornerRadius, style: .continuous)
+            .fill(MindSenseSurfaceLevel.raised.fill.opacity(0.98))
+    }
+
+    private var dockStroke: some View {
+        RoundedRectangle(cornerRadius: dockCornerRadius, style: .continuous)
+            .stroke(
+                MindSensePalette.strokeStrong.opacity(compactTabBarPresentation ? 0.16 : 0.12),
+                lineWidth: 1
+            )
     }
 }
 
@@ -926,23 +966,39 @@ struct MindSenseDoItNowDock<Content: View>: View {
 
     var body: some View {
         MindSenseBottomActionDock {
-            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
-                Text(title)
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(.secondary)
-                    .tracking(0.8)
+            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+                HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
+                    MindSenseIconBadge(
+                        systemName: "bolt.fill",
+                        tint: MindSensePalette.accent,
+                        style: .filled,
+                        size: MindSenseControlSize.chip
+                    )
+                    .accessibilityHidden(true)
 
-                if let subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+                        Text(title.uppercased())
+                            .font(MindSenseTypography.micro)
+                            .foregroundStyle(MindSensePalette.accent)
+                            .tracking(0.9)
+
+                        if let subtitle, !subtitle.isEmpty {
+                            Text(subtitle)
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.subtle)
 
                 content
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
