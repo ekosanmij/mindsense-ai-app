@@ -313,6 +313,11 @@ struct TodayView: View {
                     .mindSensePageInsets(bottom: bottomContentPadding)
                 }
             }
+            .refreshable {
+                store.retryCoreScreen(.today)
+                store.resyncDemoHealthData(surface: .today, source: "pull_to_refresh")
+                store.triggerHaptic(intent: .success)
+            }
             .mindSensePageBackground()
             .background {
                 GeometryReader { proxy in

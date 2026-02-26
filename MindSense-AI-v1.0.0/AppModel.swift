@@ -2332,10 +2332,15 @@ final class MindSenseStore: ObservableObject {
         track(event: .secondaryActionTapped, surface: .settings, action: "stress_event_injected")
     }
 
-    func resyncDemoHealthData() {
+    func resyncDemoHealthData(surface: UXSurface = .settings, source: String = "manual") {
         refreshDemoHealthSignals(updateSyncTimestamp: true)
         showActionFeedback(.updated, detail: "Health data resynced.")
-        track(event: .secondaryActionTapped, surface: .settings, action: "health_resync")
+        track(
+            event: .secondaryActionTapped,
+            surface: surface,
+            action: "health_resync",
+            metadata: ["source": source]
+        )
     }
 
     func rebuildDemoHealthDerivedData() {

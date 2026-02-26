@@ -282,6 +282,11 @@ struct RegulateView: View {
                     .mindSensePageInsets(bottom: bottomContentPadding)
                 }
             }
+            .refreshable {
+                store.retryCoreScreen(.regulate)
+                store.resyncDemoHealthData(surface: .regulate, source: "pull_to_refresh")
+                store.triggerHaptic(intent: .success)
+            }
             .mindSensePageBackground()
             .background {
                 GeometryReader { proxy in

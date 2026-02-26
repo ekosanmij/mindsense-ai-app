@@ -765,6 +765,11 @@ struct DataView: View {
                     .mindSensePageInsets(bottom: bottomContentPadding)
                 }
             }
+            .refreshable {
+                store.retryCoreScreen(.data)
+                store.resyncDemoHealthData(surface: .data, source: "pull_to_refresh")
+                store.triggerHaptic(intent: .success)
+            }
             .mindSensePageBackground()
             .background {
                 GeometryReader { proxy in
