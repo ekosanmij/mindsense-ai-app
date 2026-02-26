@@ -2,6 +2,7 @@
 
 Date: 2026-02-25  
 Source document: `/Users/ekosanmi.j/Downloads/MindSense AI Mobile App UI_UX Redesign Analysis.docx`
+Last updated: 2026-02-26
 
 ## Scope
 
@@ -12,16 +13,35 @@ This document translates every concrete feedback item in the redesign analysis i
 - definition of done
 - validation checks
 
-This is intentionally exhaustive and more granular than `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/mobile-ui-ux-redesign-implementation-backlog.md`.
-
-Completed items have been removed from this file on purpose.  
+This is intentionally exhaustive and more granular than the implementation backlog.
 Feedback IDs remain non-contiguous to preserve traceability to the original analysis.
+For a concise status roll-up, see `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/mobile-ui-ux-redesign-progress.md`.
 
 ## Status Legend
 
 - `[ ]` not started
 - `[~]` in progress/partial
 - `[x]` completed
+- `[-]` intentionally skipped / deferred by decision
+
+## Progress Snapshot (As Of 2026-02-26)
+
+- Total tracked items with explicit status: `78`
+- Completed: `76`
+- In progress: `0`
+- Not started: `0`
+- Skipped/deferred: `2` (`DS-01`, `DS-02`, per current product direction)
+
+## Recent Progress Highlights
+
+- Completed cross-cutting hierarchy, disclosure, sticky dock clearance, and accessibility hardening tasks (`C-01` through `C-05`).
+- Completed screen-level redesign items across Intro/Auth/Onboarding/Today/Regulate/Data/Settings (`F-*` items shown below as `[x]`).
+- Completed redesign roll-up requirements (`R1` through `R15`) except typography-scale design-system tracks explicitly deferred (`DS-01`, `DS-02`).
+- Added and expanded UI regression coverage for:
+  - Today hero CTA visibility
+  - Settings privacy policy row presence
+  - Onboarding progress copy consistency
+- Latest local update tightened Data workspace selector density in the hero (`Trends / Experiments / History`) via compact segmented control settings.
 
 ---
 
@@ -424,6 +444,8 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 - Code targets:
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem/SurfaceComponents.swift`
+- Completion note (2026-02-26):
+  - Data workspace selector in the hero was tightened by using compact segmented layout settings (`fillAvailableWidth: false`, `containerInset: 0`) and removing non-essential meta chip row under the selector.
 
 ### F-35 Too many filter layers
 - Status: `[x]`
@@ -587,8 +609,9 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
 ## C1) Typography Scale
 
 ### DS-01 Add explicit type token definitions (Display/Title/Body/BodySmall/Caption)
-- Status: `[ ]`
+- Status: `[-]`
 - Source detail: Type.Display 34, Type.Title 22-28, Body 17, BodySmall 15, Caption 13.
+- Decision note: Skipped for current redesign pass by product direction (`skip DS01 and DS02`).
 - Actionable TODO:
   1. Add/verify token constants for each type role in design system.
   2. Map token roles to SwiftUI text styles that scale with Dynamic Type.
@@ -601,7 +624,8 @@ Feedback IDs remain non-contiguous to preserve traceability to the original anal
   - No hardcoded ad hoc font sizes in updated modules.
 
 ### DS-02 Apply type hierarchy to primary screens
-- Status: `[ ]`
+- Status: `[-]`
+- Decision note: Skipped for current redesign pass by product direction (`skip DS01 and DS02`).
 - Actionable TODO:
   1. Today headline uses Display role.
   2. Section titles use Title role.

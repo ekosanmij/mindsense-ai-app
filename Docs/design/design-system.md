@@ -1,5 +1,7 @@
 # MindSense Phase 2 Design System v2
 
+Last updated: 2026-02-26
+
 ## Palette Direction
 - Dual accents:
   - Cool signal: `signalCool`, `signalCoolStrong`, `signalCoolSoft`
@@ -46,11 +48,17 @@
   - clean UI/body hierarchy: `title`, `titleCompact`, `bodyStrong`, `body`, `caption`, `micro`
 - Data/metric typography:
   - `metric`, `metricDisplay`, `metricBody`, `metricCaption`
+- Current redesign decision:
+  - Explicit DS typography role migration tickets (`DS-01`, `DS-02`) are deferred for now and tracked as skipped in the redesign TODO register.
 
 ## Component Usage Rules
 - `MindSenseCommandDeck`:
   - Use at most once per screen.
   - Place as the first module and pair with one primary CTA path.
+- `MindSenseSegmentedControl`:
+  - Default to full-width segments for primary navigation clusters.
+  - For compact hero selectors (for example `Trends / Experiments / History`), use `fillAvailableWidth: false` and `containerInset: 0` to avoid oversized header regions.
+  - Keep labels short and unambiguous; prefer fallback scrolling only when labels cannot fit at default type size.
 - `MindSenseSectionHeader`:
   - Use no more than 3 times on core tabs (`Today`, `Regulate`, `Data`, `Settings`).
   - Prefer concise subtitle copy over stacked explanatory paragraphs.

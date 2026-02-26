@@ -1003,12 +1003,14 @@ struct DataView: View {
             tone: .accent,
             watermarkTint: MindSensePalette.accent
         ) {
-            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
                 MindSenseSegmentedControl(
                     options: DataSubmode.allCases,
                     selection: $submode,
                     title: { $0.rawValue },
-                    enablesHorizontalScrollFallback: true,
+                    enablesHorizontalScrollFallback: false,
+                    fillAvailableWidth: false,
+                    containerInset: 0,
                     onSelectionChanged: { mode in
                         store.triggerHaptic(intent: .selection)
                         store.track(
@@ -1019,15 +1021,6 @@ struct DataView: View {
                         )
                     }
                 )
-
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: MindSenseSpacing.xs) {
-                        commandDeckMetaChips
-                    }
-                    VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
-                        commandDeckMetaChips
-                    }
-                }
 
                 if submode == .patterns {
                     Button("Start suggested plan") {
@@ -1042,20 +1035,6 @@ struct DataView: View {
                     )
                 }
             }
-        }
-    }
-
-    @ViewBuilder
-    private var commandDeckMetaChips: some View {
-        PillChip(label: store.intentMode.shortTitle, state: .selected)
-        switch submode {
-        case .patterns, .experiments:
-            PillChip(label: selectedSignal.metric.title, state: .unselected)
-        case .history:
-            PillChip(label: "Recent activity", state: .unselected)
-        }
-        if submode == .patterns {
-            PillChip(label: "Window \(window.rawValue)", state: .unselected)
         }
     }
 

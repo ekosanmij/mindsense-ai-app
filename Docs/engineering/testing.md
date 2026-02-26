@@ -25,6 +25,11 @@ Primary coverage:
 - Snapshot matrix across light/dark
 - Dynamic type scaling at accessibility sizes
 - Interaction latency budget checks
+- Redesign regression checks:
+  - `testTodayHeroPrimaryCTAVisibility`
+  - `testSettingsPrivacyPolicyLinkPresence`
+  - `testOnboardingProgressCopyConsistency`
+  - `testIntroAndOnboardingTimingCopyConsistency`
 
 ## 2) Prerequisites
 
@@ -63,6 +68,20 @@ xcodebuild \
   -scheme MindSense-AI-v1.0.0 \
   -destination "platform=iOS Simulator,name=iPhone 17 Pro Max" \
   -only-testing:MindSense-AI-v1.0.0UITests \
+  test
+```
+
+Run targeted redesign regression tests only:
+
+```bash
+xcodebuild \
+  -project MindSense-AI-v1.0.0.xcodeproj \
+  -scheme MindSense-AI-v1.0.0 \
+  -destination "platform=iOS Simulator,name=iPhone 17 Pro Max" \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testTodayHeroPrimaryCTAVisibility \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testSettingsPrivacyPolicyLinkPresence \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testOnboardingProgressCopyConsistency \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testIntroAndOnboardingTimingCopyConsistency \
   test
 ```
 

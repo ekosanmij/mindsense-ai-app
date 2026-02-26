@@ -1183,6 +1183,8 @@ struct MindSenseSegmentedControl<Option: Hashable>: View {
     @Binding var selection: Option
     let title: (Option) -> String
     var enablesHorizontalScrollFallback: Bool = false
+    var fillAvailableWidth: Bool = true
+    var containerInset: CGFloat = MindSenseSpacing.xxxs
     var onSelectionChanged: ((Option) -> Void)? = nil
 
     private let containerCornerRadius = MindSenseRadius.tile
@@ -1196,15 +1198,15 @@ struct MindSenseSegmentedControl<Option: Hashable>: View {
                             segmentButton(for: option, fillAvailableWidth: false)
                         }
                     }
-                    .padding(MindSenseSpacing.xxxs)
+                    .padding(containerInset)
                 }
             } else {
                 HStack(spacing: MindSenseSpacing.xs) {
                     ForEach(options, id: \.self) { option in
-                        segmentButton(for: option, fillAvailableWidth: true)
+                        segmentButton(for: option, fillAvailableWidth: fillAvailableWidth)
                     }
                 }
-                .padding(MindSenseSpacing.xxxs)
+                .padding(containerInset)
             }
         }
         .background(containerBackground)

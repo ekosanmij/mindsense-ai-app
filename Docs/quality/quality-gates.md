@@ -1,5 +1,7 @@
 # MindSense Phase 6 Quality Gates
 
+Last updated: 2026-02-26
+
 ## 1) Premium UI Acceptance Checklist
 
 Use this checklist per primary screen (`Launch`, `Intro/Auth`, `Onboarding`, `Today`, `Regulate`, `Data`, `Settings`, `Paywall`).
@@ -88,6 +90,11 @@ Output:
   - Secondary actions must not visually outrank the primary CTA.
 - Production scope:
   - `Community`, `KPI`, and demo controls are not visible in production builds.
+- Redesign-specific UI regressions:
+  - `MindSenseCoreScreensUITests.testTodayHeroPrimaryCTAVisibility`
+  - `MindSenseCoreScreensUITests.testSettingsPrivacyPolicyLinkPresence`
+  - `MindSenseCoreScreensUITests.testOnboardingProgressCopyConsistency`
+  - `MindSenseCoreScreensUITests.testIntroAndOnboardingTimingCopyConsistency`
 
 ## 6) Staged Shipping Plan
 
