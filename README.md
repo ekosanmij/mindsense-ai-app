@@ -83,7 +83,7 @@ MindSense-AI-v1.0.0/
 │   └── DemoHealthSignalEngine.swift       # Simulated health signal model
 ├── MindSense-AI-v1.0.0Tests/              # Unit tests
 ├── MindSense-AI-v1.0.0UITests/            # UI tests + snapshot coverage
-├── Website/                               # Marketing website (static)
+├── Website/                               # Marketing website + legal pages + screenshot assets
 ├── Scripts/                               # QA and asset generation scripts
 └── Docs/                                  # PRD, design, brand, product docs
 ```
@@ -227,6 +227,14 @@ Artifacts are saved under timestamped directories in `Artifacts/phase6-quality-g
 bash Scripts/capture_baselines.sh "iPhone 17" "Artifacts/snapshots-small.xcresult"
 ```
 
+### Marketing screenshot export helper
+
+```bash
+bash Scripts/export_marketing_screenshots.sh
+```
+
+Writes PNG exports to `Website/assets/screenshots` and regenerates optimized JPG variants in `Website/assets/screenshots/optimized`.
+
 ### Copy budget lint
 
 ```bash
@@ -284,13 +292,14 @@ Data is currently local-first and persisted in `UserDefaults` only.
 ## Documentation index
 
 - Product as-built PRD: `Docs/product/prd-as-built.md`
-- Marketing website as-built doc (v3): `Docs/product/website-marketing-v3-as-built.md`
+- Website as-built: `Docs/product/website-marketing-as-built.md`
 - Brand direction: `Docs/design/brand-direction.md`
 - Design system: `Docs/design/design-system.md`
 - Quality gates: `Docs/quality/quality-gates.md`
 - Logo system: `Docs/brand/logo/readme.md`
 - Runtime architecture guide: `Docs/engineering/architecture.md`
 - Testing and QA runbook: `Docs/engineering/testing.md`
+- Website update runbook: `Website/README.md`
 
 ## Contributing
 

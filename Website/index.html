@@ -3,37 +3,45 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MindSense AI | Nervous-System Intelligence Platform</title>
+    <title>MindSense AI | State, Action, and Measurable Regulation Loops</title>
     <meta
       name="description"
-      content="MindSense AI is a local-first iOS nervous-system guidance app: understand state, run one protocol, capture impact, and improve outcomes over time."
+      content="MindSense AI is a local-first iOS regulation app: see state in seconds, run one guided protocol, capture impact, and improve confidence through repeat loops."
     />
     <meta name="robots" content="index,follow,max-image-preview:large" />
-    <meta name="theme-color" content="#0f6a5d" />
+    <meta name="theme-color" content="#113f38" />
     <link rel="canonical" href="https://mindsense-ai-app.vercel.app/" />
 
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="MindSense AI | Nervous-System Intelligence Platform" />
+    <meta property="og:title" content="MindSense AI | State, Action, and Measurable Regulation Loops" />
     <meta
       property="og:description"
-      content="State in seconds, one guided action, measurable learning loops for users, stakeholders, and investors."
+      content="As-built v1.0.0 product walkthrough grounded in implemented iOS behavior, trust boundaries, and quality gates."
     />
     <meta property="og:url" content="https://mindsense-ai-app.vercel.app/" />
     <meta property="og:image" content="https://mindsense-ai-app.vercel.app/assets/screenshots/optimized/today-990.jpg" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="MindSense AI | Nervous-System Intelligence Platform" />
+    <meta name="twitter:title" content="MindSense AI | State, Action, and Measurable Regulation Loops" />
     <meta
       name="twitter:description"
-      content="Local-first iOS regulation app with deterministic quality gates and evidence-driven product loop."
+      content="Local-first nervous-system guidance for iOS with one clear next action, one guided protocol, and explicit confidence framing."
     />
     <meta name="twitter:image" content="https://mindsense-ai-app.vercel.app/assets/screenshots/optimized/today-990.jpg" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&amp;display=swap"
       rel="stylesheet"
+    />
+
+    <link
+      rel="preload"
+      as="image"
+      href="./assets/screenshots/optimized/today-990.jpg"
+      imagesrcset="./assets/screenshots/optimized/today-660.jpg 660w, ./assets/screenshots/optimized/today-990.jpg 990w"
+      imagesizes="(max-width: 1024px) 82vw, 420px"
     />
 
     <script>
@@ -48,7 +56,7 @@
         "name": "MindSense AI",
         "applicationCategory": "HealthApplication",
         "operatingSystem": "iOS",
-        "description": "MindSense AI helps users assess current state, run one guided regulation protocol, and track outcomes with local-first behavior.",
+        "description": "MindSense AI is a local-first iOS app that surfaces state, recommends one protocol, and captures outcomes to improve recommendation confidence.",
         "url": "https://mindsense-ai-app.vercel.app/",
         "offers": {
           "@type": "Offer",
@@ -63,140 +71,179 @@
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    <div class="scroll-progress" aria-hidden="true">
-      <div class="scroll-progress-bar" id="scroll-progress-bar"></div>
+    <div class="bg-layer" aria-hidden="true">
+      <div class="bg-orb bg-orb-a"></div>
+      <div class="bg-orb bg-orb-b"></div>
+      <div class="bg-grid"></div>
     </div>
 
-    <div class="atmosphere" aria-hidden="true">
-      <div class="glow glow-a"></div>
-      <div class="glow glow-b"></div>
-      <div class="noise-grid"></div>
+    <div class="scroll-progress" aria-hidden="true">
+      <div id="scroll-progress-bar"></div>
     </div>
 
     <header class="site-header" id="top">
-      <a class="brand" href="#top" aria-label="MindSense home">
+      <a class="brand" href="#top" aria-label="MindSense homepage">
         <img src="./assets/brand/logo-lockup-horizontal.svg" alt="MindSense AI" width="190" height="30" />
       </a>
 
-      <button
-        class="nav-toggle"
-        type="button"
-        aria-label="Toggle navigation"
-        aria-expanded="false"
-        aria-controls="site-nav"
-      >
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav" aria-label="Toggle navigation">
         Menu
       </button>
 
-      <nav id="site-nav" class="site-nav" aria-label="Primary">
+      <nav id="primary-nav" class="site-nav" aria-label="Primary">
         <a href="#overview">Overview</a>
-        <a href="#loop">Loop</a>
-        <a href="#tour">Product Tour</a>
-        <a href="#audiences">Audience Tracks</a>
+        <a href="#loop">Core loop</a>
+        <a href="#walkthrough">Walkthrough</a>
+        <a href="#audiences">Audience paths</a>
         <a href="#trust">Trust</a>
-        <a href="#roadmap">Roadmap</a>
+        <a href="#faq">FAQ</a>
         <a href="#contact">Contact</a>
       </nav>
 
-      <a class="header-cta" href="mailto:partnerships@mindsense.ai?subject=MindSense%20Pilot%20Request">Request pilot</a>
+      <a class="header-cta" href="mailto:partnerships@mindsense.ai?subject=MindSense%20Product%20Walkthrough%20Request">Book walkthrough</a>
     </header>
 
     <main id="main-content">
-      <section class="hero section reveal">
+      <section class="hero section reveal" id="hero">
         <div class="hero-copy">
-          <p class="eyebrow">MindSense AI v1.0.0 · iOS</p>
-          <h1>Nervous-system guidance designed for action, trust, and measurable progress.</h1>
-          <p>
-            MindSense AI gives users a current state snapshot in seconds, recommends one best next action,
-            guides a short regulate protocol, and turns each session into better next-day decisions.
+          <p class="eyebrow">MindSense AI v1.0.0 · As-built product site</p>
+          <h1>Nervous-system guidance with one clear next action.</h1>
+          <p class="hero-body">
+            MindSense AI is a local-first iOS app that helps users read current state, run one short protocol,
+            capture impact, and improve recommendation confidence over time.
           </p>
+          <p class="hero-subnote">
+            Current production navigation: <strong>Today</strong>, <strong>Regulate</strong>, <strong>Data</strong>.
+            MindSense is wellness support and does not replace emergency care.
+          </p>
+
           <div class="hero-cta">
-            <a class="btn btn-primary" href="mailto:hello@mindsense.ai?subject=MindSense%20Waitlist%20Request">Join waitlist</a>
-            <a class="btn btn-secondary" href="mailto:partnerships@mindsense.ai?subject=MindSense%20Product%20Demo%20Request"
-              >Book product walkthrough</a
-            >
+            <a class="btn btn-primary" href="mailto:hello@mindsense.ai?subject=MindSense%20User%20Waitlist">Join waitlist</a>
+            <a class="btn btn-secondary" href="mailto:partnerships@mindsense.ai?subject=MindSense%20Pilot%20Request">Request pilot</a>
           </div>
-          <ul class="hero-flags">
-            <li>Local-first runtime architecture</li>
-            <li>Sign in with Apple authentication</li>
-            <li>Deterministic screenshot and quality-gate workflows</li>
+
+          <ul class="hero-flags" aria-label="Product highlights">
+            <li>Sign in with Apple only (implemented)</li>
+            <li>2 required onboarding activation steps</li>
+            <li>Session outcomes feed trends and confidence labels</li>
           </ul>
         </div>
 
-        <div class="hero-stage" id="hero-stage">
-          <figure class="phone-card phone-card-main">
+        <div class="hero-stage" id="hero-stage" aria-hidden="true">
+          <figure class="phone phone-main">
             <img
               src="./assets/screenshots/optimized/today-660.jpg"
               srcset="./assets/screenshots/optimized/today-660.jpg 660w, ./assets/screenshots/optimized/today-990.jpg 990w"
-              sizes="(max-width: 900px) 74vw, 360px"
+              sizes="(max-width: 1024px) 82vw, 420px"
               width="1320"
               height="2868"
-              alt="MindSense Today screen"
+              alt="MindSense Today screen showing state and next action"
               fetchpriority="high"
             />
           </figure>
-          <figure class="phone-card phone-card-left">
+
+          <figure class="phone phone-left">
             <img
               src="./assets/screenshots/optimized/regulate_run-660.jpg"
               srcset="./assets/screenshots/optimized/regulate_run-660.jpg 660w, ./assets/screenshots/optimized/regulate_run-990.jpg 990w"
-              sizes="(max-width: 900px) 56vw, 260px"
+              sizes="(max-width: 1024px) 52vw, 260px"
               width="1320"
               height="2868"
-              alt="MindSense Regulate run screen"
+              alt="MindSense Regulate run timer"
               loading="lazy"
             />
           </figure>
-          <figure class="phone-card phone-card-right">
+
+          <figure class="phone phone-right">
             <img
               src="./assets/screenshots/optimized/data_trends-660.jpg"
               srcset="./assets/screenshots/optimized/data_trends-660.jpg 660w, ./assets/screenshots/optimized/data_trends-990.jpg 990w"
-              sizes="(max-width: 900px) 56vw, 260px"
+              sizes="(max-width: 1024px) 52vw, 260px"
               width="1320"
               height="2868"
-              alt="MindSense Data trends screen"
+              alt="MindSense Data trends view"
               loading="lazy"
             />
           </figure>
-          <aside class="hero-note note-a">
-            <p class="hero-note-title">State</p>
-            <p>Load, Readiness, Consistency</p>
+
+          <aside class="hero-note hero-note-a">
+            <p class="note-label">State</p>
+            <p>Load, Readiness, Consistency in one command deck.</p>
           </aside>
-          <aside class="hero-note note-b">
-            <p class="hero-note-title">Action</p>
-            <p>One ranked protocol with timing and rationale</p>
+          <aside class="hero-note hero-note-b">
+            <p class="note-label">Action</p>
+            <p>One protocol recommendation with duration and rationale.</p>
           </aside>
-          <aside class="hero-note note-c">
-            <p class="hero-note-title">Outcome</p>
-            <p>Session impact feeds trends and confidence</p>
+          <aside class="hero-note hero-note-c">
+            <p class="note-label">Learning</p>
+            <p>Outcomes and experiments shape confidence over time.</p>
           </aside>
         </div>
       </section>
 
-      <section id="overview" class="proof-strip reveal" aria-label="MindSense key product indicators">
-        <article>
-          <p class="metric" data-count="30">0</p>
-          <p>Seconds to identify one next action</p>
-        </article>
-        <article>
-          <p class="metric" data-count="3">0</p>
-          <p>Primary runtime tabs in production flow</p>
-        </article>
-        <article>
-          <p class="metric" data-count="9">0</p>
-          <p>Automated screenshot surfaces exported for marketing</p>
-        </article>
-        <article>
-          <p class="metric" data-count="2000">0</p>
-          <p>Analytics event ring-buffer capacity on-device</p>
-        </article>
+      <section id="overview" class="section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Product Overview</p>
+          <h2>Built around a deterministic daily loop and explicit trust boundaries.</h2>
+        </div>
+
+        <div class="metric-grid" aria-label="MindSense proof metrics">
+          <article>
+            <p class="metric" data-count="30">0</p>
+            <p class="metric-label">Target seconds to identify one next action</p>
+          </article>
+          <article>
+            <p class="metric" data-count="3">0</p>
+            <p class="metric-label">Core runtime tabs wired in production</p>
+          </article>
+          <article>
+            <p class="metric" data-count="2">0</p>
+            <p class="metric-label">Required onboarding activation steps</p>
+          </article>
+          <article>
+            <p class="metric" data-count="9">0</p>
+            <p class="metric-label">UI-test-exported screenshots mapped below</p>
+          </article>
+          <article>
+            <p class="metric" data-count="750">0</p>
+            <p class="metric-label">Simulator latency budget (ms) in UI tests</p>
+          </article>
+        </div>
+
+        <div class="overview-grid">
+          <article class="overview-card">
+            <p class="card-kicker">Today</p>
+            <h3>Read state and choose one next move</h3>
+            <p>
+              Command deck prioritizes one action path while still exposing confidence, signal diagnostics,
+              context capture, and timeline review.
+            </p>
+          </article>
+          <article class="overview-card">
+            <p class="card-kicker">Regulate</p>
+            <h3>Run a short guided protocol</h3>
+            <p>
+              Presets are ranked from scenario + metrics + history. Session moves from
+              <strong>Select → Run → Record</strong> with a focused timer and impact capture.
+            </p>
+          </article>
+          <article class="overview-card">
+            <p class="card-kicker">Data</p>
+            <h3>Inspect trends, experiments, and history</h3>
+            <p>
+              Submodes for <strong>Trends</strong>, <strong>Experiments</strong>, and <strong>History</strong>
+              consolidate behavior evidence and next actions.
+            </p>
+          </article>
+        </div>
       </section>
 
       <section id="loop" class="section reveal">
         <div class="section-head">
-          <p class="eyebrow">Core Product Loop</p>
-          <h2>A deterministic daily cycle from signal to behavior change</h2>
+          <p class="eyebrow">Core Loop</p>
+          <h2>One repeatable loop: signal, protocol, impact, learning.</h2>
           <p class="section-copy">
-            MindSense is built around one repeatable loop: read state, run protocol, record impact, and improve confidence through repeated use.
+            This is the implemented daily structure in v1.0.0. Use the stepper to inspect each stage.
           </p>
         </div>
 
@@ -204,148 +251,58 @@
           <ol class="loop-steps" id="loop-steps">
             <li class="loop-step is-active" data-step="0" role="button" tabindex="0" aria-label="Loop step 1">
               <p class="loop-index">01</p>
-              <h3>Today: state snapshot</h3>
-              <p>Current system state and one recommended protocol path.</p>
+              <h3>Understand state quickly</h3>
+              <p>Today surfaces current metrics and one recommended path.</p>
             </li>
             <li class="loop-step" data-step="1" role="button" tabindex="-1" aria-label="Loop step 2">
               <p class="loop-index">02</p>
-              <h3>Regulate: guided execution</h3>
-              <p>Select protocol, run timer, stay inside focused flow.</p>
+              <h3>Run one protocol</h3>
+              <p>Regulate guides preset selection and timed execution.</p>
             </li>
             <li class="loop-step" data-step="2" role="button" tabindex="-1" aria-label="Loop step 3">
               <p class="loop-index">03</p>
               <h3>Record impact</h3>
-              <p>Capture perceived effect and session helpfulness quickly.</p>
+              <p>Capture helped/mixed/did-not-help and optional context.</p>
             </li>
             <li class="loop-step" data-step="3" role="button" tabindex="-1" aria-label="Loop step 4">
               <p class="loop-index">04</p>
-              <h3>Data: patterns and experiments</h3>
-              <p>Use trends, experiments, and history to refine behavior.</p>
+              <h3>Review patterns</h3>
+              <p>Data trends and experiments adapt future confidence.</p>
             </li>
           </ol>
 
           <article class="loop-panel" aria-live="polite">
             <p class="loop-kicker" id="loop-kicker">Step 1</p>
-            <h3 id="loop-title">Today: state snapshot and action command deck</h3>
+            <h3 id="loop-title">Today command deck and next action</h3>
             <p id="loop-copy">
-              The hero module keeps one action path visible while exposing confidence labels, signal diagnostics, and context capture entry points.
+              MindSense keeps one primary action visible and routes deeper diagnostics behind deliberate interactions.
             </p>
             <ul id="loop-points" class="loop-points"></ul>
-            <button class="btn btn-ghost" id="loop-next" type="button">Advance step</button>
+            <button class="btn btn-ghost" type="button" id="loop-next">Advance step</button>
           </article>
         </div>
       </section>
 
-      <section id="tour" class="section reveal">
+      <section id="walkthrough" class="section reveal">
         <div class="section-head">
-          <p class="eyebrow">Product Tour</p>
-          <h2>Comprehensive walkthrough of each main app section</h2>
+          <p class="eyebrow">App Walkthrough</p>
+          <h2>Section-by-section tour grounded in exported app screenshots.</h2>
           <p class="section-copy">
-            Every panel below maps to implemented app surfaces and automated screenshot exports from the UI test suite.
+            Every screen below maps to real `MindSenseCoreScreensUITests.testMarketingWebsiteScreenshotExport()` output.
           </p>
         </div>
 
         <div class="tour-shell">
-          <div class="tour-tabs" role="tablist" aria-label="MindSense product sections" id="tour-tabs">
-            <button
-              id="tour-tab-intro"
-              class="tour-tab is-active"
-              data-screen="intro"
-              role="tab"
-              aria-selected="true"
-              aria-controls="tour-panel"
-              tabindex="0"
-            >
-              Intro
-            </button>
-            <button
-              id="tour-tab-onboarding"
-              class="tour-tab"
-              data-screen="onboarding"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Onboarding
-            </button>
-            <button
-              id="tour-tab-today"
-              class="tour-tab"
-              data-screen="today"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Today
-            </button>
-            <button
-              id="tour-tab-regulate-select"
-              class="tour-tab"
-              data-screen="regulate-select"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Regulate (Select)
-            </button>
-            <button
-              id="tour-tab-regulate-run"
-              class="tour-tab"
-              data-screen="regulate-run"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Regulate (Run)
-            </button>
-            <button
-              id="tour-tab-data-trends"
-              class="tour-tab"
-              data-screen="data-trends"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Data (Trends)
-            </button>
-            <button
-              id="tour-tab-data-experiments"
-              class="tour-tab"
-              data-screen="data-experiments"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Data (Experiments)
-            </button>
-            <button
-              id="tour-tab-data-history"
-              class="tour-tab"
-              data-screen="data-history"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Data (History)
-            </button>
-            <button
-              id="tour-tab-settings"
-              class="tour-tab"
-              data-screen="settings"
-              role="tab"
-              aria-selected="false"
-              aria-controls="tour-panel"
-              tabindex="-1"
-            >
-              Settings
-            </button>
+          <div class="tour-tabs" role="tablist" aria-label="MindSense app sections" id="tour-tabs">
+            <button id="tour-tab-intro" class="tour-tab is-active" data-screen="intro" role="tab" aria-selected="true" aria-controls="tour-panel" tabindex="0">Intro</button>
+            <button id="tour-tab-onboarding" class="tour-tab" data-screen="onboarding" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Onboarding</button>
+            <button id="tour-tab-today" class="tour-tab" data-screen="today" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Today</button>
+            <button id="tour-tab-reg-select" class="tour-tab" data-screen="regulate-select" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Regulate (Select)</button>
+            <button id="tour-tab-reg-run" class="tour-tab" data-screen="regulate-run" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Regulate (Run)</button>
+            <button id="tour-tab-data-trends" class="tour-tab" data-screen="data-trends" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Data (Trends)</button>
+            <button id="tour-tab-data-experiments" class="tour-tab" data-screen="data-experiments" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Data (Experiments)</button>
+            <button id="tour-tab-data-history" class="tour-tab" data-screen="data-history" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Data (History)</button>
+            <button id="tour-tab-settings" class="tour-tab" data-screen="settings" role="tab" aria-selected="false" aria-controls="tour-panel" tabindex="-1">Settings</button>
           </div>
 
           <article id="tour-panel" class="tour-panel" role="tabpanel" tabindex="0" aria-labelledby="tour-tab-intro">
@@ -354,20 +311,19 @@
                 id="tour-image"
                 src="./assets/screenshots/optimized/intro-660.jpg"
                 srcset="./assets/screenshots/optimized/intro-660.jpg 660w, ./assets/screenshots/optimized/intro-990.jpg 990w"
-                sizes="(max-width: 1120px) 100vw, 560px"
+                sizes="(max-width: 1100px) 100vw, 560px"
                 width="1320"
                 height="2868"
                 alt="MindSense intro screen"
                 loading="lazy"
               />
             </figure>
+
             <div class="tour-copy" aria-live="polite">
               <p class="tour-kicker" id="tour-kicker">Entry</p>
-              <h3 id="tour-title">Intro and trust framing</h3>
-              <p id="tour-description">Sets value framing and starts Sign in with Apple in one step.</p>
-
-              <dl class="tour-metadata" id="tour-metadata"></dl>
-
+              <h3 id="tour-title">Intro trust framing and Apple sign-in start</h3>
+              <p id="tour-description">Introduces the value model and starts account setup with one primary path.</p>
+              <dl id="tour-facts" class="tour-facts"></dl>
               <ul id="tour-bullets"></ul>
               <a class="btn btn-inline" id="tour-cta" href="#contact">Request walkthrough</a>
             </div>
@@ -375,143 +331,87 @@
         </div>
 
         <div class="filmstrip" aria-label="MindSense screenshot filmstrip">
-          <img src="./assets/screenshots/optimized/intro-660.jpg" alt="MindSense intro" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/onboarding-660.jpg" alt="MindSense onboarding" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/today-660.jpg" alt="MindSense today" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/regulate_select-660.jpg" alt="MindSense regulate select" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/regulate_run-660.jpg" alt="MindSense regulate run" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/data_trends-660.jpg" alt="MindSense data trends" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/data_experiments-660.jpg" alt="MindSense data experiments" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/data_history-660.jpg" alt="MindSense data history" width="1320" height="2868" loading="lazy" />
-          <img src="./assets/screenshots/optimized/settings-660.jpg" alt="MindSense settings" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/intro-660.jpg" alt="MindSense intro screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/onboarding-660.jpg" alt="MindSense onboarding screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/today-660.jpg" alt="MindSense today screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/regulate_select-660.jpg" alt="MindSense regulate selection screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/regulate_run-660.jpg" alt="MindSense regulate run screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/data_trends-660.jpg" alt="MindSense data trends screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/data_experiments-660.jpg" alt="MindSense data experiments screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/data_history-660.jpg" alt="MindSense data history screenshot" width="1320" height="2868" loading="lazy" />
+          <img src="./assets/screenshots/optimized/settings-660.jpg" alt="MindSense settings screenshot" width="1320" height="2868" loading="lazy" />
         </div>
       </section>
 
       <section id="audiences" class="section reveal">
         <div class="section-head">
-          <p class="eyebrow">Audience Tracks</p>
-          <h2>Purpose-built narratives for users, stakeholders, and investors</h2>
+          <p class="eyebrow">Who This Is For</p>
+          <h2>Distinct paths for prospective users, stakeholders, and investors.</h2>
           <p class="section-copy">
-            Different stakeholders need different evidence. Switch tracks to see the story, proof points, and next actions for each group.
+            Same product loop, different evidence lenses. Switch audience tracks to view the most relevant narrative.
           </p>
         </div>
 
-        <div class="audience-switch" role="tablist" aria-label="Audience tracks" id="audience-switch">
-          <button class="audience-tab is-active" data-audience="users" role="tab" aria-selected="true" tabindex="0">Users</button>
+        <div id="audience-switch" class="audience-switch" role="tablist" aria-label="Audience tracks">
+          <button class="audience-tab is-active" data-audience="users" role="tab" aria-selected="true" tabindex="0">Prospective users</button>
           <button class="audience-tab" data-audience="stakeholders" role="tab" aria-selected="false" tabindex="-1">Stakeholders</button>
           <button class="audience-tab" data-audience="investors" role="tab" aria-selected="false" tabindex="-1">Investors</button>
         </div>
 
-        <article class="audience-panel" id="audience-panel" aria-live="polite">
-          <p class="audience-kicker" id="audience-kicker">For users</p>
-          <h3 id="audience-title">Regulation support with low cognitive overhead</h3>
+        <article class="audience-panel" aria-live="polite">
+          <p class="audience-kicker" id="audience-kicker">For prospective users</p>
+          <h3 id="audience-title">One action path when your nervous system feels noisy.</h3>
           <p id="audience-description">
-            MindSense reduces decision fatigue by providing one clear next step, guided execution, and immediate feedback loops.
+            MindSense reduces decision overhead: understand current state, run one short protocol, then check whether it helped.
           </p>
           <ul id="audience-bullets"></ul>
-          <a class="btn btn-inline" id="audience-cta" href="mailto:hello@mindsense.ai?subject=MindSense%20Waitlist%20Request">Join waitlist</a>
+          <a class="btn btn-inline" id="audience-cta" href="mailto:hello@mindsense.ai?subject=MindSense%20User%20Waitlist">Join waitlist</a>
         </article>
-
-        <div class="diligence-grid">
-          <article class="diligence-card">
-            <p class="card-kicker">Stakeholder readiness</p>
-            <h3>Governance and operational fit</h3>
-            <ul>
-              <li>Local-first posture with explicit confidence and coverage language.</li>
-              <li>In-product escalation guidance and crisis support pathways.</li>
-              <li>Deterministic QA scripts for contrast, latency, and snapshot validation.</li>
-              <li>As-built claims constrained to implemented v1.0.0 behavior.</li>
-            </ul>
-          </article>
-
-          <article class="diligence-card diligence-card-accent">
-            <p class="card-kicker">Investor diligence</p>
-            <h3>Execution evidence over speculative narrative</h3>
-            <ul>
-              <li>Analytics-derived KPI scorecard model: activation, D1, D7, starts, completion.</li>
-              <li>Scenario engine + recommendation engine + delta engine already productionized.</li>
-              <li>Post-activation monetization surface exists and is instrumented.</li>
-              <li>Clear milestone map from simulated stack to integrated production stack.</li>
-            </ul>
-          </article>
-        </div>
       </section>
 
       <section id="trust" class="section reveal">
         <div class="section-head">
-          <p class="eyebrow">Trust, Safety, and Technical Posture</p>
-          <h2>Built with explicit boundaries and measurable quality gates</h2>
+          <p class="eyebrow">Trust, Safety, and Quality</p>
+          <h2>Explicit boundaries, local-first posture, and deterministic QA workflows.</h2>
         </div>
 
         <div class="trust-grid">
           <article class="trust-card">
-            <h3>Architecture posture</h3>
+            <h3>Wellness boundaries</h3>
             <ul>
-              <li>Single state container (`MindSenseStore`) coordinates routing, loop state, and analytics.</li>
-              <li>Local persistence via `UserDefaults` + Codable model snapshots.</li>
-              <li>Confidence score blends scenario baseline, data coverage, loop completion, and adherence.</li>
-              <li>Deterministic recommendation and metric delta engines support reproducible behavior.</li>
+              <li>MindSense is framed as wellness support, not emergency or diagnostic care.</li>
+              <li>Settings includes explicit crisis support path (`tel://988` in the US).</li>
+              <li>In high-load contexts, escalation guidance appears in onboarding and core surfaces.</li>
+            </ul>
+          </article>
+
+          <article class="trust-card">
+            <h3>Data and privacy posture</h3>
+            <ul>
+              <li>v1.0.0 runtime is local-first (`UserDefaults` + Codable persistence).</li>
+              <li>Sign in with Apple is the only implemented auth path.</li>
+              <li>No in-app cloud sync pipeline is implemented in this build.</li>
+              <li>Health diagnostics are visible in-app; real HealthKit ingestion is not yet shipped.</li>
             </ul>
           </article>
 
           <article class="trust-card">
             <h3>Quality gates</h3>
             <ul>
-              <li>`Scripts/design_qa.sh` orchestrates contrast, screenshots, dynamic type, and latency checks.</li>
-              <li>`Scripts/contrast_audit.swift` validates critical token contrast combinations.</li>
-              <li>UI tests enforce accessibility scaling and interaction latency thresholds.</li>
-              <li>`testMarketingWebsiteScreenshotExport()` keeps web visuals tied to app reality.</li>
-            </ul>
-          </article>
-
-          <article class="trust-card">
-            <h3>Safety boundaries</h3>
-            <ul>
-              <li>MindSense is a wellness product and not emergency or diagnostic care.</li>
-              <li>Crisis pathways are explicit, including US 988 support messaging.</li>
-              <li>Community and QA modules are implemented but hidden in production routing.</li>
-              <li>Current build does not claim cloud sync, HealthKit ingestion, or live billing integration.</li>
+              <li>`Scripts/design_qa.sh` orchestrates contrast, snapshots, dynamic type, and latency checks.</li>
+              <li>UI tests enforce key CTA visibility and performance budgets.</li>
+              <li>Marketing screenshots are regenerated from a dedicated UI test export.</li>
+              <li>Copy on this site is constrained to implemented behavior, not speculative roadmap claims.</li>
             </ul>
           </article>
         </div>
-      </section>
 
-      <section id="roadmap" class="section reveal">
-        <div class="section-head">
-          <p class="eyebrow">Execution Roadmap</p>
-          <h2>From strong v1 foundations to production integrations</h2>
-          <p class="section-copy">
-            The current app already ships the core user loop and quality systems. The next phases focus on integration depth and commercial readiness.
+        <aside class="scope-note" role="note" aria-label="Current scope note">
+          <p>
+            Implemented but not wired to primary production tab navigation: <strong>Community</strong>,
+            <strong>QA Tools</strong>, and <strong>KPI Scorecard</strong>.
           </p>
-        </div>
-
-        <div class="roadmap-shell" id="roadmap-shell">
-          <article class="roadmap-step is-active" data-stage="0">
-            <p class="roadmap-phase">Stage 1</p>
-            <h3>Navigation integrity and release clarity</h3>
-            <p>Resolve latent module entry points and remove dead-end guided paths.</p>
-          </article>
-          <article class="roadmap-step" data-stage="1">
-            <p class="roadmap-phase">Stage 2</p>
-            <h3>Real integrations</h3>
-            <p>Implement HealthKit ingestion, notification scheduling, and account sync layers.</p>
-          </article>
-          <article class="roadmap-step" data-stage="2">
-            <p class="roadmap-phase">Stage 3</p>
-            <h3>Monetization readiness</h3>
-            <p>Connect post-activation paywall to StoreKit products and entitlement handling.</p>
-          </article>
-          <article class="roadmap-step" data-stage="3">
-            <p class="roadmap-phase">Stage 4</p>
-            <h3>Data trust hardening</h3>
-            <p>Add stronger storage controls and clear export/delete workflows.</p>
-          </article>
-          <article class="roadmap-step" data-stage="4">
-            <p class="roadmap-phase">Stage 5</p>
-            <h3>CI quality convergence</h3>
-            <p>Continuously reconcile UI test IDs and enforce full quality gates in release flow.</p>
-          </article>
-        </div>
+        </aside>
       </section>
 
       <section id="faq" class="section reveal">
@@ -522,19 +422,23 @@
 
         <div class="faq-grid">
           <details open>
-            <summary>Is MindSense a medical device or diagnostic product?</summary>
-            <p>No. MindSense is currently positioned as wellness guidance and does not replace emergency or licensed clinical care.</p>
+            <summary>Is MindSense a medical device?</summary>
+            <p>No. MindSense is currently positioned as a wellness product and does not replace licensed clinical or emergency care.</p>
           </details>
           <details>
-            <summary>What data posture is implemented in v1.0.0?</summary>
-            <p>The implemented runtime is local-first. Data is persisted on-device with no cloud sync path in this build.</p>
+            <summary>What is implemented in the current production navigation?</summary>
+            <p>Today, Regulate, and Data are wired as primary runtime tabs, with Settings reachable from the profile menu.</p>
           </details>
           <details>
-            <summary>How does MindSense avoid recommendation overconfidence?</summary>
-            <p>Confidence labels and data coverage are explicit. Low coverage surfaces prompt additional check-ins before stronger conclusions.</p>
+            <summary>How are recommendations framed to avoid overconfidence?</summary>
+            <p>The app surfaces recommendation confidence, data coverage, signal diagnostics, and low-coverage behavior prompts.</p>
           </details>
           <details>
-            <summary>What should a user do during urgent crisis situations?</summary>
+            <summary>Does v1.0.0 include live billing, cloud sync, or full HealthKit ingestion?</summary>
+            <p>No. The post-activation paywall is presentation-level, cloud sync is not implemented, and health diagnostics are currently simulated.</p>
+          </details>
+          <details>
+            <summary>What should users do in urgent crisis situations?</summary>
             <p>Use local emergency services immediately. In the United States, call or text 988 for crisis support.</p>
           </details>
         </div>
@@ -542,26 +446,26 @@
 
       <section id="contact" class="section section-contact reveal">
         <div class="section-head">
-          <p class="eyebrow">Next Step</p>
-          <h2>Choose your path</h2>
+          <p class="eyebrow">Contact</p>
+          <h2>Pick your next step</h2>
         </div>
 
         <div class="contact-grid">
-          <a class="contact-card" href="mailto:hello@mindsense.ai?subject=MindSense%20Waitlist%20Request">
-            <h3>User waitlist</h3>
-            <p>Get launch updates and early access information.</p>
+          <a class="contact-card" href="mailto:hello@mindsense.ai?subject=MindSense%20User%20Waitlist">
+            <h3>Prospective users</h3>
+            <p>Get launch updates and early access opportunities.</p>
           </a>
-          <a class="contact-card" href="mailto:partnerships@mindsense.ai?subject=MindSense%20Product%20Demo%20Request">
+          <a class="contact-card" href="mailto:partnerships@mindsense.ai?subject=MindSense%20Product%20Walkthrough%20Request">
             <h3>Product walkthrough</h3>
-            <p>See the full Today, Regulate, Data, and Settings story live.</p>
+            <p>Walk through Today, Regulate, Data, and Settings with the team.</p>
           </a>
           <a class="contact-card" href="mailto:partnerships@mindsense.ai?subject=MindSense%20Stakeholder%20Pilot%20Request">
             <h3>Stakeholder pilot</h3>
-            <p>Assess deployment fit, trust posture, and operational requirements.</p>
+            <p>Review trust posture, operational fit, and rollout constraints.</p>
           </a>
           <a class="contact-card" href="mailto:investors@mindsense.ai?subject=MindSense%20Investor%20Inquiry">
             <h3>Investor diligence</h3>
-            <p>Request technical evidence package and milestone review session.</p>
+            <p>Request architecture, quality, and milestone evidence package.</p>
           </a>
         </div>
       </section>
@@ -571,11 +475,11 @@
       <div class="footer-grid">
         <div>
           <p class="footer-title">MindSense AI</p>
-          <p class="footer-copy">Local-first iOS regulation intelligence with one repeatable daily action loop.</p>
+          <p class="footer-copy">Local-first iOS regulation guidance built around one repeatable action loop.</p>
         </div>
 
         <div>
-          <p class="footer-title">Trust</p>
+          <p class="footer-title">Legal</p>
           <a href="./privacy.html">Privacy</a>
           <a href="./terms.html">Terms</a>
           <a href="https://988lifeline.org/" target="_blank" rel="noopener noreferrer">US crisis support (988)</a>
@@ -590,7 +494,7 @@
       </div>
 
       <p class="site-disclaimer">
-        MindSense provides wellness support and is not an emergency service. For immediate safety concerns, use local emergency channels.
+        MindSense provides wellness support and is not an emergency service. For immediate risk, use local emergency channels.
       </p>
       <p id="copyright"></p>
     </footer>

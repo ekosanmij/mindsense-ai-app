@@ -1,46 +1,58 @@
-# MindSense Website
+# MindSense Website (As-Built)
 
-This directory contains the production marketing site for MindSense AI v1.0.0.
+This folder contains the production marketing website for MindSense AI v1.0.0.
 
 ## Files
 
-- `index.html`: primary marketing experience and conversion flow
-- `styles.css`: visual system, responsive layout, animation states, and legal page styling
-- `app.js`: interaction runtime (navigation state, counters, tour system, audience tracks, motion)
-- `privacy.html`: privacy posture summary page
-- `terms.html`: terms and usage-boundary summary page
-- `assets/screenshots`: UI-test screenshot exports (source PNGs)
-- `assets/screenshots/optimized`: responsive JPG variants consumed by website `srcset`
+- `index.html`: primary marketing page
+- `styles.css`: visual system, responsive layout, legal-page styles
+- `app.js`: interaction runtime (navigation state, counters, tab systems, reveal motion)
+- `privacy.html`: privacy posture summary
+- `terms.html`: terms and usage-boundary summary
+- `assets/screenshots`: UI-test-exported PNG screenshots
+- `assets/screenshots/optimized`: responsive JPG derivatives used in `srcset`
 - `assets/brand`: website logo assets
 
 ## Local preview
 
-From repository root:
+From repo root:
 
 ```bash
 cd Website
 python3 -m http.server 4173
 ```
 
-Open `http://localhost:4173`.
+Open: `http://localhost:4173`
 
-## Refresh screenshots
+## Screenshot refresh workflow
 
-From repository root:
+Run from repo root:
 
 ```bash
 bash Scripts/export_marketing_screenshots.sh
 ```
 
-Optional override:
+Optional overrides:
 
 ```bash
 bash Scripts/export_marketing_screenshots.sh "iPhone 17" "Website/assets/screenshots"
 ```
 
+What this does:
+
+1. Runs `MindSenseCoreScreensUITests.testMarketingWebsiteScreenshotExport`.
+2. Writes raw PNG files into `Website/assets/screenshots`.
+3. Generates optimized JPEG variants in `Website/assets/screenshots/optimized`.
+
+## Update workflow
+
+1. Verify any claim against source code and `Docs/product/prd-as-built.md`.
+2. Keep walkthrough entries in `Website/app.js` aligned with screenshot asset names.
+3. Re-run screenshot export after UI changes that affect captured surfaces.
+4. Validate keyboard navigation and reduced-motion behavior before shipping.
+
 ## Content guardrails
 
-- Keep messaging aligned to implemented app behavior.
-- Avoid roadmap claims framed as shipped features.
+- Keep copy as-built and non-overclaiming.
 - Preserve wellness/safety boundaries and crisis direction language.
-- Maintain reduced-motion and keyboard accessibility behavior when adding interactions.
+- Do not present unimplemented integrations as shipped features.

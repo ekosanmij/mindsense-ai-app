@@ -6,14 +6,14 @@
     <title>MindSense AI | Privacy</title>
     <meta
       name="description"
-      content="MindSense AI privacy posture summary: local-first implementation, data boundaries, and support channels."
+      content="MindSense AI privacy summary for the current as-built v1.0.0 app: local-first data posture, user controls, and support boundaries."
     />
     <link rel="canonical" href="https://mindsense-ai-app.vercel.app/privacy" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&amp;family=Sora:wght@400;500;600;700;800&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&amp;display=swap"
       rel="stylesheet"
     />
 
@@ -27,14 +27,14 @@
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    <div class="atmosphere" aria-hidden="true">
-      <div class="glow glow-a"></div>
-      <div class="glow glow-b"></div>
-      <div class="noise-grid"></div>
+    <div class="bg-layer" aria-hidden="true">
+      <div class="bg-orb bg-orb-a"></div>
+      <div class="bg-orb bg-orb-b"></div>
+      <div class="bg-grid"></div>
     </div>
 
     <header class="site-header legal-header">
-      <a class="brand" href="./index.html#top" aria-label="MindSense home">
+      <a class="brand" href="./index.html#top" aria-label="MindSense homepage">
         <img src="./assets/brand/logo-lockup-horizontal.svg" alt="MindSense AI" width="190" height="30" />
       </a>
       <nav class="site-nav" aria-label="Legal navigation">
@@ -48,34 +48,47 @@
     <main id="main-content" class="legal-main">
       <article class="legal-shell">
         <p class="eyebrow">Privacy</p>
-        <h1>MindSense privacy posture summary</h1>
+        <h1>MindSense privacy summary (as-built v1.0.0)</h1>
         <p>
-          MindSense AI is implemented as a local-first iOS app for its core runtime behavior in v1.0.0. This page summarizes implementation posture and does not replace legal advice.
+          This page summarizes current implementation posture from source. It is informational and does not replace legal advice.
         </p>
 
-        <h2>Current implementation posture</h2>
+        <h2>1. Data storage posture</h2>
         <ul>
-          <li>Core product loop state is persisted on-device using local storage.</li>
+          <li>Core app state is local-first and persisted on-device with `UserDefaults` and Codable models.</li>
           <li>No cloud sync pipeline is implemented in this build.</li>
-          <li>Auth uses Sign in with Apple and local session persistence.</li>
-          <li>Confidence and data-coverage indicators are shown in-product to support interpretation quality.</li>
+          <li>Analytics events are stored locally as bounded event records.</li>
         </ul>
 
-        <h2>User controls</h2>
+        <h2>2. Authentication posture</h2>
         <ul>
-          <li>Settings includes privacy/data related entry points and policy access.</li>
-          <li>Health diagnostics and source controls are surfaced in-app.</li>
-          <li>Users can sign out and reset core local state from account controls.</li>
+          <li>Sign in with Apple is the implemented authentication path.</li>
+          <li>Session identifiers and account display metadata are persisted locally for return routing.</li>
+          <li>No backend identity sync layer is implemented in this build.</li>
         </ul>
 
-        <h2>Safety and support boundaries</h2>
+        <h2>3. Health and signal posture</h2>
         <ul>
-          <li>MindSense is framed as wellness support and not emergency care.</li>
-          <li>Crisis support direction is explicit, including US 988 guidance.</li>
+          <li>Apple Health diagnostics surfaces are available in Settings for permission status and quality context.</li>
+          <li>The current build does not ship a full real HealthKit ingestion pipeline.</li>
+          <li>Users can resync, rebuild baseline, or delete health-derived data from in-app controls.</li>
+        </ul>
+
+        <h2>4. User controls</h2>
+        <ul>
+          <li>Settings changes autosave and can be updated anytime (appearance, motion, notifications, signal preferences).</li>
+          <li>Sign out clears session and resets core local seeded state.</li>
+          <li>Privacy and safety pathways are accessible from Settings.</li>
+        </ul>
+
+        <h2>5. Safety boundary</h2>
+        <ul>
+          <li>MindSense is a wellness support product and not emergency care.</li>
           <li>For urgent concerns, use local emergency channels immediately.</li>
+          <li>In the US, call or text 988 for crisis support.</li>
         </ul>
 
-        <h2>Contact</h2>
+        <h2>6. Contact</h2>
         <p>
           For privacy or data-handling questions, contact
           <a href="mailto:support@mindsense.ai?subject=MindSense%20Privacy%20Request">support@mindsense.ai</a>.

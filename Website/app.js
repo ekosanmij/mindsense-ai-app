@@ -4,8 +4,8 @@ const prefersReducedMotion =
 
 const navToggle = document.querySelector(".nav-toggle");
 const nav = document.querySelector(".site-nav");
+const navLinks = Array.from(document.querySelectorAll('.site-nav a[href^="#"]'));
 const header = document.querySelector(".site-header");
-const navLinks = document.querySelectorAll('.site-nav a[href^="#"]');
 const scrollProgressBar = document.getElementById("scroll-progress-bar");
 
 const closeNav = () => {
@@ -22,7 +22,9 @@ if (navToggle && nav) {
     navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
   });
 
-  navLinks.forEach((link) => link.addEventListener("click", closeNav));
+  navLinks.forEach((link) => {
+    link.addEventListener("click", closeNav);
+  });
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -46,7 +48,7 @@ const updateScrollProgress = () => {
   }
   const scrollTop = window.scrollY || window.pageYOffset;
   const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const ratio = scrollHeight <= 0 ? 0 : Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
+  const ratio = scrollHeight <= 0 ? 0 : Math.max(0, Math.min(1, scrollTop / scrollHeight));
   scrollProgressBar.style.width = `${ratio * 100}%`;
 };
 
@@ -68,17 +70,15 @@ if ("IntersectionObserver" in window && sectionLinkMap.size > 0) {
     (entries) => {
       entries.forEach((entry) => {
         const id = entry.target.getAttribute("id");
-        if (!id || !sectionLinkMap.has(id)) {
+        if (!id || !sectionLinkMap.has(id) || !entry.isIntersecting) {
           return;
         }
-        if (entry.isIntersecting) {
-          sectionLinkMap.forEach((node) => node.removeAttribute("aria-current"));
-          sectionLinkMap.get(id)?.setAttribute("aria-current", "page");
-        }
+        sectionLinkMap.forEach((node) => node.removeAttribute("aria-current"));
+        sectionLinkMap.get(id)?.setAttribute("aria-current", "page");
       });
     },
     {
-      rootMargin: "-30% 0px -50% 0px",
+      rootMargin: "-30% 0px -52% 0px",
       threshold: 0.02
     }
   );
@@ -91,7 +91,7 @@ if ("IntersectionObserver" in window && sectionLinkMap.size > 0) {
   });
 }
 
-const metrics = Array.from(document.querySelectorAll(".metric[data-count]"));
+const metricNodes = Array.from(document.querySelectorAll(".metric[data-count]"));
 
 const animateCount = (node) => {
   const target = Number(node.dataset.count || 0);
@@ -104,12 +104,11 @@ const animateCount = (node) => {
     return;
   }
 
-  const durationMs = 1100;
+  const durationMs = 1150;
   const start = performance.now();
 
   const tick = (now) => {
-    const elapsed = now - start;
-    const progress = Math.min(elapsed / durationMs, 1);
+    const progress = Math.min((now - start) / durationMs, 1);
     const eased = 1 - Math.pow(1 - progress, 3);
     const value = Math.round(target * eased);
     node.textContent = value.toLocaleString();
@@ -122,7 +121,7 @@ const animateCount = (node) => {
   window.requestAnimationFrame(tick);
 };
 
-if ("IntersectionObserver" in window && metrics.length > 0) {
+if ("IntersectionObserver" in window && metricNodes.length > 0) {
   const metricObserver = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach((entry) => {
@@ -133,53 +132,53 @@ if ("IntersectionObserver" in window && metrics.length > 0) {
         observer.unobserve(entry.target);
       });
     },
-    { threshold: 0.35 }
+    { threshold: 0.34 }
   );
 
-  metrics.forEach((metric) => metricObserver.observe(metric));
+  metricNodes.forEach((node) => metricObserver.observe(node));
 } else {
-  metrics.forEach((metric) => animateCount(metric));
+  metricNodes.forEach((node) => animateCount(node));
 }
 
 const loopData = [
   {
     kicker: "Step 1",
-    title: "Today: state snapshot and action command deck",
-    copy: "Today gives one recommendation path while still exposing confidence, coverage, and diagnostic context.",
+    title: "Today: command deck and one primary path",
+    copy: "Today surfaces Load, Readiness, and Consistency first, then keeps one dominant action path visible.",
     points: [
-      "Load, Readiness, and Consistency are surfaced first.",
-      "One recommended next protocol stays dominant.",
-      "Context capture is available for recent unlabelled stress episodes."
+      "Primary CTA stays anchored to Start, Continue, or Save check-in depending on state.",
+      "Confidence, signal diagnostics, and model details are available without replacing the core action narrative.",
+      "Timeline and episode attribution can be reviewed or labeled when needed."
     ]
   },
   {
     kicker: "Step 2",
-    title: "Regulate: guided protocol execution",
-    copy: "Users select a ranked protocol, run a focused timer flow, and stay inside minimal-distraction execution.",
+    title: "Regulate: Select → Run with guided flow",
+    copy: "Regulate ranks protocols and moves users through a timed execution flow designed to minimize distraction.",
     points: [
-      "Three protocol families: Calm now, Focus prep, Sleep downshift.",
-      "Session transitions from selection to timer to impact capture.",
-      "Tab behavior and CTA framing preserve flow clarity."
+      "Preset catalog: Calm now, Focus prep, Sleep downshift.",
+      "Sessions move from in-progress to awaiting check-in as timer milestones complete.",
+      "Post-session paywall can appear after first completed outcome submission."
     ]
   },
   {
     kicker: "Step 3",
-    title: "Impact capture closes the loop",
-    copy: "Post-session check-in captures perceived helpfulness and estimated physiological direction.",
+    title: "Record impact to close today’s loop",
+    copy: "Outcome capture records helpfulness and directional impact, then applies deterministic model deltas.",
     points: [
-      "Outcome recording updates metric trajectories deterministically.",
-      "Session history and event history are appended immediately.",
-      "Confidence can increase as repeat loops and adherence improve."
+      "Helped/mixed/did-not-help outcomes map to session impact direction and intensity.",
+      "Event history and session history update immediately on save.",
+      "Confidence and trend narratives are influenced by adherence and repeated loop completion."
     ]
   },
   {
     kicker: "Step 4",
-    title: "Data consolidates trends, experiments, and history",
-    copy: "Users and teams can inspect directional patterns and experiment adherence over time.",
+    title: "Data: Trends, Experiments, and History",
+    copy: "Data consolidates pattern interpretation, experiment lifecycle tracking, and historical summaries.",
     points: [
-      "Trend windows include 7D, 14D, and 30D views.",
-      "Experiments support planned, active, and completed lifecycle states.",
-      "Weekly summary surfaces wins, risks, and next best action."
+      "Trends supports 7D/14D/30D with overlays and optional comparison mode.",
+      "Experiments track planned, active, and completed states with adherence.",
+      "History summarizes wins, risks, and what-is-working outputs."
     ]
   }
 ];
@@ -205,13 +204,13 @@ const renderLoop = (nextIndex) => {
   loopKicker.textContent = payload.kicker;
   loopTitle.textContent = payload.title;
   loopCopy.textContent = payload.copy;
-  loopPoints.innerHTML = payload.points.map((line) => `<li>${line}</li>`).join("");
+  loopPoints.innerHTML = payload.points.map((point) => `<li>${point}</li>`).join("");
 
-  loopStepNodes.forEach((node, index) => {
-    const isActive = index === loopIndex;
-    node.classList.toggle("is-active", isActive);
-    node.setAttribute("tabindex", isActive ? "0" : "-1");
-    node.setAttribute("aria-pressed", isActive ? "true" : "false");
+  loopStepNodes.forEach((node, idx) => {
+    const active = idx === loopIndex;
+    node.classList.toggle("is-active", active);
+    node.setAttribute("tabindex", active ? "0" : "-1");
+    node.setAttribute("aria-pressed", active ? "true" : "false");
   });
 };
 
@@ -220,6 +219,7 @@ if (loopStepNodes.length > 0) {
 
   loopStepNodes.forEach((node, index) => {
     node.addEventListener("click", () => renderLoop(index));
+
     node.addEventListener("keydown", (event) => {
       if (!["ArrowRight", "ArrowLeft", "Home", "End", "Enter", " "].includes(event.key)) {
         return;
@@ -232,27 +232,27 @@ if (loopStepNodes.length > 0) {
         return;
       }
 
-      let targetIndex = index;
+      let target = index;
       if (event.key === "ArrowRight") {
-        targetIndex = (index + 1) % loopStepNodes.length;
+        target = (index + 1) % loopStepNodes.length;
       } else if (event.key === "ArrowLeft") {
-        targetIndex = (index - 1 + loopStepNodes.length) % loopStepNodes.length;
+        target = (index - 1 + loopStepNodes.length) % loopStepNodes.length;
       } else if (event.key === "Home") {
-        targetIndex = 0;
+        target = 0;
       } else if (event.key === "End") {
-        targetIndex = loopStepNodes.length - 1;
+        target = loopStepNodes.length - 1;
       }
 
-      renderLoop(targetIndex);
-      loopStepNodes[targetIndex]?.focus();
+      renderLoop(target);
+      loopStepNodes[target]?.focus();
     });
   });
 
   loopNextButton?.addEventListener("click", () => renderLoop(loopIndex + 1));
 
   if (!prefersReducedMotion && "IntersectionObserver" in window) {
-    const loopRoot = document.getElementById("loop-steps");
-    if (loopRoot) {
+    const root = document.getElementById("loop-steps");
+    if (root) {
       const loopObserver = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -269,9 +269,10 @@ if (loopStepNodes.length > 0) {
             }
           });
         },
-        { threshold: 0.58 }
+        { threshold: 0.56 }
       );
-      loopObserver.observe(loopRoot);
+
+      loopObserver.observe(root);
     }
   }
 }
@@ -282,17 +283,17 @@ const tourData = {
     image: "./assets/screenshots/optimized/intro-660.jpg",
     srcset: "./assets/screenshots/optimized/intro-660.jpg 660w, ./assets/screenshots/optimized/intro-990.jpg 990w",
     alt: "MindSense intro screen",
-    title: "Intro and trust framing",
-    description: "Introduces the product promise and starts the Apple sign-in path with minimal friction.",
-    metadata: [
-      ["Primary job", "Frame value and trust before account session."],
+    title: "Intro trust framing and Apple sign-in start",
+    description: "Introduces value framing and starts the single implemented auth path: Continue with Apple.",
+    facts: [
       ["Primary CTA", "Continue with Apple"],
-      ["Position in flow", "Launch -> Intro -> Auth"]
+      ["Position in flow", "Launch → Intro → Auth"],
+      ["As-built note", "No email-link auth flow is implemented"]
     ],
     bullets: [
-      "Highlights state, action, and rationale model.",
-      "Keeps copy concise and confidence-forward.",
-      "Designed for completion in under a minute."
+      "Highlights state snapshot, one action, and rationale framing.",
+      "Keeps setup promise explicit with low-friction copy.",
+      "Routes into onboarding or ready state based on persisted session and progress."
     ],
     ctaLabel: "See onboarding activation"
   },
@@ -302,172 +303,172 @@ const tourData = {
     srcset: "./assets/screenshots/optimized/onboarding-660.jpg 660w, ./assets/screenshots/optimized/onboarding-990.jpg 990w",
     alt: "MindSense onboarding screen",
     title: "Onboarding with required activation steps",
-    description: "Activation focuses baseline + first check-in and routes to main tabs once complete.",
-    metadata: [
-      ["Required steps", "Start baseline, complete first check-in"],
-      ["Optional setup", "Permissions can be configured later"],
-      ["Escalation", "High check-in values trigger guidance"]
+    description: "Activation is sequentially gated for baseline and first check-in before entering the core tabs.",
+    facts: [
+      ["Required steps", "Start Baseline, First Check-in"],
+      ["Progress model", "Step rail + sequential gating"],
+      ["Escalation behavior", "High load check-in shows guidance"]
     ],
     bullets: [
-      "Progress rail keeps completion state explicit.",
-      "Required steps are sequentially gated.",
-      "Transition to ready state is deterministic."
+      "Connect Health and notifications are shown but not required for activation completion.",
+      "On completion, app state transitions to ready and main shell opens.",
+      "Supports reduced-motion and accessibility scaling behavior in UI tests."
     ],
-    ctaLabel: "Explore Today command deck"
+    ctaLabel: "Inspect Today command deck"
   },
   today: {
     kicker: "Today",
     image: "./assets/screenshots/optimized/today-660.jpg",
     srcset: "./assets/screenshots/optimized/today-660.jpg 660w, ./assets/screenshots/optimized/today-990.jpg 990w",
-    alt: "MindSense today screen",
-    title: "State snapshot and best-next-action surface",
-    description: "Today prioritizes one action path while preserving drivers, timeline, diagnostics, and confidence framing.",
-    metadata: [
+    alt: "MindSense Today screen",
+    title: "State command deck + one next action",
+    description: "Today combines metrics, recommendation, diagnostics, and context capture while preserving one dominant next action path.",
+    facts: [
       ["Primary metrics", "Load, Readiness, Consistency"],
-      ["Recommendation", "One mapped protocol with expected effect"],
-      ["Fallback mode", "Low coverage prompts check-in-first behavior"]
+      ["Action states", "Start, Continue, or Save check-in"],
+      ["Trust framing", "Confidence, coverage, and signal-source details"]
     ],
     bullets: [
-      "Sticky continue-session dock appears when a session is active.",
-      "Timeline and episode context capture stay accessible.",
-      "Confidence and coverage labels remain visible for interpretation quality."
+      "Low coverage mode shifts behavior toward check-in-first decisions.",
+      "Sticky bottom action appears while sessions are active.",
+      "Episode attribution and context capture can be edited from Today and Data history."
     ],
-    ctaLabel: "See Regulate protocol selection"
+    ctaLabel: "View Regulate selection"
   },
   "regulate-select": {
     kicker: "Regulate",
     image: "./assets/screenshots/optimized/regulate_select-660.jpg",
     srcset:
       "./assets/screenshots/optimized/regulate_select-660.jpg 660w, ./assets/screenshots/optimized/regulate_select-990.jpg 990w",
-    alt: "MindSense regulate protocol selection screen",
-    title: "Protocol selection with ranked presets",
-    description: "Regulate starts with scenario-sensitive protocol ranking and guided step progression.",
-    metadata: [
+    alt: "MindSense Regulate selection screen",
+    title: "Preset selection and guided structure",
+    description: "Regulate presents ranked protocols and an explicit step model before session execution.",
+    facts: [
+      ["Step model", "Select → Run → Record"],
       ["Preset catalog", "Calm now, Focus prep, Sleep downshift"],
-      ["Guided model", "Select -> Run -> Record"],
-      ["Selection signal", "Ranking adapts via recommendation engine"]
+      ["Ranking input", "Scenario, metrics, and outcome history"]
     ],
     bullets: [
-      "Preset metadata includes duration and why-now rationale.",
-      "Action path is narrow and low-friction.",
-      "Supports active-session resume behavior from Today."
+      "Preset metadata includes duration and why-now framing.",
+      "Predicted fit explanation is available in-context.",
+      "Supports launch from Today recommendation and episode-specific context."
     ],
-    ctaLabel: "Inspect run-timer phase"
+    ctaLabel: "Open run timer phase"
   },
   "regulate-run": {
     kicker: "Regulate",
     image: "./assets/screenshots/optimized/regulate_run-660.jpg",
     srcset:
       "./assets/screenshots/optimized/regulate_run-660.jpg 660w, ./assets/screenshots/optimized/regulate_run-990.jpg 990w",
-    alt: "MindSense regulate run timer screen",
-    title: "Run timer and impact capture",
-    description: "Timer execution transitions into post-session impact capture and updates metrics/history on submit.",
-    metadata: [
-      ["Runtime behavior", "Timer ticks every second"],
-      ["Outcome capture", "Helpfulness + directional impact"],
-      ["Post-action", "May present post-activation paywall"]
+    alt: "MindSense Regulate run timer screen",
+    title: "Run timer and impact submission",
+    description: "Session state progresses to awaiting check-in and applies deterministic outcome deltas when impact is saved.",
+    facts: [
+      ["Timer behavior", "1-second tick updates"],
+      ["Impact capture", "Helped / mixed / did not help + optional context"],
+      ["Post session", "May present post-activation paywall sheet"]
     ],
     bullets: [
-      "Session completion writes outcome to local history.",
-      "Effect metrics include downshift and recovery slope models.",
-      "Tab bar behavior adapts for focused in-session UX."
+      "Outcome saves update metrics, history, and saved insights.",
+      "Flow supports haptic pacing and optional audio guidance toggles.",
+      "Paywall is presentation-level in v1.0.0 (no live StoreKit flow wired)."
     ],
-    ctaLabel: "Move to trends analysis"
+    ctaLabel: "Review Data trends"
   },
   "data-trends": {
     kicker: "Data",
     image: "./assets/screenshots/optimized/data_trends-660.jpg",
     srcset:
       "./assets/screenshots/optimized/data_trends-660.jpg 660w, ./assets/screenshots/optimized/data_trends-990.jpg 990w",
-    alt: "MindSense data trends screen",
-    title: "Trends workspace with signal overlays",
-    description: "Trend views combine windows, overlays, and confidence readouts to support pattern interpretation.",
-    metadata: [
+    alt: "MindSense Data trends screen",
+    title: "Pattern explorer for trend interpretation",
+    description: "Trends workspace combines signal focus, windows, overlays, and confidence context to support action planning.",
+    facts: [
       ["Windows", "7D, 14D, 30D"],
-      ["Overlays", "Sessions, check-ins, experiments"],
-      ["Focus", "Readiness/Load/Consistency signal pivots"]
+      ["Overlays", "Workouts, check-ins, experiments"],
+      ["Export", "Filter sheet includes export payload controls"]
     ],
     bullets: [
-      "Interactive selection markers support deeper chart reading.",
-      "Confidence diagnostics can be inspected in detail.",
-      "Suggested plan CTA routes into Regulate."
+      "Trend chart supports marker inspection and clear summary copy.",
+      "Coverage diagnostics can be opened when reliability is low.",
+      "Suggested plan route maps back into Regulate."
     ],
-    ctaLabel: "Review experiment lifecycle"
+    ctaLabel: "Inspect experiment lifecycle"
   },
   "data-experiments": {
     kicker: "Data",
     image: "./assets/screenshots/optimized/data_experiments-660.jpg",
     srcset:
       "./assets/screenshots/optimized/data_experiments-660.jpg 660w, ./assets/screenshots/optimized/data_experiments-990.jpg 990w",
-    alt: "MindSense data experiments screen",
-    title: "Experiments workspace for behavior testing",
-    description: "Experiments track adherence and outcomes across planned, active, and completed states.",
-    metadata: [
-      ["States", "Planned, active, completed"],
-      ["Cadence", "Daily logging across duration window"],
-      ["Completion", "Summary sheet with keep/adjust decisions"]
+    alt: "MindSense Data experiments screen",
+    title: "Experiment lifecycle and adherence",
+    description: "Experiments run as planned/active/completed objects with state-driven CTA changes and outcome capture.",
+    facts: [
+      ["Status model", "Planned, active, completed"],
+      ["Cadence", "Daily logging through duration"],
+      ["Completion", "Result sheet with keep/adjust/pause decisions"]
     ],
     bullets: [
-      "CTA changes dynamically by experiment state.",
-      "Adherence influences confidence progression.",
-      "Results roll into narrative summaries and history."
+      "Active experiment CTA adapts to day logging vs completion state.",
+      "Adherence affects confidence progression and narrative signals.",
+      "Result saves create history events and insight entries."
     ],
-    ctaLabel: "Open history insights"
+    ctaLabel: "Open Data history"
   },
   "data-history": {
     kicker: "Data",
     image: "./assets/screenshots/optimized/data_history-660.jpg",
     srcset:
       "./assets/screenshots/optimized/data_history-660.jpg 660w, ./assets/screenshots/optimized/data_history-990.jpg 990w",
-    alt: "MindSense data history screen",
-    title: "History and weekly summary",
-    description: "History consolidates wins, risks, timeline events, and what-is-working summaries.",
-    metadata: [
-      ["Summary model", "Wins, risks, next best action"],
-      ["Timeline", "Grouped events with typed markers"],
-      ["Learning output", "Top protocol, top trigger, recovery window"]
+    alt: "MindSense Data history screen",
+    title: "Weekly summary and event timeline",
+    description: "History groups wins, risks, event chronology, and attribution follow-up workflows.",
+    facts: [
+      ["Weekly summary", "Wins, risks, next best action"],
+      ["Timeline source", "Sessions, check-ins, experiments, system events"],
+      ["Edit-later", "Attribution review path for recent episodes"]
     ],
     bullets: [
-      "Keeps historical context scannable for daily review.",
-      "Pairs with experiment outcomes for decision quality.",
-      "Supports stakeholder narrative generation."
+      "History keeps event context readable by day groups.",
+      "Attribution edits can be reopened without disrupting active sessions.",
+      "Pairs with what-is-working outputs for trend review."
     ],
-    ctaLabel: "Inspect settings and controls"
+    ctaLabel: "Inspect Settings"
   },
   settings: {
     kicker: "Settings",
     image: "./assets/screenshots/optimized/settings-660.jpg",
     srcset: "./assets/screenshots/optimized/settings-660.jpg 660w, ./assets/screenshots/optimized/settings-990.jpg 990w",
-    alt: "MindSense settings screen",
-    title: "Account, preferences, health controls, and safety",
-    description: "Settings centralizes preferences with autosave behavior and signal-source diagnostics.",
-    metadata: [
-      ["Persistence", "Autosave tracked with analytics events"],
-      ["Safety", "In-app crisis support shortcut"],
-      ["Privacy link", "Web privacy route reachable from settings"]
+    alt: "MindSense Settings screen",
+    title: "Privacy, health controls, notifications, and safety",
+    description: "Settings centralizes preference autosave, health diagnostics controls, account access, and crisis safety pathways.",
+    facts: [
+      ["Autosave", "Setting changes persist immediately"],
+      ["Health controls", "Resync, rebuild baseline, delete derived data"],
+      ["Safety", "US 988 crisis resource row + wellness boundary copy"]
     ],
     bullets: [
-      "Supports appearance, motion, haptics, and quiet-hour preferences.",
-      "Exposes health diagnostics and rebuild/delete derived data actions.",
-      "Sign-out clears session and seeded local state."
+      "Privacy policy row points to the public website privacy route.",
+      "Appearance, reduced motion, and haptics toggles are user controlled.",
+      "Sign out resets session and core local seeded state."
     ],
-    ctaLabel: "Talk with the team"
+    ctaLabel: "Contact the team"
   }
 };
 
 const tourTabs = Array.from(document.querySelectorAll(".tour-tab"));
+const tourPanel = document.getElementById("tour-panel");
 const tourImage = document.getElementById("tour-image");
 const tourKicker = document.getElementById("tour-kicker");
 const tourTitle = document.getElementById("tour-title");
 const tourDescription = document.getElementById("tour-description");
+const tourFacts = document.getElementById("tour-facts");
 const tourBullets = document.getElementById("tour-bullets");
-const tourMetadata = document.getElementById("tour-metadata");
 const tourCTA = document.getElementById("tour-cta");
-const tourPanel = document.getElementById("tour-panel");
 
 const renderTour = (screenKey) => {
   const payload = tourData[screenKey];
-  if (!payload || !tourImage || !tourKicker || !tourTitle || !tourDescription || !tourBullets || !tourMetadata) {
+  if (!payload || !tourImage || !tourKicker || !tourTitle || !tourDescription || !tourFacts || !tourBullets) {
     return;
   }
 
@@ -479,23 +480,20 @@ const renderTour = (screenKey) => {
   tourTitle.textContent = payload.title;
   tourDescription.textContent = payload.description;
 
-  tourMetadata.innerHTML = payload.metadata
-    .map(
-      ([label, value]) =>
-        `<div><dt>${label}</dt><dd>${value}</dd></div>`
-    )
+  tourFacts.innerHTML = payload.facts
+    .map(([label, value]) => `<div><dt>${label}</dt><dd>${value}</dd></div>`)
     .join("");
-
   tourBullets.innerHTML = payload.bullets.map((line) => `<li>${line}</li>`).join("");
+
   if (tourCTA) {
     tourCTA.textContent = payload.ctaLabel;
   }
 
   tourTabs.forEach((tab) => {
-    const isActive = tab.dataset.screen === screenKey;
-    tab.classList.toggle("is-active", isActive);
-    tab.setAttribute("aria-selected", isActive ? "true" : "false");
-    tab.setAttribute("tabindex", isActive ? "0" : "-1");
+    const active = tab.dataset.screen === screenKey;
+    tab.classList.toggle("is-active", active);
+    tab.setAttribute("aria-selected", active ? "true" : "false");
+    tab.setAttribute("tabindex", active ? "0" : "-1");
   });
 
   if (tourPanel) {
@@ -521,6 +519,7 @@ if (tourTabs.length > 0) {
       if (!["ArrowRight", "ArrowLeft", "Home", "End", "Enter", " "].includes(event.key)) {
         return;
       }
+
       event.preventDefault();
 
       if (event.key === "Enter" || event.key === " ") {
@@ -531,21 +530,21 @@ if (tourTabs.length > 0) {
         return;
       }
 
-      let targetIndex = index;
+      let target = index;
       if (event.key === "ArrowRight") {
-        targetIndex = (index + 1) % tourTabs.length;
+        target = (index + 1) % tourTabs.length;
       } else if (event.key === "ArrowLeft") {
-        targetIndex = (index - 1 + tourTabs.length) % tourTabs.length;
+        target = (index - 1 + tourTabs.length) % tourTabs.length;
       } else if (event.key === "Home") {
-        targetIndex = 0;
+        target = 0;
       } else if (event.key === "End") {
-        targetIndex = tourTabs.length - 1;
+        target = tourTabs.length - 1;
       }
 
-      const target = tourTabs[targetIndex];
-      target.focus();
-      if (target.dataset.screen) {
-        renderTour(target.dataset.screen);
+      const nextTab = tourTabs[target];
+      nextTab?.focus();
+      if (nextTab?.dataset.screen) {
+        renderTour(nextTab.dataset.screen);
       }
     });
   });
@@ -553,43 +552,42 @@ if (tourTabs.length > 0) {
 
 const audienceData = {
   users: {
-    kicker: "For users",
-    title: "Regulation support with low cognitive overhead",
+    kicker: "For prospective users",
+    title: "One action path when your nervous system feels noisy.",
     description:
-      "MindSense minimizes decision fatigue by delivering one clear action, guided execution, and immediate reflection loops.",
+      "MindSense helps users decide quickly: read state, run one short protocol, and log whether it helped.",
     bullets: [
-      "Primary loop supports state understanding in roughly 30 seconds.",
-      "Guided session flow simplifies protocol execution and follow-through.",
-      "Data workspace reinforces what is working across days and contexts."
+      "Designed to surface one next action without hunting through menus.",
+      "Regulate sessions are short and guided, with visible progress states.",
+      "Data views make it easier to see which routines are actually helping."
     ],
     ctaLabel: "Join waitlist",
-    ctaHref: "mailto:hello@mindsense.ai?subject=MindSense%20Waitlist%20Request"
+    ctaHref: "mailto:hello@mindsense.ai?subject=MindSense%20User%20Waitlist"
   },
   stakeholders: {
     kicker: "For stakeholders",
-    title: "Operational clarity with trust-forward implementation",
+    title: "Trust-forward implementation and measurable quality posture.",
     description:
-      "Stakeholders can evaluate architecture posture, quality workflows, and safety boundaries without relying on speculative claims.",
+      "Stakeholder review can focus on real runtime behavior, safety boundaries, and repeatable QA gates.",
     bullets: [
-      "Core behavior is local-first with explicit confidence/coverage communication.",
-      "Quality gates are encoded in scripts and UI tests for repeatable validation.",
-      "Feature-flagged latent modules are clearly separated from production IA."
+      "Local-first model with explicit confidence and coverage framing.",
+      "Quality scripts and UI tests validate accessibility, contrast, and latency budgets.",
+      "Scope boundaries are explicit: latent modules are separated from production navigation."
     ],
-    ctaLabel: "Request stakeholder pilot",
-    ctaHref:
-      "mailto:partnerships@mindsense.ai?subject=MindSense%20Stakeholder%20Pilot%20Request"
+    ctaLabel: "Request pilot",
+    ctaHref: "mailto:partnerships@mindsense.ai?subject=MindSense%20Stakeholder%20Pilot%20Request"
   },
   investors: {
     kicker: "For investors",
-    title: "Execution depth with visible commercialization path",
+    title: "Execution evidence first, roadmap second.",
     description:
-      "The product already demonstrates disciplined loop design, instrumentation, and platform quality systems, with clear next integration milestones.",
+      "The current build already demonstrates loop discipline, deterministic engines, and instrumentation for diligence.",
     bullets: [
-      "KPI scorecard model tracks activation, retention, session starts, and completion.",
-      "Recommendation and simulation engines are deterministic and test-covered.",
-      "Post-activation paywall and trial narrative exist for monetization progression."
+      "Recommendation, delta, and health-signal simulation engines are implemented and test-covered.",
+      "Post-activation monetization surface exists, while billing integration remains explicitly unshipped.",
+      "Clear milestone path from simulated stack to integrated production services."
     ],
-    ctaLabel: "Open investor channel",
+    ctaLabel: "Investor channel",
     ctaHref: "mailto:investors@mindsense.ai?subject=MindSense%20Investor%20Inquiry"
   }
 };
@@ -627,9 +625,9 @@ if (audienceTabs.length > 0) {
 
   audienceTabs.forEach((tab, index) => {
     tab.addEventListener("click", () => {
-      const audience = tab.dataset.audience;
-      if (audience) {
-        renderAudience(audience);
+      const key = tab.dataset.audience;
+      if (key) {
+        renderAudience(key);
       }
     });
 
@@ -637,135 +635,82 @@ if (audienceTabs.length > 0) {
       if (!["ArrowRight", "ArrowLeft", "Home", "End", "Enter", " "].includes(event.key)) {
         return;
       }
+
       event.preventDefault();
 
       if (event.key === "Enter" || event.key === " ") {
-        const audience = tab.dataset.audience;
-        if (audience) {
-          renderAudience(audience);
+        const key = tab.dataset.audience;
+        if (key) {
+          renderAudience(key);
         }
         return;
       }
 
-      let targetIndex = index;
+      let target = index;
       if (event.key === "ArrowRight") {
-        targetIndex = (index + 1) % audienceTabs.length;
+        target = (index + 1) % audienceTabs.length;
       } else if (event.key === "ArrowLeft") {
-        targetIndex = (index - 1 + audienceTabs.length) % audienceTabs.length;
+        target = (index - 1 + audienceTabs.length) % audienceTabs.length;
       } else if (event.key === "Home") {
-        targetIndex = 0;
+        target = 0;
       } else if (event.key === "End") {
-        targetIndex = audienceTabs.length - 1;
+        target = audienceTabs.length - 1;
       }
 
-      const target = audienceTabs[targetIndex];
-      target.focus();
-      if (target.dataset.audience) {
-        renderAudience(target.dataset.audience);
+      const nextTab = audienceTabs[target];
+      nextTab?.focus();
+      if (nextTab?.dataset.audience) {
+        renderAudience(nextTab.dataset.audience);
       }
     });
   });
 }
 
-const roadmapSteps = Array.from(document.querySelectorAll(".roadmap-step"));
-let roadmapIndex = 0;
-let roadmapIntervalId = null;
-
-const renderRoadmap = (nextIndex) => {
-  if (roadmapSteps.length === 0) {
-    return;
-  }
-
-  roadmapIndex = ((nextIndex % roadmapSteps.length) + roadmapSteps.length) % roadmapSteps.length;
-
-  roadmapSteps.forEach((step, index) => {
-    step.classList.toggle("is-active", index === roadmapIndex);
-  });
-};
-
-if (roadmapSteps.length > 0) {
-  renderRoadmap(0);
-
-  roadmapSteps.forEach((step, index) => {
-    step.addEventListener("mouseenter", () => renderRoadmap(index));
-    step.addEventListener("focusin", () => renderRoadmap(index));
-  });
-
-  if (!prefersReducedMotion && "IntersectionObserver" in window) {
-    const roadmapRoot = document.getElementById("roadmap-shell");
-    if (roadmapRoot) {
-      const roadmapObserver = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) {
-              if (roadmapIntervalId) {
-                window.clearInterval(roadmapIntervalId);
-                roadmapIntervalId = null;
-              }
-              return;
-            }
-
-            if (!roadmapIntervalId) {
-              roadmapIntervalId = window.setInterval(() => renderRoadmap(roadmapIndex + 1), 2600);
-            }
-          });
-        },
-        { threshold: 0.45 }
-      );
-      roadmapObserver.observe(roadmapRoot);
-    }
-  }
-}
-
 const heroStage = document.getElementById("hero-stage");
 if (heroStage && !prefersReducedMotion) {
-  const cards = Array.from(heroStage.querySelectorAll(".phone-card"));
-
+  const phones = Array.from(heroStage.querySelectorAll(".phone"));
   heroStage.addEventListener("pointermove", (event) => {
     const rect = heroStage.getBoundingClientRect();
     const x = (event.clientX - rect.left) / rect.width - 0.5;
     const y = (event.clientY - rect.top) / rect.height - 0.5;
 
-    cards.forEach((card, index) => {
+    phones.forEach((phone, index) => {
       const depth = index + 1;
-      const moveX = x * 10 * depth;
+      const moveX = x * 11 * depth;
       const moveY = y * 8 * depth;
-      card.style.translate = `${moveX}px ${moveY}px`;
+      phone.style.translate = `${moveX}px ${moveY}px`;
     });
   });
 
   heroStage.addEventListener("pointerleave", () => {
-    cards.forEach((card) => {
-      card.style.translate = "0 0";
+    phones.forEach((phone) => {
+      phone.style.translate = "0 0";
     });
   });
 }
 
 const revealNodes = Array.from(document.querySelectorAll(".reveal"));
-
-const setRevealed = (node) => {
-  node.classList.add("is-visible");
-};
+const revealNow = (node) => node.classList.add("is-visible");
 
 if (prefersReducedMotion) {
-  revealNodes.forEach((node) => setRevealed(node));
+  revealNodes.forEach((node) => revealNow(node));
 } else if (window.gsap && window.ScrollTrigger) {
   window.gsap.registerPlugin(window.ScrollTrigger);
 
   window.gsap.from(".hero-copy > *", {
-    y: 18,
+    y: 20,
     opacity: 0,
-    duration: 0.8,
-    stagger: 0.1,
-    ease: "power2.out"
+    duration: 0.82,
+    ease: "power2.out",
+    stagger: 0.1
   });
 
-  window.gsap.from(".hero-stage .phone-card", {
+  window.gsap.from(".hero-stage .phone", {
     y: 26,
     opacity: 0,
-    duration: 0.95,
-    stagger: 0.11,
-    ease: "power3.out"
+    duration: 0.94,
+    ease: "power3.out",
+    stagger: 0.11
   });
 
   revealNodes.forEach((node) => {
@@ -775,7 +720,7 @@ if (prefersReducedMotion) {
       {
         y: 0,
         opacity: 1,
-        duration: 0.7,
+        duration: 0.72,
         ease: "power2.out",
         scrollTrigger: {
           trigger: node,
@@ -792,7 +737,7 @@ if (prefersReducedMotion) {
         if (!entry.isIntersecting) {
           return;
         }
-        setRevealed(entry.target);
+        revealNow(entry.target);
         observer.unobserve(entry.target);
       });
     },
@@ -801,10 +746,10 @@ if (prefersReducedMotion) {
 
   revealNodes.forEach((node) => revealObserver.observe(node));
 } else {
-  revealNodes.forEach((node) => setRevealed(node));
+  revealNodes.forEach((node) => revealNow(node));
 }
 
-const copyrightNode = document.getElementById("copyright");
-if (copyrightNode) {
-  copyrightNode.textContent = `© ${new Date().getFullYear()} MindSense AI. All rights reserved.`;
+const copyright = document.getElementById("copyright");
+if (copyright) {
+  copyright.textContent = `© ${new Date().getFullYear()} MindSense AI. All rights reserved.`;
 }
