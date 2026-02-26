@@ -21,9 +21,7 @@ if (navToggle && nav) {
     navToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
   });
 
-  navLinks.forEach((link) => {
-    link.addEventListener("click", () => closeNav());
-  });
+  navLinks.forEach((link) => link.addEventListener("click", closeNav));
 
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") {
@@ -58,7 +56,6 @@ if ("IntersectionObserver" in window && sectionLinkMap.size > 0) {
         if (!id || !sectionLinkMap.has(id)) {
           return;
         }
-
         if (entry.isIntersecting) {
           sectionLinkMap.forEach((node) => node.removeAttribute("aria-current"));
           sectionLinkMap.get(id)?.setAttribute("aria-current", "page");
@@ -79,153 +76,26 @@ if ("IntersectionObserver" in window && sectionLinkMap.size > 0) {
   });
 }
 
-const personaData = {
-  user: {
-    title: "Nervous-system guidance that turns signals into one clear next action.",
-    copy: "MindSense helps people read current state, run one short protocol, and learn what works over time. The core loop is local-first and trust-forward by design.",
-    primaryCta: {
-      label: "Join waitlist",
-      href: "mailto:hello@mindsense.ai?subject=MindSense%20Waitlist%20Request"
-    },
-    secondaryCta: {
-      label: "Book product walkthrough",
-      href: "mailto:partnerships@mindsense.ai?subject=MindSense%20Product%20Demo%20Request"
-    },
-    tags: ["Local-first runtime", "Sign in with Apple", "Deterministic QA gates"]
-  },
-  stakeholder: {
-    title: "A wellness platform stakeholders can evaluate with clear implementation boundaries.",
-    copy: "MindSense combines user-facing guidance with transparency around confidence, data coverage, and safety framing to support responsible pilots and partner reviews.",
-    primaryCta: {
-      label: "Request stakeholder pilot",
-      href: "mailto:partnerships@mindsense.ai?subject=MindSense%20Stakeholder%20Pilot%20Request"
-    },
-    secondaryCta: {
-      label: "Review governance posture",
-      href: "#evidence"
-    },
-    tags: ["Confidence diagnostics", "Safety escalation framing", "Quality gate evidence"]
-  },
-  investor: {
-    title: "An execution-focused product story with measurable loops and diligence-ready artifacts.",
-    copy: "MindSense is positioned around repeatable behavior loops, deterministic QA instrumentation, and KPI narratives that can be reviewed directly against shipped product flows.",
-    primaryCta: {
-      label: "Contact investor relations",
-      href: "mailto:investors@mindsense.ai?subject=MindSense%20Investor%20Inquiry"
-    },
-    secondaryCta: {
-      label: "Explore KPI evidence",
-      href: "#audiences"
-    },
-    tags: ["Activation + retention KPIs", "Automated screenshot export", "Local-first product posture"]
-  }
-};
-
-const personaButtons = Array.from(document.querySelectorAll(".persona-btn"));
-const personaTitle = document.getElementById("persona-title");
-const personaCopy = document.getElementById("persona-copy");
-const personaPrimaryCta = document.getElementById("persona-primary-cta");
-const personaSecondaryCta = document.getElementById("persona-secondary-cta");
-const personaTags = document.getElementById("persona-tags");
-
-const renderPersona = (personaKey) => {
-  const payload = personaData[personaKey];
-  if (!payload || !personaTitle || !personaCopy || !personaPrimaryCta || !personaSecondaryCta || !personaTags) {
-    return;
-  }
-
-  document.body.setAttribute("data-persona", personaKey);
-
-  personaTitle.textContent = payload.title;
-  personaCopy.textContent = payload.copy;
-
-  personaPrimaryCta.textContent = payload.primaryCta.label;
-  personaPrimaryCta.setAttribute("href", payload.primaryCta.href);
-
-  personaSecondaryCta.textContent = payload.secondaryCta.label;
-  personaSecondaryCta.setAttribute("href", payload.secondaryCta.href);
-
-  const tagNodes = payload.tags.map((item) => {
-    const li = document.createElement("li");
-    li.textContent = item;
-    return li;
-  });
-  personaTags.replaceChildren(...tagNodes);
-};
-
-if (personaButtons.length > 0) {
-  const activatePersona = (nextButton, shouldFocus = false) => {
-    if (!nextButton) {
-      return;
-    }
-
-    personaButtons.forEach((button) => {
-      const active = button === nextButton;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-selected", active ? "true" : "false");
-      if (active && shouldFocus) {
-        button.focus();
-      }
-    });
-
-    const personaKey = nextButton.getAttribute("data-persona");
-    renderPersona(personaKey);
-  };
-
-  const defaultButton = personaButtons.find((node) => node.classList.contains("is-active")) || personaButtons[0];
-  activatePersona(defaultButton, false);
-
-  personaButtons.forEach((button, index) => {
-    button.addEventListener("click", () => activatePersona(button, false));
-
-    button.addEventListener("keydown", (event) => {
-      if (!["ArrowRight", "ArrowLeft", "Home", "End", "Enter", " "].includes(event.key)) {
-        return;
-      }
-
-      event.preventDefault();
-
-      if (event.key === "Enter" || event.key === " ") {
-        activatePersona(button, false);
-        return;
-      }
-
-      let targetIndex = index;
-      if (event.key === "ArrowRight") {
-        targetIndex = (index + 1) % personaButtons.length;
-      } else if (event.key === "ArrowLeft") {
-        targetIndex = (index - 1 + personaButtons.length) % personaButtons.length;
-      } else if (event.key === "Home") {
-        targetIndex = 0;
-      } else if (event.key === "End") {
-        targetIndex = personaButtons.length - 1;
-      }
-
-      activatePersona(personaButtons[targetIndex], true);
-    });
-  });
-}
-
 const loopData = [
   {
     kicker: "Step 1",
-    title: "Read state quickly on Today",
-    copy: "The command deck keeps one primary path visible while preserving confidence context, top drivers, and timeline insights."
+    title: "Today: state and recommendation",
+    copy: "The command deck keeps one action path visible while preserving confidence context and signal diagnostics."
   },
   {
     kicker: "Step 2",
-    title: "Run one protocol in Regulate",
-    copy: "Select, Run, and Record flow guides a short intervention session with timer pacing and reduced navigation noise."
+    title: "Regulate: guided protocol execution",
+    copy: "Users select a ranked protocol, run the timer, and stay in a focused execution flow."
   },
   {
     kicker: "Step 3",
-    title: "Capture immediate impact",
-    copy: "Post-session check-in captures helpfulness and direction so deterministic deltas can adjust state and recommendation quality."
+    title: "Impact capture closes the loop",
+    copy: "Post-session check-in captures perceived effect and updates deterministic model state."
   },
   {
     kicker: "Step 4",
-    title: "Review trends and experiments",
-    copy: "Data surfaces behavior patterns, overlays event context, and supports focused experiments for incremental improvement."
+    title: "Data: trends and experiments",
+    copy: "Trends, overlays, and experiment workspaces support better day-over-day regulation decisions."
   }
 ];
 
@@ -236,7 +106,7 @@ const loopCopy = document.getElementById("loop-copy");
 const loopNextButton = document.getElementById("loop-next");
 
 let loopIndex = 0;
-let loopTimerId = null;
+let loopIntervalId = null;
 
 const renderLoop = (nextIndex) => {
   if (!loopKicker || !loopTitle || !loopCopy || loopStepNodes.length === 0) {
@@ -265,89 +135,43 @@ if (loopStepNodes.length > 0) {
   loopNextButton?.addEventListener("click", () => renderLoop(loopIndex + 1));
 
   if (!prefersReducedMotion && "IntersectionObserver" in window) {
-    const loopObserver = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) {
-            if (loopTimerId) {
-              window.clearInterval(loopTimerId);
-              loopTimerId = null;
+    const loopRoot = document.getElementById("loop-steps");
+    if (loopRoot) {
+      const loopObserver = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+              if (loopIntervalId) {
+                window.clearInterval(loopIntervalId);
+                loopIntervalId = null;
+              }
+              return;
             }
-            return;
-          }
 
-          if (!loopTimerId) {
-            loopTimerId = window.setInterval(() => {
-              renderLoop(loopIndex + 1);
-            }, 5200);
-          }
-        });
-      },
-      { threshold: 0.55 }
-    );
-
-    const stepsRoot = document.getElementById("loop-steps");
-    if (stepsRoot) {
-      loopObserver.observe(stepsRoot);
+            if (!loopIntervalId) {
+              loopIntervalId = window.setInterval(() => renderLoop(loopIndex + 1), 5500);
+            }
+          });
+        },
+        { threshold: 0.55 }
+      );
+      loopObserver.observe(loopRoot);
     }
   }
 }
 
 const surfaceData = {
-  today: {
-    kicker: "Today",
-    image: "./assets/screenshots/optimized/today-660.jpg",
-    srcset:
-      "./assets/screenshots/optimized/today-660.jpg 660w, ./assets/screenshots/optimized/today-990.jpg 990w",
-    alt: "MindSense Today screen",
-    title: "State + one next action",
-    copy: "Today keeps one recommendation dominant while preserving diagnostics, driver context, and timeline evidence.",
+  intro: {
+    kicker: "Intro",
+    image: "./assets/screenshots/optimized/intro-660.jpg",
+    srcset: "./assets/screenshots/optimized/intro-660.jpg 660w, ./assets/screenshots/optimized/intro-990.jpg 990w",
+    alt: "MindSense intro screen",
+    title: "Promise and trust framing",
+    description: "Sets product value and trust posture before authentication.",
     bullets: [
-      "Load, Readiness, Consistency with metric deltas.",
-      "Best-next-step card with rationale and expected effect.",
-      "Timeline, stress-episode details, and quick context capture."
-    ]
-  },
-  regulate: {
-    kicker: "Regulate",
-    image: "./assets/screenshots/optimized/regulate_run-660.jpg",
-    srcset:
-      "./assets/screenshots/optimized/regulate_run-660.jpg 660w, ./assets/screenshots/optimized/regulate_run-990.jpg 990w",
-    alt: "MindSense Regulate run screen",
-    title: "Protocol execution and impact recording",
-    copy: "Regulate uses a three-step execution model: select protocol, run timer, and record perceived impact.",
-    bullets: [
-      "Preset ranking tied to intent mode and recommendation logic.",
-      "Guided timer flow with low-noise interaction model.",
-      "Outcome capture feeds deterministic state updates."
-    ]
-  },
-  data: {
-    kicker: "Data",
-    image: "./assets/screenshots/optimized/data_trends-660.jpg",
-    srcset:
-      "./assets/screenshots/optimized/data_trends-660.jpg 660w, ./assets/screenshots/optimized/data_trends-990.jpg 990w",
-    alt: "MindSense Data trends screen",
-    title: "Patterns, overlays, and comparisons",
-    copy: "Data Trends blends time windows, smoothing, day filters, and event overlays to expose behavior patterns.",
-    bullets: [
-      "7D / 14D / 30D trend windows.",
-      "Check-ins, workouts, and experiments as visual overlays.",
-      "Coverage-aware confidence context for interpretation."
-    ]
-  },
-  history: {
-    kicker: "History",
-    image: "./assets/screenshots/optimized/data_history-660.jpg",
-    srcset:
-      "./assets/screenshots/optimized/data_history-660.jpg 660w, ./assets/screenshots/optimized/data_history-990.jpg 990w",
-    alt: "MindSense Data history screen",
-    title: "Traceable outcome history",
-    copy: "History consolidates sessions, check-ins, and experiment events for attribution and review.",
-    bullets: [
-      "Chronological event stream with metadata context.",
-      "Episode-level details for better pattern interpretation.",
-      "Supports stakeholder reviews of usage quality."
+      "Highlights: status, action, rationale.",
+      "Sign in with Apple entry point.",
+      "Low-friction start into onboarding."
     ]
   },
   onboarding: {
@@ -355,13 +179,54 @@ const surfaceData = {
     image: "./assets/screenshots/optimized/onboarding-660.jpg",
     srcset:
       "./assets/screenshots/optimized/onboarding-660.jpg 660w, ./assets/screenshots/optimized/onboarding-990.jpg 990w",
-    alt: "MindSense Onboarding screen",
+    alt: "MindSense onboarding screen",
     title: "Activation in under 45 seconds",
-    copy: "Onboarding keeps activation tight with required baseline + first check-in steps before entering main tabs.",
+    description: "Required activation path focuses baseline start and first check-in.",
     bullets: [
-      "Step model with deterministic progression.",
-      "Escalation guidance appears on high load values.",
-      "Optional permissions can be completed later in Settings."
+      "Step model: baseline then first check-in.",
+      "Escalation guidance appears on high values.",
+      "Optional permissions can be handled later."
+    ]
+  },
+  today: {
+    kicker: "Today",
+    image: "./assets/screenshots/optimized/today-660.jpg",
+    srcset: "./assets/screenshots/optimized/today-660.jpg 660w, ./assets/screenshots/optimized/today-990.jpg 990w",
+    alt: "MindSense today screen",
+    title: "State and one next action",
+    description: "Today keeps one recommendation dominant with confidence and context available.",
+    bullets: [
+      "Load, Readiness, Consistency cards with deltas.",
+      "Best-next-step recommendation card.",
+      "Timeline, drivers, and quick check-in support."
+    ]
+  },
+  regulate: {
+    kicker: "Regulate",
+    image: "./assets/screenshots/optimized/regulate_run-660.jpg",
+    srcset:
+      "./assets/screenshots/optimized/regulate_run-660.jpg 660w, ./assets/screenshots/optimized/regulate_run-990.jpg 990w",
+    alt: "MindSense regulate screen",
+    title: "Guided intervention execution",
+    description: "Three-step flow: select protocol, run timer, record impact.",
+    bullets: [
+      "Ranked presets by scenario and intent.",
+      "Focused timer run with minimal distraction.",
+      "Outcome capture updates state and history."
+    ]
+  },
+  data: {
+    kicker: "Data",
+    image: "./assets/screenshots/optimized/data_trends-660.jpg",
+    srcset:
+      "./assets/screenshots/optimized/data_trends-660.jpg 660w, ./assets/screenshots/optimized/data_trends-990.jpg 990w",
+    alt: "MindSense data screen",
+    title: "Patterns and experiments",
+    description: "Trends, overlays, and experiments turn behavior into learning.",
+    bullets: [
+      "Time windows with smoothing and filters.",
+      "Event overlays for contextual pattern reading.",
+      "Experiment lifecycle with completion summary."
     ]
   },
   settings: {
@@ -369,13 +234,13 @@ const surfaceData = {
     image: "./assets/screenshots/optimized/settings-660.jpg",
     srcset:
       "./assets/screenshots/optimized/settings-660.jpg 660w, ./assets/screenshots/optimized/settings-990.jpg 990w",
-    alt: "MindSense Settings screen",
+    alt: "MindSense settings screen",
     title: "Privacy, notifications, and safety controls",
-    copy: "Settings centralizes policy links, signal-source preferences, quiet hours, motion, and account access.",
+    description: "Settings centralizes operational preferences and trust controls.",
     bullets: [
-      "Privacy/data control pathways and health-permission entry.",
-      "Notification preferences with quiet-hours scheduling.",
-      "Safety actions including crisis shortcut context."
+      "Privacy and data pathways.",
+      "Notification, quiet-hours, and motion controls.",
+      "Safety and account actions."
     ]
   }
 };
@@ -384,13 +249,13 @@ const surfaceTabs = Array.from(document.querySelectorAll(".surface-tab"));
 const surfaceImage = document.getElementById("surface-image");
 const surfaceKicker = document.getElementById("surface-kicker");
 const surfaceTitle = document.getElementById("surface-title");
-const surfaceCopy = document.getElementById("surface-copy");
+const surfaceDescription = document.getElementById("surface-description");
 const surfaceBullets = document.getElementById("surface-bullets");
 const surfacePanel = document.getElementById("surface-panel");
 
 const renderSurface = (key) => {
   const payload = surfaceData[key];
-  if (!payload || !surfaceImage || !surfaceKicker || !surfaceTitle || !surfaceCopy || !surfaceBullets) {
+  if (!payload || !surfaceImage || !surfaceKicker || !surfaceTitle || !surfaceDescription || !surfaceBullets) {
     return;
   }
 
@@ -399,7 +264,7 @@ const renderSurface = (key) => {
   surfaceImage.alt = payload.alt;
   surfaceKicker.textContent = payload.kicker;
   surfaceTitle.textContent = payload.title;
-  surfaceCopy.textContent = payload.copy;
+  surfaceDescription.textContent = payload.description;
 
   const bulletNodes = payload.bullets.map((item) => {
     const li = document.createElement("li");
@@ -480,7 +345,7 @@ const setMetricFinalValues = () => {
 
 const animateCounter = (node) => {
   const max = Number(node.getAttribute("data-count") || 0);
-  if (!window.gsap || prefersReducedMotion) {
+  if (prefersReducedMotion || !window.gsap) {
     node.textContent = String(max);
     return;
   }
@@ -488,7 +353,7 @@ const animateCounter = (node) => {
   const tracker = { value: 0 };
   window.gsap.to(tracker, {
     value: max,
-    duration: 1,
+    duration: 1.05,
     ease: "power2.out",
     onUpdate: () => {
       node.textContent = String(Math.round(tracker.value));
@@ -497,7 +362,7 @@ const animateCounter = (node) => {
 };
 
 if ("IntersectionObserver" in window) {
-  const metricObserver = new IntersectionObserver(
+  const counterObserver = new IntersectionObserver(
     (entries, observer) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
@@ -509,27 +374,13 @@ if ("IntersectionObserver" in window) {
     { threshold: 0.5 }
   );
 
-  metrics.forEach((metric) => metricObserver.observe(metric));
+  metrics.forEach((metric) => counterObserver.observe(metric));
 } else {
   setMetricFinalValues();
 }
 
-const ambientOrbs = Array.from(document.querySelectorAll(".ambient-orb"));
-if (!prefersReducedMotion && ambientOrbs.length > 0) {
-  window.addEventListener("pointermove", (event) => {
-    const x = event.clientX / Math.max(window.innerWidth, 1);
-    const y = event.clientY / Math.max(window.innerHeight, 1);
-
-    ambientOrbs.forEach((orb, index) => {
-      const depth = (index + 1) * 8;
-      const moveX = (x - 0.5) * depth;
-      const moveY = (y - 0.5) * depth;
-      orb.style.transform = `translate(${moveX.toFixed(2)}px, ${moveY.toFixed(2)}px)`;
-    });
-  });
-}
-
 const revealNodes = document.querySelectorAll(".reveal");
+
 if (prefersReducedMotion || !window.gsap || !window.ScrollTrigger) {
   revealNodes.forEach((node) => {
     node.style.opacity = "1";
@@ -538,42 +389,26 @@ if (prefersReducedMotion || !window.gsap || !window.ScrollTrigger) {
 } else {
   window.gsap.registerPlugin(window.ScrollTrigger);
 
-  window.gsap.to(".shot-card-a", {
-    y: -11,
-    duration: 3.4,
-    repeat: -1,
-    yoyo: true,
-    ease: "sine.inOut"
-  });
-
-  window.gsap.to(".shot-card-b", {
-    y: 9,
-    duration: 3.8,
-    repeat: -1,
-    yoyo: true,
-    ease: "sine.inOut"
-  });
-
-  window.gsap.to(".shot-card-c", {
+  window.gsap.to(".hero-phone", {
     y: -8,
-    duration: 3.2,
+    duration: 3.6,
+    ease: "sine.inOut",
     repeat: -1,
-    yoyo: true,
-    ease: "sine.inOut"
+    yoyo: true
   });
 
   window.gsap.utils.toArray(".reveal").forEach((element) => {
     window.gsap.fromTo(
       element,
-      { opacity: 0, y: 24 },
+      { opacity: 0, y: 20 },
       {
         opacity: 1,
         y: 0,
-        duration: 0.8,
+        duration: 0.72,
         ease: "power2.out",
         scrollTrigger: {
           trigger: element,
-          start: "top 84%"
+          start: "top 86%"
         }
       }
     );

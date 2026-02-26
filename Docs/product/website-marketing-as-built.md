@@ -1,6 +1,6 @@
 # MindSense Marketing Website (As Built)
 
-Version: 2.0
+Version: 2.1
 Date: February 26, 2026
 
 ## Purpose
@@ -25,13 +25,13 @@ Goals of the current site:
 
 The page is intentionally sequenced for comprehension and conversion:
 
-1. Hero with audience switcher (`Users`, `Stakeholders`, `Investors`)
-2. Positioning section (problem/solution framing)
+1. Hero narrative with primary conversion CTAs
+2. Proof strip with key product/runtime counters
 3. Workflow simulator (state -> regulate -> impact -> learn)
 4. Interactive main-surface explorer (tabbed)
-5. Full screenshot gallery by app section
+5. Horizontal screenshot filmstrip by app section
 6. Audience paths for users, stakeholders, and investors
-7. Product evidence section (QA/tests/docs posture)
+7. Trust + quality posture section
 8. FAQ and safety boundaries
 9. Contact conversion section
 10. Footer with trust links and support channels
@@ -59,11 +59,10 @@ Image sources:
 
 - Mobile nav menu with ARIA state and keyboard close behavior.
 - Active-section nav highlighting via `IntersectionObserver`.
-- Persona switcher updates headline/CTA/tags and visual accent direction.
 - Loop simulator with manual and optional auto-advance.
 - Keyboard-accessible surface tabs with dynamic panel updates.
 - Animated metric counters with reduced-motion fallback.
-- Scroll reveal and hero floating motion (GSAP + ScrollTrigger with graceful fallback).
+- Scroll reveal and restrained hero motion (GSAP + ScrollTrigger with graceful fallback).
 
 ## Audience Messaging Guardrails
 
