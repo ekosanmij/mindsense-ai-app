@@ -418,6 +418,14 @@ section[id] {
   max-width: 24ch;
 }
 
+.section-copy {
+  margin-top: 10px;
+  max-width: 74ch;
+  color: var(--text-secondary);
+  font-size: 0.94rem;
+  line-height: 1.56;
+}
+
 .loop-layout,
 .surface-layout,
 .trust-layout {
@@ -638,6 +646,15 @@ section[id] {
 
 .trust-card h3 {
   font-size: 1.1rem;
+}
+
+.trust-card code {
+  font-family: "SF Mono", "Menlo", ui-monospace, monospace;
+  font-size: 0.82em;
+  background: var(--surface-base);
+  border: 1px solid var(--stroke-subtle);
+  border-radius: var(--radius-tight);
+  padding: 1px 5px;
 }
 
 .faq-grid {
