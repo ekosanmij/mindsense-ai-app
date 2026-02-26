@@ -4,6 +4,7 @@ struct SettingsView: View {
     @EnvironmentObject private var store: MindSenseStore
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var accessibilityReduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     @AppStorage("appearanceMode") private var appearanceMode = AppearanceMode.system.rawValue
     @AppStorage("appReduceMotion") private var appReduceMotion = false
@@ -170,146 +171,205 @@ struct SettingsView: View {
     }
 
     private var settingsList: some View {
-        List {
-            healthDataSection
-                .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
-            profileSection
-                .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
-            notificationSection
-                .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
-            appearanceSection
-                .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
-            safetySection
-                .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
-            accountSection
-                .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
+        ScrollView {
+            VStack(spacing: MindSenseRhythm.section) {
+                profileSection
+                    .mindSenseStaggerEntrance(0, isPresented: didAppear, reduceMotion: reduceMotion)
+                healthDataSection
+                    .mindSenseStaggerEntrance(1, isPresented: didAppear, reduceMotion: reduceMotion)
+                notificationSection
+                    .mindSenseStaggerEntrance(2, isPresented: didAppear, reduceMotion: reduceMotion)
+                appearanceSection
+                    .mindSenseStaggerEntrance(3, isPresented: didAppear, reduceMotion: reduceMotion)
+                safetySection
+                    .mindSenseStaggerEntrance(4, isPresented: didAppear, reduceMotion: reduceMotion)
+                accountSection
+                    .mindSenseStaggerEntrance(5, isPresented: didAppear, reduceMotion: reduceMotion)
+            }
+            .mindSensePageInsets()
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
+    }
+
+    private var autosaveStatusText: String {
+        autosaveNotice.isEmpty ? "Preferences save automatically." : autosaveNotice
+    }
+
+    private var nudgesEnabledCount: Int {
+        [gentlePrompts, weeklyReview, stressNudge, recoveryWindow].filter { $0 }.count
+    }
+
+    private var appearanceChipText: String {
+        "Theme \(appearanceBinding.wrappedValue.title)"
+    }
+
+    private var motionChipText: String {
+        "Motion \(appReduceMotion ? "Reduced" : "Standard")"
+    }
+
+    private var nudgeChipText: String {
+        "Nudges \(nudgesEnabledCount)/4"
+    }
+
+    private var quietHoursChipText: String {
+        quietHoursEnabled ? "Quiet hours On" : "Quiet hours Off"
     }
 
     private var profileSection: some View {
-        Section {
-            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
-                HStack(spacing: MindSenseSpacing.xs) {
-                    Image(systemName: "person.crop.circle.fill")
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .foregroundStyle(MindSensePalette.signalCoolStrong)
-                    Text(store.userDisplayName)
-                        .font(MindSenseTypography.bodyStrong)
-                        .foregroundStyle(.primary)
-                    Spacer()
-                }
+        FocusSurface {
+            settingsModuleHeader(
+                title: "Settings control center",
+                subtitle: "Personal preferences, signal behavior, and trust controls.",
+                icon: "gearshape.2"
+            )
 
-                Text(
-                    autosaveNotice.isEmpty
-                        ? "Preferences save automatically."
-                        : autosaveNotice
-                )
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-                Button {
-                    store.showBanner(
-                        title: "Recommended next step",
-                        detail: "Review notification settings for quiet hours and stress nudges.",
-                        severity: .info
+            settingsInfoPanel {
+                HStack(alignment: .center, spacing: MindSenseSpacing.sm) {
+                    MindSenseIconBadge(
+                        systemName: "person.crop.circle.fill",
+                        tint: MindSensePalette.signalCoolStrong,
+                        style: .filled,
+                        size: MindSenseControlSize.profileBadge
                     )
-                    store.triggerHaptic(intent: .selection)
-                } label: {
-                    HStack(spacing: MindSenseSpacing.sm) {
-                        Image(systemName: "bell.badge.fill")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
-                            .foregroundStyle(MindSensePalette.signalCoolStrong)
-                            .frame(width: 20)
-                        Text("Recommended: Review notifications")
+
+                    VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+                        Text(store.userDisplayName)
+                            .font(MindSenseTypography.bodyStrong)
+                            .foregroundStyle(.primary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Profile and preference defaults")
                             .font(MindSenseTypography.caption)
                             .foregroundStyle(.secondary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .frame(minHeight: MindSenseControlSize.minimumTapTarget)
+
+                    Spacer(minLength: MindSenseSpacing.xs)
+
+                    settingsStatusChip(
+                        title: autosaveNotice.isEmpty ? "Auto-save" : "Saved",
+                        icon: autosaveNotice.isEmpty ? "checkmark.circle" : "checkmark.circle.fill",
+                        tint: MindSensePalette.signalCoolStrong
+                    )
+                    .fixedSize()
                 }
-                .buttonStyle(.plain)
+
+                Text(autosaveStatusText)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(autosaveNotice.isEmpty ? .secondary : MindSensePalette.signalCoolStrong)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.vertical, MindSenseSpacing.xs)
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-        } header: {
-            settingsSectionHeader("Profile", icon: "person.crop.circle")
+
+            if !dynamicTypeSize.isAccessibilitySize {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: MindSenseSpacing.xs) {
+                        settingsStatusChip(title: appearanceChipText, icon: "paintbrush", tint: MindSensePalette.signalCoolStrong)
+                        settingsStatusChip(title: motionChipText, icon: "figure.walk", tint: MindSensePalette.signalCool)
+                        settingsStatusChip(title: nudgeChipText, icon: "bell.badge", tint: MindSensePalette.signalCoolStrong)
+                        settingsStatusChip(title: quietHoursChipText, icon: "moon.zzz", tint: quietHoursEnabled ? MindSensePalette.warning : MindSensePalette.signalCool)
+                    }
+                    .padding(.vertical, 1)
+                }
+                .accessibilityLabel("Settings status summary")
+            }
+
+            Button {
+                store.showBanner(
+                    title: "Recommended next step",
+                    detail: "Review notification settings for quiet hours and stress nudges.",
+                    severity: .info
+                )
+                store.triggerHaptic(intent: .selection)
+            } label: {
+                Label("Recommended: Review notifications", systemImage: "bell.badge.fill")
+            }
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary))
         }
     }
 
     private var accountSection: some View {
-        Section {
-            settingsRow(
-                title: "Sign out",
-                icon: "rectangle.portrait.and.arrow.right",
-                tint: MindSensePalette.critical
-            ) {
-                store.signOut()
+        InsetSurface {
+            settingsModuleHeader(
+                title: "Account and access",
+                subtitle: "Session access and account-level actions.",
+                icon: "person.badge.key"
+            )
+
+            settingsInfoPanel(spacing: MindSenseSpacing.xxxs) {
+                Text("Sign out is separate from data controls so privacy and export actions remain easy to find above.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-        } header: {
-            settingsSectionHeader("Account and access", icon: "person.badge.key")
+
+            settingsCluster {
+                settingsRow(
+                    title: "Sign out",
+                    icon: "rectangle.portrait.and.arrow.right",
+                    tint: MindSensePalette.critical,
+                    showsDisclosure: false
+                ) {
+                    store.signOut()
+                }
+            }
         }
     }
 
     private var healthDataSection: some View {
-        Section {
-            settingsRow(title: "Privacy policy", icon: "lock.shield") {
-                guard let url = URL(string: privacyPolicyURLString) else {
-                    store.showBanner(
-                        title: "Privacy policy unavailable",
-                        detail: "The privacy policy link is not configured correctly yet. Please try again later.",
-                        severity: .warning
-                    )
-                    return
-                }
-                openURL(url)
-            }
-            .accessibilityIdentifier("settings_privacy_policy_row")
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-
-            settingsRow(title: "Data export and delete", icon: "tray.and.arrow.down") {
-                store.showBanner(title: "Data controls", detail: "Export and delete workflows can be connected here.", severity: .info)
-            }
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-
-            NavigationLink {
-                AppleHealthPermissionsView()
-            } label: {
-                settingsRowLabel(title: "Apple Health permissions", icon: "waveform.path.ecg")
-            }
-            .buttonStyle(.plain)
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-
-            settingsToggleRow(
-                title: "Use meeting/call signals",
-                subtitle: "Allow Calendar and calls metadata to influence Top drivers ranking.",
-                isOn: meetingCallSignalsBinding
+        FocusSurface {
+            settingsModuleHeader(
+                title: "Privacy and data",
+                subtitle: "Trust-first controls for local data access, export, and signal-source behavior.",
+                icon: "heart.text.square"
             )
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
+
+            settingsCluster {
+                settingsRow(title: "Privacy policy", icon: "lock.shield") {
+                    guard let url = URL(string: privacyPolicyURLString) else {
+                        store.showBanner(
+                            title: "Privacy policy unavailable",
+                            detail: "The privacy policy link is not configured correctly yet. Please try again later.",
+                            severity: .warning
+                        )
+                        return
+                    }
+                    openURL(url)
+                }
+                .accessibilityIdentifier("settings_privacy_policy_row")
+
+                settingsClusterDivider()
+
+                settingsRow(title: "Data export and delete", icon: "tray.and.arrow.down") {
+                    store.showBanner(title: "Data controls", detail: "Export and delete workflows can be connected here.", severity: .info)
+                }
+
+                settingsClusterDivider()
+
+                NavigationLink {
+                    AppleHealthPermissionsView()
+                } label: {
+                    settingsRowLabel(title: "Apple Health permissions", icon: "waveform.path.ecg")
+                }
+                .buttonStyle(.plain)
+            }
+
+            settingsSubgroupLabel(
+                "Signal sources",
+                subtitle: "Metadata-only calendar and call volume can optionally influence Top drivers ranking."
+            )
+
+            settingsCluster {
+                settingsToggleRow(
+                    title: "Use meeting/call signals",
+                    subtitle: "Allow Calendar and calls metadata to influence Top drivers ranking.",
+                    isOn: meetingCallSignalsBinding
+                )
+            }
 
             meetingCallSignalsContextRow
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-        } header: {
-            settingsSectionHeader("Privacy and data", icon: "heart.text.square")
         }
     }
 
     private var meetingCallSignalsContextRow: some View {
-        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+        settingsInfoPanel {
             HStack(spacing: MindSenseSpacing.xs) {
                 Image(systemName: meetingCallSignalsStateIcon)
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
@@ -329,133 +389,157 @@ struct SettingsView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, MindSenseSpacing.sm)
-        .padding(.vertical, MindSenseSpacing.xs)
-        .background(
-            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                .fill(MindSenseSurfaceLevel.base.fill)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(meetingCallSignalsStateTitle). Uses calendar busy windows and call-volume metadata for Top drivers ranking. Does not use event titles, participant names, contact names, or message content.")
     }
 
     private var notificationSection: some View {
-        Section {
-            settingsSubgroupLabel("Guidance nudges")
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-
-            settingsToggleRow(title: "Gentle nudges", subtitle: "Low-friction nudges before likely high-load windows.", isOn: $gentlePrompts)
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-            settingsToggleRow(title: "Weekly review", subtitle: "Prompt to review trend and experiment quality.", isOn: $weeklyReview)
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-            settingsToggleRow(title: "Smart stress nudge", subtitle: "Offer a 3-minute downshift when a stress episode is detected.", isOn: $stressNudge)
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-            settingsToggleRow(title: "Recovery window", subtitle: "Notify when physiology stabilizes for a deep-work window.", isOn: $recoveryWindow)
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-
-            settingsSubgroupLabel("System behavior")
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-
-            settingsToggleRow(
-                title: "Battery friendly mode",
-                subtitle: batteryFriendlyModeSubtitle,
-                isOn: $batteryFriendlyMode
+        InsetSurface {
+            settingsModuleHeader(
+                title: "Notifications",
+                subtitle: "Tune nudges, quiet windows, and battery-aware behavior with clearer groups.",
+                icon: "bell.badge"
             )
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
 
-            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
-                Text(store.batteryFriendlyModeStatusLine)
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+            settingsSubgroupLabel(
+                "Guidance nudges",
+                subtitle: "Choose which proactive prompts MindSense can surface."
+            )
 
-                if batteryFriendlyMode {
-                    Text("Applies only while iPhone Low Power Mode is on. Manual resync and user-started reminders are still available.")
-                        .font(MindSenseTypography.micro)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+            settingsCluster {
+                settingsToggleRow(title: "Gentle nudges", subtitle: "Low-friction nudges before likely high-load windows.", isOn: $gentlePrompts)
+                settingsClusterDivider()
+                settingsToggleRow(title: "Weekly review", subtitle: "Prompt to review trend and experiment quality.", isOn: $weeklyReview)
+                settingsClusterDivider()
+                settingsToggleRow(title: "Smart stress nudge", subtitle: "Offer a 3-minute downshift when a stress episode is detected.", isOn: $stressNudge)
+                settingsClusterDivider()
+                settingsToggleRow(title: "Recovery window", subtitle: "Notify when physiology stabilizes for a deep-work window.", isOn: $recoveryWindow)
+            }
+
+            settingsSubgroupLabel(
+                "System behavior",
+                subtitle: "Low Power Mode handling and refresh efficiency."
+            )
+
+            settingsCluster {
+                settingsToggleRow(
+                    title: "Battery friendly mode",
+                    subtitle: batteryFriendlyModeSubtitle,
+                    isOn: $batteryFriendlyMode
+                )
+                settingsClusterDivider()
+                batteryFriendlyModeStatusRow
+            }
+
+            settingsSubgroupLabel(
+                "Quiet hours",
+                subtitle: "Protect a no-nudge window and set the active time range."
+            )
+
+            settingsCluster {
+                settingsToggleRow(
+                    title: "Quiet hours",
+                    subtitle: "Pause nudges during your protected time window.",
+                    isOn: $quietHoursEnabled
+                )
+
+                if quietHoursEnabled {
+                    settingsClusterDivider()
+                    quietHoursRow
+                        .padding(.horizontal, MindSenseSpacing.sm)
+                        .padding(.bottom, MindSenseSpacing.sm)
                 }
             }
-            .padding(.horizontal, MindSenseSpacing.sm)
-            .padding(.vertical, MindSenseSpacing.xs)
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-
-            settingsSubgroupLabel("Quiet hours")
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-
-            settingsToggleRow(
-                title: "Quiet hours",
-                subtitle: "Pause nudges during your protected time window.",
-                isOn: $quietHoursEnabled
-            )
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-
-            if quietHoursEnabled {
-                quietHoursRow
-                    .listRowInsets(settingsRowInsets)
-                    .listRowBackground(Color.clear)
-            }
-        } header: {
-            settingsSectionHeader("Notifications", icon: "bell.badge")
         }
     }
 
-    private var quietHoursRow: some View {
-        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
-            Text("Active \(quietHoursLabel)")
+    private var batteryFriendlyModeStatusRow: some View {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+            Text(store.batteryFriendlyModeStatusLine)
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            HStack(spacing: MindSenseSpacing.sm) {
-                quietTimePicker(title: "Start", selection: quietStartBinding)
-                quietTimePicker(title: "End", selection: quietEndBinding)
+            if batteryFriendlyMode {
+                Text("Applies only while iPhone Low Power Mode is on. Manual resync and user-started reminders are still available.")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, MindSenseSpacing.xxxs)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.sm)
+    }
+
+    private var quietHoursRow: some View {
+        settingsInfoPanel(spacing: MindSenseSpacing.sm) {
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+                Text("Active \(quietHoursLabel)")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text("Nudges remain paused during this window while user-started reminders stay available.")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Group {
+                if dynamicTypeSize.isAccessibilitySize {
+                    VStack(spacing: MindSenseSpacing.sm) {
+                        quietTimePicker(title: "Start", selection: quietStartBinding)
+                        quietTimePicker(title: "End", selection: quietEndBinding)
+                    }
+                } else {
+                    HStack(spacing: MindSenseSpacing.sm) {
+                        quietTimePicker(title: "Start", selection: quietStartBinding)
+                        quietTimePicker(title: "End", selection: quietEndBinding)
+                    }
+                }
+            }
+        }
+        .padding(.top, MindSenseSpacing.xxxs)
     }
 
     private var appearanceSection: some View {
-        Section {
-            appearanceMotionSemanticsRow
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-
-            MindSenseSegmentedControl(
-                options: AppearanceMode.allCases,
-                selection: appearanceBinding,
-                title: { $0.title }
+        InsetSurface {
+            settingsModuleHeader(
+                title: "Appearance and motion",
+                subtitle: "Theme, animation intensity, and tactile feedback in one coherent preference group.",
+                icon: "paintbrush"
             )
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
 
-            settingsToggleRow(title: "Reduce motion", subtitle: "Lower animation amplitude throughout the app. Also follows iOS Reduce Motion.", isOn: $appReduceMotion)
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-            settingsToggleRow(title: "Haptics", subtitle: "Tactile confirmation for key actions and completions. iOS System Haptics off will suppress output.", isOn: $enableHaptics)
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-        } header: {
-            settingsSectionHeader("Appearance and motion", icon: "paintbrush")
+            settingsSubgroupLabel(
+                "Theme",
+                subtitle: "Follow iPhone appearance or lock a specific app theme."
+            )
+
+            settingsInfoPanel {
+                MindSenseSegmentedControl(
+                    options: AppearanceMode.allCases,
+                    selection: appearanceBinding,
+                    title: { $0.title }
+                )
+            }
+
+            settingsSubgroupLabel(
+                "Motion and feedback",
+                subtitle: "Animation intensity harmonizes with iOS Reduce Motion; haptics confirm key actions."
+            )
+
+            appearanceMotionSemanticsRow
+
+            settingsCluster {
+                settingsToggleRow(title: "Reduce motion", subtitle: "Lower animation amplitude throughout the app. Also follows iOS Reduce Motion.", isOn: $appReduceMotion)
+                settingsClusterDivider()
+                settingsToggleRow(title: "Haptics", subtitle: "Tactile confirmation for key actions and completions. iOS System Haptics off will suppress output.", isOn: $enableHaptics)
+            }
         }
     }
 
     private var appearanceMotionSemanticsRow: some View {
-        VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+        settingsInfoPanel {
             Text("Theme controls visual appearance. Motion controls animation intensity and follows iOS Reduce Motion.")
                 .font(MindSenseTypography.caption)
                 .foregroundStyle(.secondary)
@@ -471,8 +555,99 @@ struct SettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+        .accessibilityElement(children: .combine)
+    }
+
+    private var safetySection: some View {
+        InsetSurface {
+            settingsModuleHeader(
+                title: "Safety and support",
+                subtitle: "Quick access to support pathways and guidance without replacing emergency care.",
+                icon: "cross.case"
+            )
+
+            settingsCluster {
+                settingsRow(title: "Crisis resources (US 988)", icon: "phone.fill", tint: MindSensePalette.warning, haptic: .warning) {
+                    if let tel = URL(string: "tel://988") {
+                        openURL(tel)
+                    }
+                }
+
+                settingsClusterDivider()
+
+                settingsRow(title: "Safety guidelines", icon: "exclamationmark.shield") {
+                    store.showBanner(title: "Safety guidelines", detail: "Use support channels and personal boundaries that keep you safe.", severity: .info)
+                }
+            }
+
+            settingsInfoPanel(spacing: MindSenseSpacing.xxxs) {
+                Text("MindSense provides wellness support and does not replace emergency services.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func settingsModuleHeader(
+        title: String,
+        subtitle: String,
+        icon: String,
+        tint: Color = MindSensePalette.signalCoolStrong
+    ) -> some View {
+        MindSenseSectionHeader(
+            model: .init(
+                title: title,
+                subtitle: subtitle,
+                icon: icon,
+                iconTint: tint
+            )
+        )
+    }
+
+    private func settingsSubgroupLabel(_ title: String, subtitle: String? = nil) -> some View {
+        VStack(alignment: .leading, spacing: subtitle == nil ? 0 : 2) {
+            Text(title.uppercased())
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .tracking(0.75)
+
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func settingsCluster<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            content()
+        }
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tile, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+    }
+
+    private func settingsClusterDivider() -> some View {
+        MindSenseSectionDivider(inset: MindSenseSpacing.sm)
+    }
+
+    private func settingsInfoPanel<Content: View>(
+        spacing: CGFloat = MindSenseSpacing.xs,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: spacing) {
+            content()
+        }
         .padding(.horizontal, MindSenseSpacing.sm)
-        .padding(.vertical, MindSenseSpacing.xs)
+        .padding(.vertical, MindSenseSpacing.sm)
         .background(
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .fill(MindSenseSurfaceLevel.base.fill)
@@ -481,64 +656,30 @@ struct SettingsView: View {
             RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
                 .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
         )
-        .accessibilityElement(children: .combine)
     }
 
-    private var safetySection: some View {
-        Section {
-            settingsRow(title: "Crisis resources (US 988)", icon: "phone.fill", haptic: .warning) {
-                if let tel = URL(string: "tel://988") {
-                    openURL(tel)
-                }
-            }
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-            .tint(MindSensePalette.warning)
-
-            settingsRow(title: "Safety guidelines", icon: "exclamationmark.shield") {
-                store.showBanner(title: "Safety guidelines", detail: "Use support channels and personal boundaries that keep you safe.", severity: .info)
-            }
-            .listRowInsets(settingsRowInsets)
-            .listRowBackground(Color.clear)
-
-            Text("MindSense provides wellness support and does not replace emergency services.")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .listRowInsets(settingsRowInsets)
-                .listRowBackground(Color.clear)
-        } header: {
-            settingsSectionHeader("Safety", icon: "cross.case")
-        }
-    }
-
-    private var settingsRowInsets: EdgeInsets {
-        EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16)
-    }
-
-    private func settingsSectionHeader(_ title: String, icon: String) -> some View {
-        HStack(spacing: MindSenseSpacing.xs) {
-            MindSenseIconBadge(
-                systemName: icon,
-                tint: MindSensePalette.signalCoolStrong,
-                style: .muted,
-                size: 20
-            )
-            Text(title.uppercased())
+    private func settingsStatusChip(title: String, icon: String, tint: Color) -> some View {
+        HStack(spacing: MindSenseSpacing.xxxs) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .foregroundStyle(tint)
+                .accessibilityHidden(true)
+            Text(title)
                 .font(MindSenseTypography.micro)
                 .foregroundStyle(.secondary)
-                .tracking(0.85)
+                .lineLimit(1)
         }
-        .padding(.bottom, 2)
-    }
-
-    private func settingsSubgroupLabel(_ title: String) -> some View {
-        Text(title.uppercased())
-            .font(MindSenseTypography.micro)
-            .foregroundStyle(.secondary)
-            .tracking(0.75)
-            .padding(.horizontal, MindSenseSpacing.sm)
-            .padding(.top, 2)
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .frame(minHeight: 32)
+        .background(
+            Capsule(style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
     }
 
     private func autosaveSetting(_ notice: String) {
@@ -556,13 +697,14 @@ struct SettingsView: View {
         icon: String,
         tint: Color = MindSensePalette.accent,
         haptic: MindSenseHapticIntent = .primary,
+        showsDisclosure: Bool = true,
         action: @escaping () -> Void
     ) -> some View {
         Button {
             store.triggerHaptic(intent: haptic)
             action()
         } label: {
-            settingsRowLabel(title: title, icon: icon, tint: tint)
+            settingsRowLabel(title: title, icon: icon, tint: tint, showsDisclosure: showsDisclosure)
         }
         .buttonStyle(.plain)
     }
@@ -570,25 +712,32 @@ struct SettingsView: View {
     private func settingsRowLabel(
         title: String,
         icon: String,
-        tint: Color = MindSensePalette.accent
+        tint: Color = MindSensePalette.accent,
+        showsDisclosure: Bool = true
     ) -> some View {
         HStack(spacing: MindSenseSpacing.sm) {
             Image(systemName: icon)
                 .font(.system(size: settingsIconSize, weight: .semibold, design: .rounded))
                 .foregroundStyle(tint)
                 .frame(width: 20)
+
             Text(title)
                 .font(MindSenseTypography.bodyStrong)
                 .foregroundStyle(.primary)
                 .fixedSize(horizontal: false, vertical: true)
-            Spacer()
-            Image(systemName: "chevron.right")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
+
+            Spacer(minLength: MindSenseSpacing.xs)
+
+            if showsDisclosure {
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(minHeight: settingsRowMinHeight)
         .padding(.horizontal, MindSenseSpacing.sm)
         .padding(.vertical, MindSenseSpacing.xs)
+        .contentShape(Rectangle())
     }
 
     private func settingsToggleRow(title: String, subtitle: String, isOn: Binding<Bool>) -> some View {
@@ -596,13 +745,17 @@ struct SettingsView: View {
             VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
                 Text(title)
                     .font(MindSenseTypography.bodyStrong)
+                    .foregroundStyle(.primary)
+
                 Text(subtitle)
                     .font(MindSenseTypography.caption)
                     .foregroundStyle(.secondary)
-                    .lineLimit(3)
+                    .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 3)
                     .fixedSize(horizontal: false, vertical: true)
             }
+
             Spacer(minLength: 12)
+
             Toggle("", isOn: isOn)
                 .labelsHidden()
                 .tint(MindSensePalette.signalCool)
@@ -611,7 +764,7 @@ struct SettingsView: View {
         }
         .frame(minHeight: settingsToggleRowMinHeight, alignment: .leading)
         .padding(.horizontal, MindSenseSpacing.sm)
-        .padding(.vertical, MindSenseSpacing.xs)
+        .padding(.vertical, MindSenseSpacing.sm)
     }
 
     private var batteryFriendlyModeSubtitle: String {

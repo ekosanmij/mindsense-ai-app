@@ -347,7 +347,7 @@ enum MindSenseLayout {
 
         let baseOffset = max(0, measuredOverlay - safeAreaInset)
         let compactThreshold = floatingTabBarCompactClearance + MindSenseSpacing.xs
-        let visualGap = measuredOverlay <= compactThreshold ? MindSenseSpacing.xs : MindSenseSpacing.xxs
+        let visualGap = measuredOverlay <= compactThreshold ? MindSenseSpacing.sm : MindSenseSpacing.xs
         return baseOffset + visualGap
     }
 }

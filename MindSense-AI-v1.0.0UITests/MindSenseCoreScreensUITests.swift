@@ -592,12 +592,32 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
         attachSnapshot(named: "\(prefix)_today")
 
-        app.tabBars.buttons["Regulate"].tap()
-        XCTAssertTrue(app.buttons["regulate_primary_cta"].waitForExistence(timeout: 3))
+        tapTab(named: "Regulate", in: app)
+        let regulateCTA = firstExistingButton(
+            in: app,
+            identifiers: [
+                "regulate_start_cta",
+                "regulate_primary_cta",
+                "regulate_complete_now_cta",
+                "regulate_outcome_submit_cta"
+            ],
+            timeout: 3
+        )
+        XCTAssertNotNil(regulateCTA, "Regulate should expose a primary CTA or active session CTA.")
         attachSnapshot(named: "\(prefix)_regulate")
 
-        app.tabBars.buttons["Data"].tap()
-        XCTAssertTrue(app.buttons["data_primary_cta"].waitForExistence(timeout: 3))
+        tapTab(named: "Data", in: app)
+        let dataCTA = firstExistingButton(
+            in: app,
+            identifiers: [
+                "data_hero_primary_cta",
+                "data_primary_cta",
+                "data_log_day_cta",
+                "data_complete_experiment_cta"
+            ],
+            timeout: 3
+        )
+        XCTAssertNotNil(dataCTA, "Data should expose a primary next-step CTA.")
         attachSnapshot(named: "\(prefix)_data")
 
         app.buttons["Profile and access"].tap()

@@ -906,27 +906,34 @@ struct MindSenseBottomActionDock<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MindSenseSpacing.md)
-        .padding(.top, MindSenseSpacing.sm)
-        .padding(.bottom, MindSenseSpacing.sm)
+        .padding(.top, compactTabBarPresentation ? MindSenseSpacing.sm : MindSenseSpacing.md)
+        .padding(.bottom, compactTabBarPresentation ? MindSenseSpacing.sm : MindSenseSpacing.md)
         .background(dockBackground)
         .overlay(dockStroke)
-        .overlay(alignment: .topLeading) {
+        .overlay(alignment: .top) {
             Capsule(style: .continuous)
-                .fill(MindSensePalette.accent.opacity(compactTabBarPresentation ? 0.28 : 0.22))
-                .frame(width: compactTabBarPresentation ? 66 : 84, height: 3)
+                .fill(MindSensePalette.accent.opacity(compactTabBarPresentation ? 0.24 : 0.2))
+                .frame(width: compactTabBarPresentation ? 64 : 76, height: 2.5)
                 .padding(.top, MindSenseSpacing.xs)
-                .padding(.leading, MindSenseSpacing.md)
+                .accessibilityHidden(true)
+        }
+        .overlay(alignment: .top) {
+            Capsule(style: .continuous)
+                .fill(MindSensePalette.accent.opacity(0.06))
+                .frame(width: compactTabBarPresentation ? 110 : 136, height: 10)
+                .blur(radius: 10)
+                .offset(y: 6)
                 .accessibilityHidden(true)
         }
         .shadow(
-            color: MindSensePalette.shadowDirectional.opacity(compactTabBarPresentation ? 0.16 : 0.12),
-            radius: compactTabBarPresentation ? 16 : 12,
+            color: MindSensePalette.shadowDirectional.opacity(compactTabBarPresentation ? 0.14 : 0.1),
+            radius: compactTabBarPresentation ? 14 : 10,
             x: 0,
-            y: compactTabBarPresentation ? 6 : 4
+            y: compactTabBarPresentation ? 6 : 3
         )
         .frame(maxWidth: dockMaxWidth, alignment: .leading)
         .frame(maxWidth: .infinity, alignment: .center)
-        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.horizontal, MindSenseLayout.pageHorizontal)
         .padding(.top, MindSenseSpacing.xxxs)
     }
 
@@ -938,68 +945,88 @@ struct MindSenseBottomActionDock<Content: View>: View {
         if dynamicTypeSize.isAccessibilitySize {
             return .infinity
         }
-        return compactTabBarPresentation ? 430 : 560
+        return compactTabBarPresentation ? 460 : 600
     }
 
     private var dockCornerRadius: CGFloat {
-        compactTabBarPresentation ? 18 : 20
+        compactTabBarPresentation ? 20 : 22
     }
 
     private var dockBackground: some View {
         RoundedRectangle(cornerRadius: dockCornerRadius, style: .continuous)
-            .fill(MindSenseSurfaceLevel.raised.fill.opacity(0.98))
+            .fill(MindSenseSurfaceLevel.raised.fill.opacity(0.985))
+            .overlay(
+                RoundedRectangle(cornerRadius: dockCornerRadius, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                MindSensePalette.accent.opacity(0.035),
+                                Color.clear,
+                                Color.clear
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+            )
     }
 
     private var dockStroke: some View {
         RoundedRectangle(cornerRadius: dockCornerRadius, style: .continuous)
             .stroke(
-                MindSensePalette.strokeStrong.opacity(compactTabBarPresentation ? 0.16 : 0.12),
+                MindSensePalette.strokeStrong.opacity(compactTabBarPresentation ? 0.14 : 0.1),
                 lineWidth: 1
             )
     }
 }
 
 struct MindSenseDoItNowDock<Content: View>: View {
-    var title: String = "Do it now"
+    var title: String = "Primary action"
     var subtitle: String?
     @ViewBuilder var content: Content
 
     var body: some View {
         MindSenseBottomActionDock {
-            VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
-                HStack(alignment: .top, spacing: MindSenseSpacing.sm) {
-                    MindSenseIconBadge(
-                        systemName: "bolt.fill",
-                        tint: MindSensePalette.accent,
-                        style: .filled,
-                        size: MindSenseControlSize.chip
-                    )
-                    .accessibilityHidden(true)
-
-                    VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
-                        Text(title.uppercased())
-                            .font(MindSenseTypography.micro)
-                            .foregroundStyle(MindSensePalette.accent)
-                            .tracking(0.9)
-
-                        if let subtitle, !subtitle.isEmpty {
-                            Text(subtitle)
-                                .font(MindSenseTypography.caption)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(2)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xs) {
+                HStack {
+                    dockLabelPill
+                    Spacer(minLength: 0)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
 
-                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.subtle)
+                if let subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
                 content
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+    }
+
+    private var dockLabelPill: some View {
+        HStack(spacing: MindSenseSpacing.xxs) {
+            Image(systemName: "bolt.fill")
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundStyle(MindSensePalette.accent)
+            Text(title)
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(MindSensePalette.accent)
+                .tracking(0.5)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(
+            Capsule(style: .continuous)
+                .fill(MindSensePalette.accentMuted)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(MindSensePalette.strokeEdge.opacity(0.42), lineWidth: 1)
+        )
     }
 }
 
