@@ -38,7 +38,12 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         XCTAssertTrue(app.buttons["regulate_primary_cta"].waitForExistence(timeout: 3))
 
         app.tabBars.buttons["Data"].tap()
-        XCTAssertTrue(app.buttons["data_primary_cta"].waitForExistence(timeout: 3))
+        let dataCTA = firstExistingButton(
+            in: app,
+            identifiers: ["data_hero_primary_cta", "data_primary_cta", "data_log_day_cta", "data_complete_experiment_cta"],
+            timeout: 3
+        )
+        XCTAssertNotNil(dataCTA)
 
         app.buttons["Profile and access"].tap()
         app.buttons["Settings"].tap()
@@ -70,6 +75,94 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         XCTAssertTrue(heroCTA.isHittable, "Today hero CTA should be visible and tappable on launch.")
     }
 
+    func testTodaySinglePrimaryCTAWhenNoActiveSession() {
+        let app = launchReadyApp(
+            appearance: .system,
+            reset: true,
+            enableHaptics: false,
+            reduceMotion: true
+        )
+
+        waitForTodayReady(app: app)
+        let heroCTA = app.buttons["today_action_card_cta"]
+        XCTAssertTrue(heroCTA.waitForExistence(timeout: 5))
+        XCTAssertTrue(heroCTA.isHittable, "Today hero CTA should be the dominant visible action when no session is active.")
+        XCTAssertFalse(
+            app.buttons["today_primary_cta"].exists,
+            "Sticky dock CTA should not appear when no active session is running."
+        )
+    }
+
+    func testTodayFallbackDisclosureCarriesCoverageDetails() {
+        let app = launchReadyApp(
+            appearance: .system,
+            reset: true,
+            enableHaptics: false,
+            reduceMotion: true
+        )
+
+        waitForTodayReady(app: app)
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
+
+        let disclosureButton = app.buttons["Why this action"]
+        XCTAssertTrue(disclosureButton.waitForExistence(timeout: 3))
+        disclosureButton.tap()
+
+        XCTAssertTrue(
+            app.staticTexts.matching(NSPredicate(format: "label CONTAINS[c] %@", "Precision is limited")).firstMatch
+                .waitForExistence(timeout: 2),
+            "Expanded fallback disclosure should expose coverage limitation detail."
+        )
+    }
+
+    func testRegulateImpactIncludesMixedOption() {
+        let app = launchReadyApp()
+
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
+        app.buttons["today_action_card_cta"].tap()
+
+        XCTAssertTrue(app.buttons["regulate_complete_now_cta"].waitForExistence(timeout: 4))
+        app.buttons["regulate_complete_now_cta"].tap()
+
+        let mixedButton = app.buttons["regulate_helped_mixed"]
+        XCTAssertTrue(mixedButton.waitForExistence(timeout: 3))
+        XCTAssertTrue(mixedButton.isHittable, "Regulate outcome capture should include a visible Mixed option.")
+    }
+
+    func testRegulateRecordImpactHasNoPreSaveBranchActions() {
+        let app = launchReadyApp()
+
+        XCTAssertTrue(app.buttons["today_action_card_cta"].waitForExistence(timeout: 5))
+        app.buttons["today_action_card_cta"].tap()
+
+        XCTAssertTrue(app.buttons["regulate_complete_now_cta"].waitForExistence(timeout: 4))
+        app.buttons["regulate_complete_now_cta"].tap()
+        XCTAssertTrue(app.staticTexts["regulate_active_preset_label"].waitForExistence(timeout: 3))
+
+        XCTAssertFalse(app.buttons["regulate_post_session_focus_block_cta"].exists)
+        XCTAssertFalse(app.buttons["regulate_post_session_log_impact_cta"].exists)
+        XCTAssertFalse(app.buttons["regulate_post_session_add_context_cta"].exists)
+    }
+
+    func testDataPatternsSinglePrimaryCTAAboveFold() {
+        let app = launchReadyApp(
+            appearance: .system,
+            reset: true,
+            enableHaptics: false,
+            reduceMotion: true
+        )
+
+        waitForTodayReady(app: app)
+        tapTab(named: "Data", in: app)
+
+        let heroCTA = app.buttons["data_hero_primary_cta"]
+        XCTAssertTrue(heroCTA.waitForExistence(timeout: 3))
+        XCTAssertTrue(heroCTA.isHittable, "Patterns mode should keep hero CTA visible above fold.")
+
+        let suggestedButtons = app.buttons.matching(NSPredicate(format: "label == %@", "Start suggested plan"))
+        XCTAssertEqual(suggestedButtons.count, 1, "Patterns mode should expose only one suggested-plan CTA.")
+    }
+
     func testSettingsPrivacyPolicyLinkPresence() {
         let app = launchReadyApp()
 
@@ -80,6 +173,77 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         let privacyRow = app.buttons["settings_privacy_policy_row"]
         XCTAssertTrue(privacyRow.waitForExistence(timeout: 3))
         XCTAssertTrue(privacyRow.isHittable, "Privacy policy row should remain visible and tappable.")
+    }
+
+    func testSettingsPrivacyPolicySheetExternalLegalLinksPresence() {
+        let app = launchReadyApp()
+
+        app.buttons["Profile and access"].tap()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+
+        let privacyRow = app.buttons["settings_privacy_policy_row"]
+        XCTAssertTrue(privacyRow.waitForExistence(timeout: 3))
+        privacyRow.tap()
+
+        XCTAssertTrue(app.navigationBars["Privacy policy"].waitForExistence(timeout: 3))
+        XCTAssertTrue(
+            app.buttons["settings_privacy_policy_open_url_button"].waitForExistence(timeout: 2),
+            "Privacy sheet should expose the full privacy notice link."
+        )
+        XCTAssertTrue(
+            app.buttons["settings_terms_open_url_button"].waitForExistence(timeout: 2),
+            "Privacy sheet should expose the terms link."
+        )
+    }
+
+    func testSettingsDataControlsSheetActionsPresence() {
+        let app = launchReadyApp()
+
+        app.buttons["Profile and access"].tap()
+        app.buttons["Settings"].tap()
+        XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
+
+        let dataControlsRow = app.buttons["settings_data_controls_row"]
+        XCTAssertTrue(dataControlsRow.waitForExistence(timeout: 3))
+        dataControlsRow.tap()
+
+        XCTAssertTrue(app.navigationBars["Data controls"].waitForExistence(timeout: 3))
+        XCTAssertTrue(
+            app.buttons["settings_data_export_refresh_button"].waitForExistence(timeout: 2),
+            "Data controls should expose refresh export action."
+        )
+        XCTAssertTrue(
+            app.buttons["settings_delete_all_local_data_button"].waitForExistence(timeout: 2),
+            "Data controls should expose delete-local-data action."
+        )
+    }
+
+    func testTodaySignalSourceSheetShowsMeetingCallAuthorizationState() {
+        let app = launchReadyApp(
+            appearance: .system,
+            reset: true,
+            enableHaptics: false,
+            reduceMotion: true
+        )
+
+        waitForTodayReady(app: app)
+        let signalSourceButton = app.buttons["today_signal_source_button"]
+        XCTAssertTrue(signalSourceButton.waitForExistence(timeout: 3))
+        signalSourceButton.tap()
+
+        XCTAssertTrue(app.navigationBars["Signal Diagnostics"].waitForExistence(timeout: 3))
+        XCTAssertTrue(
+            app.staticTexts["Meeting/call metadata control"].waitForExistence(timeout: 2),
+            "Signal diagnostics should surface meeting/call authorization context."
+        )
+
+        let includedState = app.staticTexts["Current state: Included in Top drivers"]
+        let excludedState = app.staticTexts["Current state: Excluded from Top drivers"]
+        XCTAssertTrue(
+            includedState.waitForExistence(timeout: 1.5) || excludedState.waitForExistence(timeout: 1.5),
+            "Signal diagnostics should show whether meeting/call metadata is currently included or excluded."
+        )
     }
 
     func testOnboardingProgressCopyUsesStepModelOnly() {
@@ -149,7 +313,12 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         )
 
         app.tabBars.buttons["Data"].tap()
-        XCTAssertTrue(app.buttons["data_primary_cta"].waitForExistence(timeout: 3))
+        let dataCTA = firstExistingButton(
+            in: app,
+            identifiers: ["data_hero_primary_cta", "data_primary_cta", "data_log_day_cta", "data_complete_experiment_cta"],
+            timeout: 3
+        )
+        XCTAssertNotNil(dataCTA)
 
         let trends = app.buttons["Trends"]
         let experiments = app.buttons["Experiments"]
@@ -313,6 +482,8 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         let app = launchReadyApp()
 
         app.tabBars.buttons["Data"].tap()
+        XCTAssertTrue(app.buttons["Experiments"].waitForExistence(timeout: 3))
+        app.buttons["Experiments"].tap()
         XCTAssertTrue(app.buttons["data_primary_cta"].waitForExistence(timeout: 3))
 
         app.buttons["data_primary_cta"].tap()
@@ -368,8 +539,13 @@ final class MindSenseCoreScreensUITests: XCTestCase {
         attachSnapshot(named: "dynamic_type_regulate_axxxl")
 
         app.tabBars.buttons["Data"].tap()
-        XCTAssertTrue(app.buttons["data_primary_cta"].waitForExistence(timeout: 3))
-        XCTAssertTrue(app.buttons["data_primary_cta"].isHittable, "Data CTA should remain tappable at large text sizes.")
+        let dataCTA = firstExistingButton(
+            in: app,
+            identifiers: ["data_hero_primary_cta", "data_primary_cta", "data_log_day_cta", "data_complete_experiment_cta"],
+            timeout: 3
+        )
+        XCTAssertNotNil(dataCTA, "Data should expose a primary next-step CTA at large text sizes.")
+        XCTAssertTrue(dataCTA?.isHittable ?? false, "Data CTA should remain tappable at large text sizes.")
         attachSnapshot(named: "dynamic_type_data_axxxl")
     }
 

@@ -428,4 +428,38 @@ final class MindSensePersistenceService {
         defaults.removeObject(forKey: "regulate.session.history.v1")
         defaults.removeObject(forKey: "data.experiments.v1")
     }
+
+    func clearAllLocalData() {
+        clearSession()
+        clearOnboardingTimer()
+        clearDemoState()
+        clearAnalyticsEvents()
+        setHasSeenIntro(false)
+        setPaywallSeen(false)
+        setKPIReviewedAt(nil)
+
+        let settingsKeys = [
+            "appearanceMode",
+            "appReduceMotion",
+            "enableHaptics",
+            "notifications.gentlePrompts",
+            "notifications.weeklyReview",
+            "notifications.stressNudge",
+            "notifications.recoveryWindow",
+            "notifications.quietHoursEnabled",
+            "notifications.quietStartMinutes",
+            "notifications.quietEndMinutes",
+            "batteryFriendlyMode",
+            "widget.onboarding.synced_at"
+        ]
+        settingsKeys.forEach { defaults.removeObject(forKey: $0) }
+
+        removeDefaultsKeys(withPrefix: "auth.apple.email_lookup.")
+        removeDefaultsKeys(withPrefix: "onboarding.progress.")
+    }
+
+    private func removeDefaultsKeys(withPrefix prefix: String) {
+        let keys = defaults.dictionaryRepresentation().keys.filter { $0.hasPrefix(prefix) }
+        keys.forEach { defaults.removeObject(forKey: $0) }
+    }
 }

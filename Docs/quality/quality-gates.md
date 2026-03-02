@@ -1,6 +1,6 @@
 # MindSense Phase 6 Quality Gates
 
-Last updated: 2026-02-26
+Last updated: 2026-03-02
 
 ## 1) Premium UI Acceptance Checklist
 
@@ -93,8 +93,13 @@ Output:
 - Redesign-specific UI regressions:
   - `MindSenseCoreScreensUITests.testTodayHeroPrimaryCTAVisibility`
   - `MindSenseCoreScreensUITests.testSettingsPrivacyPolicyLinkPresence`
-  - `MindSenseCoreScreensUITests.testOnboardingProgressCopyConsistency`
-  - `MindSenseCoreScreensUITests.testIntroAndOnboardingTimingCopyConsistency`
+  - `MindSenseCoreScreensUITests.testOnboardingProgressCopyUsesStepModelOnly`
+  - `MindSenseCoreScreensUITests.testIntroAndOnboardingCopyConsistency`
+  - `MindSenseCoreScreensUITests.testTodaySinglePrimaryCTAWhenNoActiveSession`
+  - `MindSenseCoreScreensUITests.testTodayFallbackDisclosureCarriesCoverageDetails`
+  - `MindSenseCoreScreensUITests.testRegulateImpactIncludesMixedOption`
+  - `MindSenseCoreScreensUITests.testRegulateRecordImpactHasNoPreSaveBranchActions`
+  - `MindSenseCoreScreensUITests.testDataPatternsSinglePrimaryCTAAboveFold`
 
 ## 6) Staged Shipping Plan
 

@@ -383,7 +383,8 @@ struct TodayView: View {
                     permissions: store.healthPermissions,
                     diagnostics: store.healthQualityDiagnostics,
                     qualityScore: store.healthDataQualityScore,
-                    actionHint: store.demoHealthProfile.quality.actionHint
+                    actionHint: store.demoHealthProfile.quality.actionHint,
+                    meetingCallSignalsEnabled: store.useMeetingCallSignals
                 )
             }
             .sheet(isPresented: $showTimelineDetails, onDismiss: {
@@ -495,6 +496,24 @@ struct TodayView: View {
             let commandActionMinHeight: CGFloat = hasUnfinishedRegulateStep
                 ? MindSenseControlSize.minimumTapTarget
                 : MindSenseControlSize.primaryButton
+            let disclosureCopy: (summary: String, detail: String) = {
+                if hasUnfinishedRegulateStep {
+                    return (
+                        "An active session is already running. Use the sticky action below to finish today's loop.",
+                        "We keep one persistent action when a session is in progress so you can resume or record impact without hunting through cards."
+                    )
+                } else if isLowCoverageRecommendationMode {
+                    return (
+                        lowCoverageSummaryLine,
+                        "\(lowCoverageReasonLine) \(lowCoverageFixLine)"
+                    )
+                } else {
+                    return (
+                        "Why now: \(recommendation.why)",
+                        "Expected effect: \(recommendation.expectedEffect)"
+                    )
+                }
+            }()
 
             Button(inlineActionLabel) {
                 if isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep {
@@ -516,25 +535,6 @@ struct TodayView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            VStack(alignment: .leading, spacing: MindSenseSpacing.xxs) {
-                HStack(spacing: MindSenseSpacing.xs) {
-                    PillChip(label: "Today goal", state: .unselected)
-                    PillChip(label: store.intentMode.shortTitle, state: .selected)
-                }
-
-                Text(todayGoalNarrativeLine)
-                    .font(MindSenseTypography.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            if hasUnfinishedRegulateStep {
-                Text("Primary action is pinned in the bottom dock.")
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
             if dynamicTypeSize.isAccessibilitySize {
                 VStack(spacing: MindSenseSpacing.xs) {
                     ForEach(heroMetricCards) { card in
@@ -549,51 +549,41 @@ struct TodayView: View {
                 }
             }
 
-            Button {
-                if reduceMotion {
-                    toggleHeroWhy()
-                } else {
-                    withAnimation(MindSenseMotion.selection) {
-                        toggleHeroWhy()
-                    }
+            MindSenseSummaryDisclosureText(
+                summary: disclosureCopy.summary,
+                detail: disclosureCopy.detail,
+                collapsedLabel: "Why this action",
+                expandedLabel: "Hide details",
+                onToggleExpanded: { isExpanded in
+                    guard isExpanded, isLowCoverageRecommendationMode else { return }
+                    store.track(
+                        event: .secondaryActionTapped,
+                        surface: .today,
+                        action: "today_fallback_disclosure_opened"
+                    )
                 }
-                store.triggerHaptic(intent: .selection)
-            } label: {
-                HStack(spacing: MindSenseSpacing.xs) {
-                    Text(showHeroWhy ? "Hide details" : "Why + details")
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer(minLength: MindSenseSpacing.xs)
-                    Image(systemName: showHeroWhy ? "chevron.up" : "chevron.down")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .frame(minHeight: MindSenseControlSize.minimumTapTarget)
-                .padding(.horizontal, MindSenseSpacing.sm)
-                .background(
-                    RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                        .fill(MindSenseSurfaceLevel.base.fill)
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
-                        .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("today_action_card_why_now")
+            )
 
-            if showHeroWhy {
-                VStack(alignment: .leading, spacing: MindSenseSpacing.sm) {
-                    heroDiagnosticsDetails
-                    heroIntentModeDetails
-                    heroActionContextDetails
-                    heroStateDisclosureRow
-                    if showHeroStateExplanation {
-                        heroStateExplanationDetails(useBullets: shouldUseBulletWhyExplanation)
-                    }
-                }
+            if hasUnfinishedRegulateStep {
+                Text("Primary action is pinned in the bottom dock.")
+                    .font(MindSenseTypography.micro)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+
+            Button(isLowCoverageRecommendationMode && !hasUnfinishedRegulateStep ? "Choose a protocol manually" : "Pick a different protocol") {
+                openRegulateProtocolPicker(source: "today_action_card_pick_protocol")
+            }
+            .accessibilityIdentifier("today_action_card_pick_protocol")
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+
+            Button("Open signal diagnostics") {
+                showSignalSourceDetails = true
+                store.track(event: .secondaryActionTapped, surface: .today, action: "today_diagnostics_opened")
+                store.triggerHaptic(intent: .selection)
+            }
+            .accessibilityIdentifier("today_signal_source_button")
+            .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
         }
     }
 
@@ -820,10 +810,7 @@ struct TodayView: View {
                 }
 
                 if scenarioIncludesMeetingCallDrivers {
-                    Text("Control: Use meeting/call signals is \(store.useMeetingCallSignals ? "On" : "Off") in Settings > Health and data.")
-                        .font(MindSenseTypography.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    meetingCallSignalsContextPanel
                 }
 
                 if store.todayPrimaryDrivers.count > 2 {
@@ -1436,15 +1423,15 @@ struct TodayView: View {
     }
 
     private var lowCoverageSummaryLine: String {
-        "Fallback guidance is active: \(store.demoDataCoveragePercent)% coverage is too low for a precise protocol ranking right now."
+        "Start with a quick check-in so guidance stays useful while signal coverage rebuilds."
     }
 
     private var lowCoverageReasonLine: String {
         let reasons = lowCoverageReasons
         guard !reasons.isEmpty else {
-            return "What's limiting precision: recent signal collection is incomplete."
+            return "Coverage is \(store.demoDataCoveragePercent)% right now, so recent signal collection is still incomplete."
         }
-        return "What's limiting precision: \(reasons.joined(separator: "; "))."
+        return "Coverage is \(store.demoDataCoveragePercent)% right now. Precision is limited by \(reasons.joined(separator: "; "))."
     }
 
     private var lowCoverageFixLine: String {
@@ -1751,7 +1738,47 @@ struct TodayView: View {
 
     private func driverControlLine(for driver: DriverImpact) -> String? {
         guard driver.source.isMeetingOrCallSignal else { return nil }
-        return "Control: Use meeting/call signals is \(store.useMeetingCallSignals ? "On" : "Off")"
+        return "Authorization: \(store.useMeetingCallSignals ? "Included in Top drivers" : "Excluded from Top drivers")"
+    }
+
+    private var meetingCallSignalsContextPanel: some View {
+        VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+            HStack(spacing: MindSenseSpacing.xs) {
+                Image(systemName: store.useMeetingCallSignals ? "checkmark.circle.fill" : "minus.circle.fill")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .foregroundStyle(store.useMeetingCallSignals ? MindSensePalette.success : MindSensePalette.warning)
+                Text(store.useMeetingCallSignals ? "Meeting/call metadata is included in Top drivers." : "Meeting/call metadata is excluded from Top drivers.")
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Text("Uses: Calendar busy windows and call-volume metadata only for attribution.")
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text("Does not use: event titles, participant names, contact names, or message content.")
+                .font(MindSenseTypography.micro)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, MindSenseSpacing.sm)
+        .padding(.vertical, MindSenseSpacing.xs)
+        .background(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .fill(MindSenseSurfaceLevel.base.fill)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: MindSenseRadius.tight, style: .continuous)
+                .stroke(MindSensePalette.strokeSubtle, lineWidth: 1)
+        )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            store.useMeetingCallSignals
+                ? "Meeting and call metadata is included in top drivers. Uses calendar busy windows and call-volume metadata only. Does not use event titles, participant names, contact names, or message content."
+                : "Meeting and call metadata is excluded from top drivers. Uses calendar busy windows and call-volume metadata only. Does not use event titles, participant names, contact names, or message content."
+        )
     }
 
     private func driverMicroActionLabel(for driver: DriverImpact) -> String? {
@@ -1929,7 +1956,7 @@ struct TodayView: View {
 
     private var heroInterpretation: String {
         if isLowCoverageRecommendationMode {
-            return "Coverage is limited, so check-in-first fallback guidance is active."
+            return "Start with a quick check-in while coverage rebuilds."
         }
         if heroDelta.load <= -2 && heroDelta.readiness >= 2 {
             return "Load is easing while readiness is recovering."
@@ -2809,6 +2836,7 @@ private struct TodaySignalSourceSheet: View {
     let diagnostics: [(String, Int)]
     let qualityScore: Int
     let actionHint: String
+    let meetingCallSignalsEnabled: Bool
 
     var body: some View {
         NavigationStack {
@@ -2839,6 +2867,35 @@ private struct TodaySignalSourceSheet: View {
                         infoRow(label: "Sleep import", value: sleepImportLabel)
                         infoRow(label: "HRV sample", value: hrvImportLabel)
                         infoRow(label: "Data confidence", value: "\(qualityScore)")
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Meeting/call metadata control",
+                                subtitle: "Authorization state for optional metadata-only attribution."
+                            )
+                        )
+                        HStack(spacing: MindSenseSpacing.xs) {
+                            Image(systemName: meetingCallSignalsEnabled ? "checkmark.circle.fill" : "minus.circle.fill")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .foregroundStyle(meetingCallSignalsEnabled ? MindSensePalette.success : MindSensePalette.warning)
+                            Text(
+                                meetingCallSignalsEnabled
+                                    ? "Current state: Included in Top drivers"
+                                    : "Current state: Excluded from Top drivers"
+                            )
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                        }
+                        Text("Uses: Calendar busy windows and call-volume metadata only.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text("Does not use: event titles, participant names, contact names, or message content.")
+                            .font(MindSenseTypography.micro)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     InsetSurface {

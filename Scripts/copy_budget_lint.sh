@@ -8,11 +8,18 @@ failures=0
 count_words() {
   local file="$1"
   local line_limit="$2"
-
-  sed -n "1,${line_limit}p" "$file" \
+  local extracted
+  extracted="$(sed -n "1,${line_limit}p" "$file" \
     | rg 'Text\("|Button\("|title:\s*"|subtitle:\s*"|detail:\s*"|label:\s*"|metric:\s*"' \
     | rg -v 'accessibilityIdentifier|systemImage|systemName|rawValue|\.title|\.metric|_cta|Profile and access' \
-    | rg -o '"[^"]+"' \
+    | rg -o '"[^"]+"' || true)"
+
+  if [[ -z "$extracted" ]]; then
+    echo 0
+    return
+  fi
+
+  printf '%s\n' "$extracted" \
     | tr -d '"' \
     | sed 's/[^[:alnum:] ]/ /g' \
     | awk '{ for (i = 1; i <= NF; i++) words++ } END { print words + 0 }'

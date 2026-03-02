@@ -1630,6 +1630,42 @@ struct AnalyticsEventRecord: Identifiable, Codable, Equatable {
     let metadata: [String: String]
 }
 
+struct MindSensePreferencesSnapshot: Codable {
+    let appearanceMode: String
+    let appReduceMotion: Bool
+    let enableHaptics: Bool
+    let gentlePrompts: Bool
+    let weeklyReview: Bool
+    let stressNudge: Bool
+    let recoveryWindow: Bool
+    let quietHoursEnabled: Bool
+    let quietStartMinutes: Int
+    let quietEndMinutes: Int
+    let batteryFriendlyMode: Bool
+}
+
+struct MindSenseUserDataExportSnapshot: Codable {
+    let generatedAt: Date
+    let appVersion: String
+    let session: AuthSession?
+    let onboarding: OnboardingProgress
+    let kpiLastReviewedAt: Date?
+    let selectedTab: String
+    let demoScenario: DemoScenario
+    let intentMode: IntentMode
+    let useMeetingCallSignals: Bool
+    let demoDay: Int
+    let demoMetrics: DemoMetricSnapshot
+    let demoEventHistory: [DemoEventRecord]
+    let demoHealthProfile: DemoHealthProfile
+    let demoSavedInsights: [DemoSavedInsight]
+    let regulateSessionHistory: [RegulateSessionRecord]
+    let activeRegulateSession: RegulateSessionRecord?
+    let experiments: [Experiment]
+    let analyticsEvents: [AnalyticsEventRecord]
+    let preferences: MindSensePreferencesSnapshot
+}
+
 struct ProductKPIScorecard {
     let activationRate: Double
     let d1RetentionRate: Double
@@ -2369,6 +2405,146 @@ final class MindSenseStore: ObservableObject {
         persistDemoHealthProfile()
         showActionFeedback(.saved, detail: "Health-derived metrics cleared.")
         track(event: .actionCompleted, surface: .settings, action: "health_derived_deleted")
+    }
+
+    func buildUserDataExportJSON() -> String? {
+        let snapshot = MindSenseUserDataExportSnapshot(
+            generatedAt: Date(),
+            appVersion: appVersionLabel,
+            session: session,
+            onboarding: onboarding,
+            kpiLastReviewedAt: kpiLastReviewedAt,
+            selectedTab: selectedTab.title,
+            demoScenario: demoScenario,
+            intentMode: intentMode,
+            useMeetingCallSignals: useMeetingCallSignals,
+            demoDay: demoDay,
+            demoMetrics: demoMetrics,
+            demoEventHistory: demoEventHistory,
+            demoHealthProfile: demoHealthProfile,
+            demoSavedInsights: demoSavedInsights,
+            regulateSessionHistory: regulateSessionHistory,
+            activeRegulateSession: activeRegulateSession,
+            experiments: experiments,
+            analyticsEvents: analyticsEvents,
+            preferences: currentPreferencesSnapshot()
+        )
+
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        encoder.dateEncodingStrategy = .iso8601
+
+        do {
+            let jsonData = try encoder.encode(snapshot)
+            guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+                showBanner(
+                    title: "Export unavailable",
+                    detail: "The export payload could not be encoded for sharing.",
+                    severity: .warning
+                )
+                track(
+                    event: .secondaryActionTapped,
+                    surface: .settings,
+                    action: "data_export_failed",
+                    metadata: ["stage": "encoding_to_string"]
+                )
+                return nil
+            }
+            track(
+                event: .secondaryActionTapped,
+                surface: .settings,
+                action: "data_export_generated",
+                metadata: [
+                    "events": "\(analyticsEvents.count)",
+                    "has_session": session == nil ? "false" : "true"
+                ]
+            )
+            return jsonString
+        } catch {
+            showBanner(
+                title: "Export unavailable",
+                detail: "Your local data could not be packaged yet. Please try again.",
+                severity: .warning
+            )
+            track(
+                event: .secondaryActionTapped,
+                surface: .settings,
+                action: "data_export_failed",
+                metadata: ["stage": "encode", "error": "\(error)"]
+            )
+            return nil
+        }
+    }
+
+    func clearAllLocalData() {
+        let hadSession = session != nil
+        persistence.clearAllLocalData()
+
+        hasSeenIntro = false
+        session = nil
+        onboarding = OnboardingProgress()
+        appState = AppStateResolver.reduce(state: appState, event: .signedOut)
+        selectedTab = .today
+        regulateLaunchRequest = nil
+        todayContextCaptureEpisodeID = nil
+        activeRegulateSession = nil
+        regulateSessionHistory = []
+        experiments = []
+        demoScenario = .balancedDay
+        intentMode = .focus
+        useMeetingCallSignals = true
+        demoMetrics = DemoScenario.balancedDay.baseMetrics
+        demoEventHistory = []
+        applyDemoHealthProfile(
+            MindSenseDemoSeedCatalog.seededHealthProfile(
+                for: .balancedDay,
+                demoDay: DemoScenario.balancedDay.defaultDay
+            ),
+            emitPermissionRevocationBanner: false
+        )
+        demoSavedInsights = []
+        demoLastUpdatedAt = Date()
+        demoDay = DemoScenario.balancedDay.defaultDay
+        demoDataIssue = nil
+        guidedDemoPathStep = nil
+        coreScreenStates = [:]
+        shouldPresentPostActivationPaywall = false
+        kpiLastReviewedAt = nil
+        analyticsEvents = []
+
+        showActionFeedback(
+            .saved,
+            detail: hadSession
+                ? "All local account and app data deleted from this device."
+                : "All local app data deleted from this device."
+        )
+    }
+
+    private func currentPreferencesSnapshot() -> MindSensePreferencesSnapshot {
+        MindSensePreferencesSnapshot(
+            appearanceMode: defaults.string(forKey: "appearanceMode") ?? AppearanceMode.system.rawValue,
+            appReduceMotion: defaults.bool(forKey: "appReduceMotion"),
+            enableHaptics: defaults.object(forKey: "enableHaptics") == nil ? true : defaults.bool(forKey: "enableHaptics"),
+            gentlePrompts: defaults.object(forKey: "notifications.gentlePrompts") == nil ? true : defaults.bool(forKey: "notifications.gentlePrompts"),
+            weeklyReview: defaults.object(forKey: "notifications.weeklyReview") == nil ? true : defaults.bool(forKey: "notifications.weeklyReview"),
+            stressNudge: defaults.object(forKey: "notifications.stressNudge") == nil ? true : defaults.bool(forKey: "notifications.stressNudge"),
+            recoveryWindow: defaults.object(forKey: "notifications.recoveryWindow") == nil ? true : defaults.bool(forKey: "notifications.recoveryWindow"),
+            quietHoursEnabled: defaults.bool(forKey: "notifications.quietHoursEnabled"),
+            quietStartMinutes: defaults.object(forKey: "notifications.quietStartMinutes") as? Int ?? 22 * 60,
+            quietEndMinutes: defaults.object(forKey: "notifications.quietEndMinutes") as? Int ?? 7 * 60,
+            batteryFriendlyMode: defaults.bool(forKey: "batteryFriendlyMode")
+        )
+    }
+
+    private var appVersionLabel: String {
+        let shortVersion = (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String) ?? "unknown"
+        guard let buildVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String else {
+            return shortVersion
+        }
+        if buildVersion == shortVersion {
+            return shortVersion
+        }
+        return "\(shortVersion) (\(buildVersion))"
     }
 
     func saveStressEpisodeContext(

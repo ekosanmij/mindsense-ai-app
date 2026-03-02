@@ -665,6 +665,12 @@ UI tests (`MindSenseCoreScreensUITests`):
 - Snapshot matrix (system/light/dark).
 - Dynamic type scaling assertions.
 - Interaction latency report generation.
+- Core-loop simplification regressions:
+  - `testTodaySinglePrimaryCTAWhenNoActiveSession`
+  - `testTodayFallbackDisclosureCarriesCoverageDetails`
+  - `testRegulateImpactIncludesMixedOption`
+  - `testRegulateRecordImpactHasNoPreSaveBranchActions`
+  - `testDataPatternsSinglePrimaryCTAAboveFold`
 
 ## 16. Security, Privacy, And Compliance Posture
 
@@ -676,7 +682,7 @@ Current posture:
 
 Known compliance constraints in current state:
 - No cryptographic hardening of persisted user defaults payloads.
-- Privacy policy URL currently points to placeholder `https://example.com/privacy`.
+- Privacy/terms are routed to repository-hosted legal pages (`Website/privacy.html`, `Website/terms.html`) via external URLs from Settings.
 
 ## 17. Known Gaps And Risks
 
@@ -694,8 +700,8 @@ Data and trust risks:
 - User data stored in plain `UserDefaults` payloads.
 - KPI metrics are derived from local analytics events, not backend truth.
 
-Testing consistency risk (static inspection):
-- Some UI test identifiers and expected labels appear out of sync with currently visible control IDs/text in source, indicating potential stale tests or stale assumptions.
+Testing consistency risk:
+- UI identifiers are actively evolving with the redesign; keep core-loop regression tests synchronized with accessibility IDs when CTA structure changes.
 
 ## 18. Release Scope Definition (As Of This Build)
 
@@ -732,7 +738,7 @@ Debug/latent surfaces:
 
 4. Data trust milestone:
 - Harden local storage strategy for sensitive fields.
-- Add explicit data export/delete workflow implementation behind current placeholders.
+- Move legal links from repository-hosted pages to production-owned canonical policy URLs when available.
 
 5. Testing convergence milestone:
 - Reconcile UI test identifiers with actual source IDs and CTAs.

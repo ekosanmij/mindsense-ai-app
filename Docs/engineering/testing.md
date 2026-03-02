@@ -28,8 +28,13 @@ Primary coverage:
 - Redesign regression checks:
   - `testTodayHeroPrimaryCTAVisibility`
   - `testSettingsPrivacyPolicyLinkPresence`
-  - `testOnboardingProgressCopyConsistency`
-  - `testIntroAndOnboardingTimingCopyConsistency`
+  - `testOnboardingProgressCopyUsesStepModelOnly`
+  - `testIntroAndOnboardingCopyConsistency`
+  - `testTodaySinglePrimaryCTAWhenNoActiveSession`
+  - `testTodayFallbackDisclosureCarriesCoverageDetails`
+  - `testRegulateImpactIncludesMixedOption`
+  - `testRegulateRecordImpactHasNoPreSaveBranchActions`
+  - `testDataPatternsSinglePrimaryCTAAboveFold`
 
 ## 2) Prerequisites
 
@@ -80,8 +85,13 @@ xcodebuild \
   -destination "platform=iOS Simulator,name=iPhone 17 Pro Max" \
   -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testTodayHeroPrimaryCTAVisibility \
   -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testSettingsPrivacyPolicyLinkPresence \
-  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testOnboardingProgressCopyConsistency \
-  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testIntroAndOnboardingTimingCopyConsistency \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testOnboardingProgressCopyUsesStepModelOnly \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testIntroAndOnboardingCopyConsistency \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testTodaySinglePrimaryCTAWhenNoActiveSession \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testTodayFallbackDisclosureCarriesCoverageDetails \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testRegulateImpactIncludesMixedOption \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testRegulateRecordImpactHasNoPreSaveBranchActions \
+  -only-testing:MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests/testDataPatternsSinglePrimaryCTAAboveFold \
   test
 ```
 

@@ -21,11 +21,12 @@ struct SettingsView: View {
     @State private var screenState: ScreenMode = .ready
     @State private var autosaveNotice = ""
     @State private var didAppear = false
+    @State private var showPrivacyPolicySheet = false
+    @State private var showDataControlsSheet = false
 
     private let settingsRowMinHeight: CGFloat = 50
     private let settingsToggleRowMinHeight: CGFloat = 64
     private let settingsIconSize: CGFloat = 16
-    private let privacyPolicyURLString = "https://example.com/privacy"
 
     private var appearanceBinding: Binding<AppearanceMode> {
         Binding {
@@ -95,6 +96,14 @@ struct SettingsView: View {
             ToolbarItem(placement: .principal) {
                 MindSenseNavTitleLockup(title: AppIA.settings)
             }
+        }
+        .sheet(isPresented: $showPrivacyPolicySheet) {
+            SettingsPrivacyPolicySheet()
+                .environmentObject(store)
+        }
+        .sheet(isPresented: $showDataControlsSheet) {
+            SettingsDataControlsSheet()
+                .environmentObject(store)
         }
         .onAppear {
             didAppear = true
@@ -323,23 +332,18 @@ struct SettingsView: View {
 
             settingsCluster {
                 settingsRow(title: "Privacy policy", icon: "lock.shield") {
-                    guard let url = URL(string: privacyPolicyURLString) else {
-                        store.showBanner(
-                            title: "Privacy policy unavailable",
-                            detail: "The privacy policy link is not configured correctly yet. Please try again later.",
-                            severity: .warning
-                        )
-                        return
-                    }
-                    openURL(url)
+                    showPrivacyPolicySheet = true
+                    store.track(event: .secondaryActionTapped, surface: .settings, action: "privacy_policy_opened")
                 }
                 .accessibilityIdentifier("settings_privacy_policy_row")
 
                 settingsClusterDivider()
 
                 settingsRow(title: "Data export and delete", icon: "tray.and.arrow.down") {
-                    store.showBanner(title: "Data controls", detail: "Export and delete workflows can be connected here.", severity: .info)
+                    showDataControlsSheet = true
+                    store.track(event: .secondaryActionTapped, surface: .settings, action: "data_controls_opened")
                 }
+                .accessibilityIdentifier("settings_data_controls_row")
 
                 settingsClusterDivider()
 
@@ -1040,6 +1044,271 @@ struct AppleHealthPermissionsView: View {
             return MindSensePalette.accent
         }
         return MindSensePalette.warning
+    }
+}
+
+private struct SettingsPrivacyPolicySheet: View {
+    @EnvironmentObject private var store: MindSenseStore
+    @Environment(\.openURL) private var openURL
+
+    private let privacyPolicyURLString = "https://github.com/ekosanmij/mindsense-ai-app/blob/main/Website/privacy.html"
+    private let termsURLString = "https://github.com/ekosanmij/mindsense-ai-app/blob/main/Website/terms.html"
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: MindSenseSpacing.md) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Privacy at a glance",
+                                subtitle: "How MindSense uses data to personalize guidance.",
+                                icon: "lock.shield"
+                            )
+                        )
+
+                        SettingsPolicyBulletRow(
+                            icon: "heart.text.square",
+                            title: "Uses health and in-app behavior",
+                            detail: "Apple Health signals, check-ins, and in-app actions support trend and recommendation quality."
+                        )
+                        SettingsPolicyBulletRow(
+                            icon: "calendar",
+                            title: "Optional metadata-only context",
+                            detail: "When enabled, Calendar busy windows and call-volume metadata can influence Top drivers ranking."
+                        )
+                        SettingsPolicyBulletRow(
+                            icon: "person.crop.circle.badge.xmark",
+                            title: "Content is not used",
+                            detail: "MindSense does not use event titles, participant names, contact names, or message content."
+                        )
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Retention and control",
+                                subtitle: "Your local controls for trust and transparency."
+                            )
+                        )
+
+                        Text("Use Data export and delete in Settings to package your local snapshot or remove all local app data from this device.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text("MindSense provides wellness support and does not replace emergency or clinical care.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Full legal pages",
+                                subtitle: "Open the complete website legal documents."
+                            )
+                        )
+
+                        Button {
+                            openExternalLegalURL(
+                                privacyPolicyURLString,
+                                action: "privacy_policy_external_opened",
+                                unavailableTitle: "Privacy policy unavailable"
+                            )
+                        } label: {
+                            Label("Open full privacy notice", systemImage: "arrow.up.right.square")
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary))
+                        .accessibilityIdentifier("settings_privacy_policy_open_url_button")
+
+                        Button {
+                            openExternalLegalURL(
+                                termsURLString,
+                                action: "terms_external_opened",
+                                unavailableTitle: "Terms unavailable"
+                            )
+                        } label: {
+                            Label("Open terms of use", systemImage: "arrow.up.right.square")
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary))
+                        .accessibilityIdentifier("settings_terms_open_url_button")
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("Privacy policy")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "Privacy policy")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+        .onAppear {
+            store.track(event: .screenView, surface: .settings, action: "privacy_policy_sheet")
+        }
+    }
+
+    private func openExternalLegalURL(
+        _ urlString: String,
+        action: String,
+        unavailableTitle: String
+    ) {
+        guard let url = URL(string: urlString) else {
+            store.showBanner(
+                title: unavailableTitle,
+                detail: "The legal document URL is not configured correctly.",
+                severity: .warning
+            )
+            store.track(
+                event: .secondaryActionTapped,
+                surface: .settings,
+                action: "\(action)_failed",
+                metadata: ["stage": "invalid_url"]
+            )
+            return
+        }
+        openURL(url)
+        store.track(event: .secondaryActionTapped, surface: .settings, action: action)
+    }
+}
+
+private struct SettingsDataControlsSheet: View {
+    @EnvironmentObject private var store: MindSenseStore
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var exportPayload = ""
+    @State private var showDeleteAllDataConfirmation = false
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: MindSenseSpacing.md) {
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Export local data",
+                                subtitle: "Generate a JSON snapshot of local app state.",
+                                icon: "square.and.arrow.up"
+                            )
+                        )
+
+                        Text("The export includes session, onboarding progress, trend state, saved insights, and local analytics events.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        if exportPayload.isEmpty {
+                            Text("No export snapshot is ready yet. Refresh to generate one.")
+                                .font(MindSenseTypography.caption)
+                                .foregroundStyle(MindSensePalette.warning)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else {
+                            Text("Snapshot size: \(ByteCountFormatter.string(fromByteCount: Int64(exportPayload.utf8.count), countStyle: .file))")
+                                .font(MindSenseTypography.micro)
+                                .foregroundStyle(.secondary)
+
+                            ShareLink(item: exportPayload) {
+                                Label("Share export snapshot", systemImage: "square.and.arrow.up")
+                                    .font(MindSenseTypography.caption)
+                                    .frame(minHeight: MindSenseControlSize.minimumTapTarget)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("settings_data_export_share_button")
+                        }
+
+                        Button("Refresh export snapshot") {
+                            refreshExportPayload()
+                            store.triggerHaptic(intent: .selection)
+                        }
+                        .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary))
+                        .accessibilityIdentifier("settings_data_export_refresh_button")
+                    }
+
+                    InsetSurface {
+                        MindSenseSectionHeader(
+                            model: .init(
+                                title: "Delete local data",
+                                subtitle: "Clear local account and app data from this device.",
+                                icon: "trash"
+                            )
+                        )
+
+                        Text("This signs you out and removes local session data, onboarding progress, analytics history, and demo state.")
+                            .font(MindSenseTypography.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Button("Delete all local data") {
+                            showDeleteAllDataConfirmation = true
+                            store.triggerHaptic(intent: .warning)
+                        }
+                        .buttonStyle(MindSenseButtonStyle(kind: .destructive))
+                        .accessibilityIdentifier("settings_delete_all_local_data_button")
+                    }
+                }
+                .mindSenseSheetInsets()
+            }
+            .mindSensePageBackground()
+            .navigationTitle("Data controls")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    MindSenseNavTitleLockup(title: "Data controls")
+                }
+            }
+        }
+        .mindSenseSheetPresentationChrome()
+        .onAppear {
+            refreshExportPayload()
+            store.track(event: .screenView, surface: .settings, action: "data_controls_sheet")
+        }
+        .alert("Delete all local data?", isPresented: $showDeleteAllDataConfirmation) {
+            Button("Delete", role: .destructive) {
+                store.clearAllLocalData()
+                dismiss()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This permanently clears local app data on this device and cannot be undone.")
+        }
+    }
+
+    private func refreshExportPayload() {
+        exportPayload = store.buildUserDataExportJSON() ?? ""
+    }
+}
+
+private struct SettingsPolicyBulletRow: View {
+    let icon: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: MindSenseSpacing.xs) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .foregroundStyle(MindSensePalette.signalCoolStrong)
+                .padding(.top, 1)
+
+            VStack(alignment: .leading, spacing: MindSenseSpacing.xxxs) {
+                Text(title)
+                    .font(MindSenseTypography.bodyStrong)
+                    .foregroundStyle(.primary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(detail)
+                    .font(MindSenseTypography.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
     }
 }
 

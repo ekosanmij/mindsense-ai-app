@@ -1271,6 +1271,7 @@ struct DataView: View {
                     actionTitle: "Filters",
                     action: {
                         showTrendFilterSheet = true
+                        store.track(event: .secondaryActionTapped, surface: .data, action: "data_filters_opened")
                         store.triggerHaptic(intent: .selection)
                     }
                 )
@@ -1398,10 +1399,10 @@ struct DataView: View {
                 if shouldShowRecoveryAnchorPlanner {
                     recoveryAnchorPlannerBlock
                 } else {
-                    Button("Start suggested plan") {
-                        launchRecommendedAction(source: "data_trend_insight")
-                    }
-                    .buttonStyle(MindSenseButtonStyle(hierarchy: .text, fullWidth: false))
+                    Text("Use the hero action above to start the suggested plan.")
+                        .font(MindSenseTypography.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -2128,12 +2129,21 @@ struct DataView: View {
     private func launchRecommendedAction(source: String) {
         let recommendation = store.primaryRecommendation
         store.openRegulatePreset(recommendation.preset, startImmediately: true, source: source)
-        store.track(
-            event: .primaryCTATapped,
-            surface: .data,
-            action: "start_mapped_\(recommendation.preset.rawValue)",
-            metadata: ["source": source]
-        )
+        if source == "data_hero_primary_cta" {
+            store.track(
+                event: .primaryCTATapped,
+                surface: .data,
+                action: "data_hero_primary_cta",
+                metadata: ["source": source, "preset": recommendation.preset.rawValue]
+            )
+        } else {
+            store.track(
+                event: .primaryCTATapped,
+                surface: .data,
+                action: "start_mapped_\(recommendation.preset.rawValue)",
+                metadata: ["source": source]
+            )
+        }
         store.triggerHaptic(intent: .primary)
     }
 

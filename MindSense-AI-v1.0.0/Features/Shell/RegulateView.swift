@@ -23,8 +23,6 @@ struct RegulateView: View {
     @State private var showPredictedFitExplanation = false
     @State private var showFlowStateExplanation = false
     @State private var selectedPresetDetails: DemoRegulatePreset?
-    @State private var showPostSessionTransition = false
-    @State private var postSessionTransitionSessionID: UUID?
     @State private var lastGuidedPhaseID: Int?
     @State private var viewSafeAreaBottomInset: CGFloat = 0
     @StateObject private var audioCoach = RegulateAudioCoach()
@@ -196,14 +194,6 @@ struct RegulateView: View {
         )
     }
 
-    private var activeSessionEpisodeID: UUID? {
-        guard let source = store.activeRegulateSession?.source else { return nil }
-        guard source.hasPrefix("episode:") else { return nil }
-        let payload = String(source.dropFirst("episode:".count))
-        let episodeToken = payload.split(separator: "|", maxSplits: 1).first.map(String.init) ?? payload
-        return UUID(uuidString: episodeToken)
-    }
-
     private var primaryCTAConfig: (label: String, id: String, action: () -> Void, disabled: Bool)? {
         guard let session = store.activeRegulateSession else { return nil }
 
@@ -355,7 +345,6 @@ struct RegulateView: View {
                     selectedPresetID = presets.first?.id
                 }
                 consumeLaunchRequestIfNeeded()
-                refreshPostSessionTransitionStateIfNeeded()
                 store.prepareCoreScreen(.regulate)
                 if firstAppearance {
                     store.track(event: .screenView, surface: .regulate)
@@ -366,12 +355,6 @@ struct RegulateView: View {
             }
             .onChange(of: store.regulateLaunchRequest) { _, _ in
                 consumeLaunchRequestIfNeeded()
-            }
-            .onChange(of: store.activeRegulateSession?.id) { _, _ in
-                refreshPostSessionTransitionStateIfNeeded()
-            }
-            .onChange(of: store.activeRegulateSession?.state) { _, _ in
-                refreshPostSessionTransitionStateIfNeeded()
             }
             .onChange(of: currentStep) { _, step in
                 if step == .runTimer {
@@ -880,62 +863,7 @@ struct RegulateView: View {
                 .font(MindSenseTypography.bodyStrong)
                 .accessibilityIdentifier("regulate_active_preset_label")
 
-            if showPostSessionTransition {
-                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
-                postSessionTransitionSection(for: runningPreset)
-                MindSenseSectionDivider(emphasis: MindSenseDividerEmphasis.regular)
-            }
-
             recordImpactForm(runningPreset)
-        }
-    }
-
-    private func postSessionTransitionSection(for runningPreset: DemoRegulatePreset) -> some View {
-        VStack(alignment: .leading, spacing: MindSenseSpacing.md) {
-            MindSenseSectionHeader(
-                model: .init(
-                    title: "Session complete",
-                    subtitle: "Choose your next action.",
-                    icon: "flag.checkered.2.crossed"
-                )
-            )
-
-            Text("Next step for \(runningPreset.title):")
-                .font(MindSenseTypography.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Button("Start your focus block") {
-                startFocusBlockFromPostSession()
-            }
-            .buttonStyle(
-                MindSenseButtonStyle(
-                    hierarchy: .secondary,
-                    minHeight: MindSenseControlSize.minimumTapTarget
-                )
-            )
-            .accessibilityIdentifier("regulate_post_session_focus_block_cta")
-
-            Button("Log impact") {
-                startImpactLoggingFromPostSession()
-            }
-            .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
-            .accessibilityIdentifier("regulate_post_session_log_impact_cta")
-
-            if let episodeID = activeSessionEpisodeID {
-                Button("Add context") {
-                    openEpisodeContextCapture(episodeID)
-                }
-                .buttonStyle(MindSenseButtonStyle(hierarchy: .secondary, minHeight: MindSenseControlSize.minimumTapTarget))
-                .accessibilityIdentifier("regulate_post_session_add_context_cta")
-            }
-
-            if store.activeRegulateSession?.isAwaitingCheckIn == true {
-                Text("Save check-in in the bottom dock remains the primary next action.")
-                    .font(MindSenseTypography.micro)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
     }
 
@@ -969,6 +897,12 @@ struct RegulateView: View {
                     title: "No",
                     systemImage: "hand.thumbsdown.fill",
                     accessibilityID: "regulate_helped_no"
+                )
+                outcomeRatingButton(
+                    .mixed,
+                    title: "Mixed",
+                    systemImage: "equal.circle.fill",
+                    accessibilityID: "regulate_helped_mixed"
                 )
             }
         }
@@ -1018,8 +952,8 @@ struct RegulateView: View {
         }
 
         MindSenseSummaryDisclosureText(
-            summary: "Pick Yes or No to save.",
-            detail: "Pick Yes or No to save, or skip to log No rating with reduced learning weight.",
+            summary: "Pick Yes, No, or Mixed to save.",
+            detail: "Pick Yes, No, or Mixed to save, or skip to log No rating with reduced learning weight.",
             collapsedLabel: "How ratings are saved",
             expandedLabel: "Hide save details"
         )
@@ -1079,6 +1013,9 @@ struct RegulateView: View {
         let selected = checkInRating == rating
         return Button {
             checkInRating = rating
+            if rating == .mixed {
+                store.track(event: .secondaryActionTapped, surface: .regulate, action: "rating_mixed_selected")
+            }
             store.triggerHaptic(intent: .selection)
         } label: {
             Label(title, systemImage: systemImage)
@@ -1326,8 +1263,6 @@ struct RegulateView: View {
         if store.activeRegulateSession?.isInProgress == true {
             store.syncActiveRegulateSessionState(now: date)
             announceCurrentProtocolPhase()
-        } else {
-            refreshPostSessionTransitionStateIfNeeded()
         }
     }
 
@@ -1351,24 +1286,6 @@ struct RegulateView: View {
         if audioGuidanceEnabled {
             let instruction = "\(activePhase.minuteRangeLabel). \(activePhase.title)."
             audioCoach.speak(instruction)
-        }
-    }
-
-    private func refreshPostSessionTransitionStateIfNeeded() {
-        guard let session = store.activeRegulateSession else {
-            showPostSessionTransition = false
-            postSessionTransitionSessionID = nil
-            return
-        }
-
-        if session.isAwaitingCheckIn, postSessionTransitionSessionID != session.id {
-            postSessionTransitionSessionID = session.id
-            showPostSessionTransition = true
-            return
-        }
-
-        if session.isInProgress {
-            showPostSessionTransition = false
         }
     }
 
@@ -1436,36 +1353,6 @@ struct RegulateView: View {
         selectedOutcomeTag = nil
         outcomeNote = ""
         showRecordImpactDetails = false
-        showPostSessionTransition = false
-        postSessionTransitionSessionID = nil
-    }
-
-    private func startImpactLoggingFromPostSession() {
-        showPostSessionTransition = false
-        store.track(event: .secondaryActionTapped, surface: .regulate, action: "post_session_log_impact")
-        store.triggerHaptic(intent: .selection)
-    }
-
-    private func startFocusBlockFromPostSession() {
-        if store.intentMode != .focus {
-            store.setIntentMode(.focus, source: "regulate_post_session_focus_block")
-        }
-        store.selectedTab = .data
-        store.showActionFeedback(.updated, detail: "Plan workspace opened for your focus block.")
-        store.track(event: .secondaryActionTapped, surface: .regulate, action: "post_session_start_focus_block")
-        store.triggerHaptic(intent: .primary)
-    }
-
-    private func openEpisodeContextCapture(_ episodeID: UUID) {
-        store.openTodayContextCapture(episodeID)
-        store.showActionFeedback(.updated, detail: "Opened episode context capture.")
-        store.track(
-            event: .secondaryActionTapped,
-            surface: .regulate,
-            action: "post_session_add_context",
-            metadata: ["episode_id": episodeID.uuidString]
-        )
-        store.triggerHaptic(intent: .primary)
     }
 
     private var impactTint: Color {

@@ -808,6 +808,7 @@ struct MindSenseSummaryDisclosureText: View {
     var expandedLabel: String = "Hide details"
     var textStyle: Font = MindSenseTypography.caption
     var textColor: Color = .secondary
+    var onToggleExpanded: ((Bool) -> Void)? = nil
     @State private var expanded = false
 
     private var reduceMotion: Bool {
@@ -837,10 +838,12 @@ struct MindSenseSummaryDisclosureText: View {
                 Button {
                     if reduceMotion {
                         expanded.toggle()
+                        onToggleExpanded?(expanded)
                     } else {
                         withAnimation(MindSenseMotion.selection) {
                             expanded.toggle()
                         }
+                        onToggleExpanded?(expanded)
                     }
                 } label: {
                     HStack(spacing: MindSenseSpacing.xxxs) {

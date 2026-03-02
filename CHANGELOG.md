@@ -36,5 +36,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Refreshed website screenshot assets from UI-test snapshot exports (small/large captures for `Today`, `Regulate`, `Data`, `Settings`).
 - Updated `MindSenseCoreScreensUITests` snapshot helper to match current core-screen CTA identifiers during screenshot capture.
 - Updated root `README.md` documentation index and repository structure to include the website/docs.
+- Simplified core loop UX:
+  - `Today` hero now centers one dominant action path with disclosure-based detail.
+  - `Regulate` enforces loop closure before branching and exposes explicit `Mixed` outcome capture.
+  - `Data` patterns mode keeps a single hero-level suggested-plan CTA.
+- Standardized analytics action keys for core-loop interactions:
+  - `today_diagnostics_opened`
+  - `today_fallback_disclosure_opened`
+  - `rating_mixed_selected`
+  - `data_filters_opened`
+  - `data_hero_primary_cta`
+- Replaced Settings trust placeholders with implemented privacy and data-control sheets, including local export/delete actions.
+- Expanded UI regression coverage with dedicated tests for core-loop simplification and trust-control surfaces.
 
 ### Removed

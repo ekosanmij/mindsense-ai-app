@@ -1,6 +1,6 @@
 # MindSense Mobile UI/UX Redesign Progress
 
-Last updated: 2026-02-26
+Last updated: 2026-03-02
 Primary tracker: `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/mobile-ui-ux-redesign-exhaustive-feedback-to-todos.md`
 
 ## Snapshot
@@ -46,16 +46,55 @@ Primary tracker: `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/Docs/design/mo
 
 ## Latest Local Batch (Not Yet Committed)
 
+- Core-loop simplification pass completed (`Today -> Regulate -> Data`):
+  - `Today` hero now prioritizes one dominant CTA path, one short context line, KPI chips, and one disclosure entry.
+  - fallback mode hero copy is now calm/action-oriented while detailed coverage rationale remains in disclosure detail.
+  - active-session state keeps sticky dock as the dominant completion path.
+  - `Regulate` record-impact flow no longer surfaces pre-save branch actions.
+  - `Regulate` now exposes explicit `Mixed` rating in outcome capture (`Yes / No / Mixed / Skip`).
+  - `Data` patterns keeps one primary hero CTA and removes duplicate lower suggested-plan CTA.
+- Analytics action-key standardization for changed core-loop interactions:
+  - `today_diagnostics_opened`
+  - `today_fallback_disclosure_opened`
+  - `rating_mixed_selected`
+  - `data_filters_opened`
+  - `data_hero_primary_cta`
 - Data workspace header density tightened for `Trends / Experiments / History`:
   - compact segmented control mode in Data hero (`fillAvailableWidth: false`, `containerInset: 0`)
   - removed extra meta-chip row under workspace selector
   - reduced local stack spacing in selector block
+- Settings trust controls moved from placeholders to implemented flows:
+  - `Privacy policy` now opens in-app trust sheet with explicit links to full legal pages.
+  - `Data export and delete` now opens a dedicated controls sheet with refresh/share export and destructive delete confirmation.
+  - Store/persistence now support `buildUserDataExportJSON` and full `clearAllLocalData`.
+- Today meeting/call attribution context clarified:
+  - `Top drivers now` includes an inline authorization-state panel (included/excluded).
+  - `Signal Diagnostics` now includes a dedicated `Meeting/call metadata control` section with explicit used/excluded boundaries.
+- UI test coverage expanded for trust/control flows:
+  - Privacy sheet full-legal-link presence.
+  - Data controls action presence.
+  - Signal diagnostics meeting/call authorization state visibility.
+- UI test coverage expanded for core-loop simplification:
+  - `testTodaySinglePrimaryCTAWhenNoActiveSession`
+  - `testTodayFallbackDisclosureCarriesCoverageDetails`
+  - `testRegulateImpactIncludesMixedOption`
+  - `testRegulateRecordImpactHasNoPreSaveBranchActions`
+  - `testDataPatternsSinglePrimaryCTAAboveFold`
 - File targets:
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/DataView.swift`
   - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/DesignSystem/SurfaceComponents.swift`
+  - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/SettingsView.swift`
+  - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/TodayView.swift`
+  - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/Features/Shell/RegulateView.swift`
+  - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/AppModel.swift`
+  - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0/MindSensePersistenceService.swift`
+  - `/Users/ekosanmi.j/Documents/MindSense-AI-v1.0.0/MindSense-AI-v1.0.0UITests/MindSenseCoreScreensUITests.swift`
 
 ## Verification Notes
 
 - Latest local batch compiles with:
   - `xcodebuild -scheme MindSense-AI-v1.0.0 -project MindSense-AI-v1.0.0.xcodeproj -destination "platform=iOS Simulator,name=iPhone 17" build-for-testing`
 - Result: test build succeeded.
+- Additional local verification for this batch:
+  - Swift parser checks pass for updated view/design-system/UI-test files.
+  - `swift Scripts/contrast_audit.swift` passes.
